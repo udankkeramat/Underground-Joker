@@ -1,0 +1,2107 @@
+﻿<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>BANGGO HUNTER</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@300;500;700;900&display=swap" rel="stylesheet">
+    <style>
+        body { margin: 0; overflow: hidden; background-color: #000; touch-action: none; font-family: 'Fredoka', sans-serif; user-select: none; -webkit-user-select: none; }
+        #gameCanvas { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 10; display: block; }
+        #loadingScreen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background-color: #000; z-index: 100; display: flex; flex-direction: column; justify-content: center; align-items: center; transition: background-color 0.8s ease, opacity 0.5s ease; }
+        #loadingGroup { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); width: 100%; display: flex; flex-direction: column; align-items: center; }
+        .loading-bar-container { width: 60%; max-width: 300px; height: 4px; background: #333; border-radius: 2px; margin-top: 20px; overflow: hidden; }
+        .loading-bar-fill { height: 100%; width: 0%; background: #fbbf24; transition: width 0.2s linear; box-shadow: 0 0 10px rgba(251, 191, 36, 0.5); }
+
+        .scaled-group { position: absolute; width: 1920px; height: 1080px; top: 50%; left: 50%; transform-origin: center center; pointer-events: none; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10; }
+        .scaled-group > * { pointer-events: auto; }
+
+        #splashOverlay { position: absolute; top:0; left:0; width: 100%; height: 100%; background: rgba(255, 255, 255, 0.8); backdrop-filter: blur(20px); z-index: 200; opacity: 0; pointer-events: none; transition: opacity 0.5s ease; }
+        .splash-active { animation: splashFlash 0.8s forwards; }
+        @keyframes splashFlash { 0% { opacity: 0; } 20% { opacity: 1; } 100% { opacity: 0; } }
+
+        .touch-start-btn { cursor: pointer; text-align: center; animation: floatPulseFun 2.5s infinite ease-in-out; padding: 20px; }
+        .ts-title { font-size: 8rem; font-weight: 900; color: #fbbf24; -webkit-text-stroke: 6px #422006; text-shadow: 0 0 0 #422006, 8px 8px 0 rgba(0,0,0,0.3); letter-spacing: 0.05em; line-height: 1; font-style: italic; }
+        @keyframes floatPulseFun { 0% { transform: translateY(0) scale(1); } 50% { transform: translateY(-30px) scale(1.05); } 100% { transform: translateY(0) scale(1); } }
+
+        .title-bg-tree { position: absolute; top: -5%; left: -5%; width: 110%; height: 110%; object-fit: cover; transform-origin: bottom center; z-index: 1; transition: opacity 0.5s ease; }
+        .title-character { position: absolute; bottom: 0; left: 0; top: auto; width: auto; height: 100%; object-fit: contain; object-position: bottom left; transform-origin: bottom left; z-index: 2; transition: transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s; }
+        .title-logo { position: absolute; top: 163px; left: 789px; width: 1014px; height: 464px; object-fit: contain; }
+
+        .mode-container { position: absolute; left: 1016px; top: 650px; width: 452px; height: 88px; background-color: #262626; border-radius: 44px; display: flex; align-items: center; justify-content: space-between; padding: 0 12px; box-sizing: border-box; box-shadow: 0 4px 10px rgba(0,0,0,0.3); border: 2px solid rgba(255,255,255,0.05); }
+        .mode-btn { background: transparent; border: none; color: #888; width: 200px; height: 62px; border-radius: 31px; font-weight: 700; font-size: 1.5rem; cursor: pointer; transition: all 0.2s; text-transform: uppercase; display: flex; align-items: center; justify-content: center; letter-spacing: 2px; }
+        .mode-btn.active { width: 210px; height: 62px; background: #22c55e; color: white; box-shadow: 0 2px 10px rgba(34, 197, 94, 0.4); transform: scale(1.0); }
+
+        .play-btn-main { position: absolute; left: 1012px; top: 770px; width: 460px; height: 130px; border: none; border-radius: 35px; font-size: 2.5rem; font-weight: 900; color: #422006; cursor: pointer; transition: all 0.2s ease; text-transform: uppercase; display: flex; align-items: center; justify-content: center; letter-spacing: 0.05em; }
+        .play-btn-yellow { background: linear-gradient(to bottom, #facc15, #ca8a04); box-shadow: 0 10px 0 #854d0e, 0 20px 25px rgba(0,0,0,0.4); }
+        .play-btn-yellow:active { transform: translateY(8px); box-shadow: 0 2px 0 #854d0e, 0 10px 10px rgba(0,0,0,0.4); }
+        .play-btn-blue { background: linear-gradient(to bottom, #3b82f6, #1d4ed8); box-shadow: 0 10px 0 #1e3a8a, 0 20px 25px rgba(0,0,0,0.4); color: white; -webkit-text-stroke: 1px #1e3a8a; }
+        .play-btn-blue:active { transform: translateY(8px); box-shadow: 0 2px 0 #1e3a8a, 0 10px 10px rgba(0,0,0,0.4); }
+
+        .btn-green-small { background: linear-gradient(to bottom, #22c55e, #16a34a); border: none; border-radius: 20px; font-size: 1.3rem; font-weight: 900; color: white; box-shadow: 0 6px 0 #15803d, 0 10px 15px rgba(0,0,0,0.4); cursor: pointer; transition: all 0.1s; text-transform: uppercase; display: flex; align-items: center; justify-content: center; padding: 10px 30px; font-style: italic; }
+        .btn-green-small:active { transform: translateY(6px); box-shadow: 0 0px 0 #15803d; }
+        .pressed { transform: scale(0.9) translateY(4px) !important; box-shadow: 0 0px 0 transparent !important; filter: brightness(0.8); }
+
+        .name-input-field { text-align: center; font-size: 1.5rem; font-weight: 800; color: #000; padding: 12px; outline: none; text-transform: uppercase; background: rgba(255, 255, 255, 0.9); }
+        .studio-logo { position: absolute; bottom: 40px; right: 40px; width: 406px; height: 73px; z-index: 4; animation: blinkLogo 3s infinite; object-fit: contain; }
+
+        @keyframes charIdle { 0% { transform: scale(1); } 50% { transform: scale(1.02); } 100% { transform: scale(1); } }
+        @keyframes blinkLogo { 0%, 100% { opacity: 1; } 50% { opacity: 0.8; } }
+        .anim-char-idle { animation: charIdle 4s ease-in-out infinite; }
+
+        @keyframes topIn { from { transform: translateY(-120%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes topOut { from { transform: translateY(0); opacity: 1; } to { transform: translateY(-120%); opacity: 0; } }
+        @keyframes botIn { from { transform: translateY(120%); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
+        @keyframes botOut { from { transform: translateY(0); opacity: 1; } to { transform: translateY(120%); opacity: 0; } }
+        @keyframes leftIn { from { transform: translateX(-120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes leftOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(-120%); opacity: 0; } }
+        @keyframes rightIn { from { transform: translateX(120%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+        @keyframes rightOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(120%); opacity: 0; } }
+
+        .anim-top-in { animation: topIn 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+        .anim-top-out { animation: topOut 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+        .anim-bot-in { animation: botIn 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+        .anim-bot-out { animation: botOut 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+        .anim-left-in { animation: leftIn 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+        .anim-left-out { animation: leftOut 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+        .anim-right-in { animation: rightIn 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+        .anim-right-out { animation: rightOut 0.8s cubic-bezier(0.22, 1, 0.36, 1) forwards; }
+
+        .hidden { display: none !important; opacity: 0; pointer-events: none; }
+        .fade-in-btn { opacity: 0; pointer-events: none; transition: opacity 0.5s ease; }
+        .fade-in-btn.visible { opacity: 1; pointer-events: auto; }
+
+        .ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; z-index: 20; }
+        #countdownLayer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.3); z-index: 40; pointer-events: none; }
+        .countdown-text { font-family: 'Fredoka', sans-serif; font-size: 15rem; font-weight: 900; color: #fbbf24; -webkit-text-stroke: 8px #422006; text-shadow: 10px 10px 0 rgba(0,0,0,0.5); animation: countdownPop 0.8s forwards; font-style: italic; }
+        @keyframes countdownPop { 0% { transform: scale(0); opacity: 0; } 50% { transform: scale(1.2); opacity: 1; } 100% { transform: scale(1); opacity: 1; } }
+
+        .pop-text { position: absolute; left: 50%; top: 40%; transform: translate(-50%, -50%); font-size: 2.5rem; font-weight: 700; color: #fbbf24; -webkit-text-stroke: 1px #000; text-shadow: 3px 3px 0 rgba(0,0,0,0.5); pointer-events: none; animation: popJump 1s forwards; z-index: 25; white-space: pre-wrap; text-align: center; line-height: 1.2; }
+        @keyframes popJump { 0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; } 50% { transform: translate(-50%, -80%) scale(1.2); opacity: 1; } 100% { transform: translate(-50%, -120%) scale(1); opacity: 0; } }
+
+        .glass-panel { background: rgba(255, 255, 255, 0.1); backdrop-filter: blur(12px); border: 1px solid rgba(255, 255, 255, 0.2); box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37); pointer-events: auto; }
+        
+        .screen-overlay { position: absolute; top:0; left:0; width:100%; height:100%; background: rgba(13, 17, 23, 0.85); backdrop-filter: blur(12px); z-index: 60; color:white; pointer-events:none; display: flex; align-items: center; justify-content: center; opacity: 0; transition: opacity 0.3s ease; }
+        .screen-overlay.active { opacity: 1; pointer-events:auto; }
+        .modal-content { transform: scale(0.8); transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275); width: 100%; height: 100%; position: absolute; top: 0; left: 0; display: flex; align-items: center; justify-content: center; }
+        .screen-overlay.active .modal-content { transform: scale(1); }
+
+        .end-btn-menu { width: 220px; height: 220px; border-radius: 40px; font-weight: 900; font-size: 2.25rem; color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; background: #0ea5e9; box-shadow: 0 10px 0 #0284c7, 0 20px 25px rgba(0,0,0,0.4); text-transform: uppercase; transition: all 0.1s; pointer-events: auto; }
+        .end-btn-menu:active { transform: translateY(8px); box-shadow: 0 2px 0 #0284c7, 0 10px 10px rgba(0,0,0,0.4); }
+
+        .end-btn-replay { width: 220px; height: 220px; border-radius: 40px; font-weight: 900; font-size: 2.25rem; color: white; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; background: #22c55e; box-shadow: 0 10px 0 #15803d, 0 20px 25px rgba(0,0,0,0.4); text-transform: uppercase; transition: all 0.1s; white-space: pre-wrap; text-align: center; line-height: 1.1; pointer-events: auto; }
+        .end-btn-replay:active { transform: translateY(8px); box-shadow: 0 2px 0 #15803d, 0 10px 10px rgba(0,0,0,0.4); }
+
+        .btn-start-center { opacity: 0; transform: translateX(507px) scale(0.2); pointer-events: none; transition: none; }
+        .btn-go-left { opacity: 1; transform: translateX(60px) scale(1); pointer-events: none; transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
+        .btn-go-right { opacity: 1; transform: translateX(954px) scale(1); pointer-events: none; transition: all 0.8s cubic-bezier(0.34, 1.56, 0.64, 1); }
+
+        .star-icon { width: 100px; height: 100px; object-fit: contain; opacity: 0; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.3)); }
+        @keyframes starExplosion { 0% { transform: scale(0) rotate(-720deg); opacity: 0; filter: brightness(5); } 50% { transform: scale(1.8) rotate(20deg); opacity: 1; filter: brightness(2); } 70% { transform: scale(0.8) rotate(-10deg); filter: brightness(1.2); } 85% { transform: scale(1.1) rotate(5deg); } 100% { transform: scale(1) rotate(0); filter: brightness(1); opacity: 1; } }
+        .star-icon.visible { animation: starExplosion 0.8s forwards; }
+
+        .lb-container { position: relative; width: 1200px; height: 850px; display: flex; flex-direction: column; }
+        .lb-table-wrapper { width: 100%; height: 100%; background: #1a1a1a; border-radius: 20px; overflow-y: auto; padding: 15px; box-shadow: inset 0 4px 10px rgba(0,0,0,0.8); }
+        .lb-table { width: 100%; text-align: left; border-collapse: collapse; color: white; font-size: 1.4rem; }
+        .lb-table th { padding: 15px; color: #facc15; font-weight: 900; border-bottom: 2px solid #333; text-transform: uppercase; }
+        .lb-table td { padding: 15px; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .lb-table tr:nth-child(1) td { color: #fbbf24; font-weight: 800; font-size: 1.6rem; }
+        .lb-table tr:nth-child(2) td { color: #94a3b8; font-weight: 700; font-size: 1.5rem; }
+        .lb-table tr:nth-child(3) td { color: #b45309; font-weight: 700; font-size: 1.5rem; }
+
+        #charUI { position: absolute; top: 0; left: 0; width: 100%; height: 100%; z-index: 5; pointer-events: none;}
+        .btn-equip { border: none; border-radius: 35px; font-size: 1.8rem; font-weight: 900; color: white; cursor: pointer; text-transform: uppercase; padding: 15px; display: flex; align-items: center; justify-content: center; }
+        .btn-equip-main { background: linear-gradient(to bottom, #3b82f6, #2563eb); box-shadow: 0 8px 0 #1e40af; }
+        .btn-equip-main.equipped { background: linear-gradient(to bottom, #6b7280, #4b5563); box-shadow: 0 8px 0 #374151; color: #d1d5db; cursor: default; }
+        .btn-equip-main.equipped:active { transform: translateY(0); box-shadow: 0 8px 0 #374151; }
+        .btn-equip-main.locked { background: linear-gradient(to bottom, #ef4444, #dc2828); box-shadow: 0 8px 0 #991b1b; cursor: default; }
+
+        @keyframes levelUpPopup {
+            0% { transform: translate(-50%, -50%) scale(0.5); opacity: 0; }
+            20% { transform: translate(-50%, -60%) scale(1.2); opacity: 1; }
+            80% { transform: translate(-50%, -70%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -80%) scale(1); opacity: 0; }
+        }
+        .anim-level-up { animation: levelUpPopup 1.5s ease-out forwards; }
+
+        .scroll-container-left { direction: rtl; overflow-y: auto; overflow-x: hidden; scrollbar-width: thin; scrollbar-color: rgba(255,255,255,0.3) transparent; }
+        .scroll-content-left { direction: ltr; }
+        .scroll-container-left::-webkit-scrollbar { width: 4px; }
+        .scroll-container-left::-webkit-scrollbar-track { background: transparent; }
+        .scroll-container-left::-webkit-scrollbar-thumb { background: rgba(255, 255, 255, 0.3); border-radius: 4px; }
+        
+        .floating-triangle-top { width: 0; height: 0; border-left: 16px solid transparent; border-right: 16px solid transparent; border-bottom: 20px solid #4ade80; animation: floatUp 1.5s infinite ease-in-out; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.8)); }
+        .floating-triangle-bottom { width: 0; height: 0; border-left: 16px solid transparent; border-right: 16px solid transparent; border-top: 20px solid #4ade80; animation: floatDown 1.5s infinite ease-in-out; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.8)); }
+        
+        @keyframes floatUp { 0%, 100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, -10px); } }
+        @keyframes floatDown { 0%, 100% { transform: translate(-50%, 0); } 50% { transform: translate(-50%, 10px); } }
+
+        .switch { position: relative; display: inline-block; width: 64px; height: 36px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #4b5563; transition: .4s; border-radius: 36px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.5); }
+        .slider:before { position: absolute; content: ""; height: 28px; width: 28px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+        input:checked + .slider { background-color: #22c55e; }
+        input:checked + .slider:before { transform: translateX(28px); }
+
+        @keyframes itemPopFlash { 0% { transform: scale(0.5); opacity: 0; filter: brightness(2); } 50% { transform: scale(1.1); opacity: 1; filter: brightness(1.5); } 100% { transform: scale(1); opacity: 1; filter: brightness(1); } }
+        @keyframes floatItem { 0%, 100% { transform: translateY(0px); } 50% { transform: translateY(-15px); } }
+        .anim-gacha-result { animation: itemPopFlash 0.5s ease-out forwards, floatItem 3s ease-in-out infinite 0.5s; }
+        .draw-flashing { animation: pulseFast 0.1s infinite; }
+        @keyframes pulseFast { 0%, 100% { transform: scale(0.95); opacity: 0.8; } 50% { transform: scale(1.05); opacity: 1; filter: brightness(1.2); } }
+
+        @keyframes rarityBlink { 
+            0%, 100% { filter: brightness(1) drop-shadow(0 0 2px rgba(255,255,255,0.5)); } 
+            50% { filter: brightness(1.5) drop-shadow(0 0 12px rgba(255,255,255,0.9)); } 
+        }
+        .anim-rarity-blink { animation: rarityBlink 1.5s infinite ease-in-out; }
+
+        @keyframes splashSequence {
+            0%   { opacity: 0; transform: scale(0.333); }
+            20%  { opacity: 1; transform: scale(0.333); }   
+            60%  { opacity: 1; transform: scale(0.333); }   
+            80%  { opacity: 0; transform: scale(0.333); }   
+            100% { opacity: 0; transform: scale(0.333); }   
+        }
+        .splash-logo-anim { animation: splashSequence 5s forwards linear; }
+
+        /* GAMEPLAY SELECTION UI */
+        .gs-icon-wrapper { width: 300px; height: 300px; border-radius: 40px; border: 6px solid transparent; overflow: hidden; cursor: pointer; transition: all 0.3s cubic-bezier(0.25, 1, 0.5, 1); box-shadow: 0 10px 25px rgba(0,0,0,0.8); position: relative; }
+        .gs-icon-wrapper img { width: 100%; height: 100%; object-fit: cover; }
+        .gs-icon-wrapper.unselected { filter: brightness(0.4) grayscale(60%); transform: scale(0.9); }
+        .gs-icon-wrapper.selected { border-color: #facc15; transform: scale(1.1); box-shadow: 0 0 30px rgba(250, 204, 21, 0.8), 0 15px 35px rgba(0,0,0,0.8); z-index: 10; animation: pulseGlow 2s infinite; }
+        
+        .gs-slot-machine { width: 350px; height: 350px; border-radius: 50px; border: 8px solid #facc15; overflow: hidden; box-shadow: 0 0 50px rgba(250, 204, 21, 0.6), inset 0 0 20px rgba(0,0,0,0.8); position: relative; background: #000; }
+        .gs-slot-machine img { width: 100%; height: 100%; object-fit: cover; }
+        .gs-rolling { animation: rapidFlash 0.1s infinite; }
+
+        @keyframes pulseGlow { 0%, 100% { box-shadow: 0 0 30px rgba(250, 204, 21, 0.8), 0 15px 35px rgba(0,0,0,0.8); } 50% { box-shadow: 0 0 50px rgba(250, 204, 21, 1), 0 15px 35px rgba(0,0,0,0.8); } }
+        @keyframes rapidFlash { 0%, 100% { filter: brightness(1) sepia(0); } 50% { filter: brightness(1.5) sepia(0.5); } }
+
+        /* GAMEPLAY HUD TYPE LABEL */
+        .gameplay-type-label { 
+            position: absolute; left: 0px; bottom: 0px; font-family: 'Fredoka', sans-serif; 
+            font-size: 0.6rem; font-weight: 900; color: white; text-transform: uppercase; 
+            letter-spacing: 0.1em; text-shadow: 0 2px 4px rgba(0,0,0,0.8); opacity: 0.8; 
+            z-index: 40; pointer-events: none; padding: 10px 15px;
+            display: flex; align-items: center; justify-content: flex-start;
+        }
+        
+        .frenzy-time-add { font-family: 'Fredoka', sans-serif; font-size: 2.5rem; font-weight: 900; color: #4ade80; -webkit-text-stroke: 2px #14532d; text-shadow: 0 4px 6px rgba(0,0,0,0.5); text-align: center; position: absolute; top: 180px; left: 140px; transform: translateX(-50%); opacity: 0; transition: all 0.3s; z-index: 55; pointer-events: none; }
+        .frenzy-anim-show { animation: frenzyPop 1.5s forwards; }
+        @keyframes frenzyPop { 0% { transform: translateX(-50%) translateY(20px) scale(0.5); opacity: 0; } 20% { transform: translateX(-50%) translateY(0) scale(1.2); opacity: 1; } 80% { transform: translateX(-50%) translateY(-10px) scale(1); opacity: 1; } 100% { transform: translateX(-50%) translateY(-30px) scale(1); opacity: 0; } }
+
+        .sniper-ammo-container { position: absolute; left: 50%; bottom: 15px; transform: translateX(-50%); width: 250px; height: 50px; display: flex; align-items: center; justify-content: center; gap: 15px; z-index: 40; pointer-events: none; }
+    </style>
+</head>
+<body>
+
+    <div id="customSplashScreen" style="position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: #000; z-index: 9999; display: flex; justify-content: center; align-items: center;">
+        <img src="https://udankkeramat.github.io/Banggo-Hunter-Asset/splash_screen_logo.png" alt="Splash Logo" class="splash-logo-anim" style="max-width: 100%; max-height: 100%; object-fit: contain;">
+    </div>
+
+    <div id="loadingScreen">
+        <div id="loadingGroup" class="loading-content">
+            <div data-i18n="loading" class="text-white text-2xl font-bold tracking-widest mb-2">MEMUAT DATA</div>
+            <div class="loading-bar-container">
+                <div id="loadingBarFill" class="loading-bar-fill"></div>
+            </div>
+        </div>
+        
+        <div id="startGroup" class="scaled-group hidden">
+            <div class="touch-start-btn" onclick="startExperience()">
+                <div data-i18n="touchToStart" class="ts-title whitespace-pre-wrap">SENTUH<br>UNTUK MULAI</div>
+            </div>
+        </div>
+    </div>
+
+    <div id="splashOverlay"></div>
+
+    <canvas id="gameCanvas"></canvas>
+
+    <video id="comboVideo" src="https://udankkeramat.github.io/Banggo-Hunter-Asset/combo_vfx.mp4" loop muted playsinline crossorigin="anonymous" style="display:none;"></video>
+
+    <div id="topNotifContainer" class="absolute top-4 left-1/2 transform -translate-x-1/2 flex flex-col items-center gap-2 z-[9999] pointer-events-none"></div>
+
+    <div id="titleLayer" class="absolute top-0 left-0 w-full h-full z-50 overflow-hidden hidden">
+        <img id="titleBgTree" class="title-bg-tree pointer-events-none" src="" alt="Tree BG">
+        
+        <div class="scaled-group pointer-events-none">
+            
+            <div id="uiLeftWrapper" class="absolute top-0 left-0 w-full h-full pointer-events-none opacity-0">
+                <img id="titleChar" class="title-character pointer-events-auto" src="" alt="Character">
+            </div>
+            
+            <div id="uiRightWrapper" class="absolute top-0 left-0 w-full h-full pointer-events-none opacity-0">
+                <img id="titleLogo" class="title-logo pointer-events-auto" src="" alt="Banggo Hunter Logo">
+                <div class="mode-container pointer-events-auto">
+                    <button id="btn-classic" class="mode-btn active" data-i18n="classic" onclick="setGameMode('classic')">CLASSIC</button>
+                    <button id="btn-rank" class="mode-btn" data-i18n="rank" onclick="setGameMode('rank')">RANK</button>
+                </div>
+                <button id="btn-play-title" class="play-btn-main play-btn-blue pointer-events-auto" data-i18n="play" onclick="playGameTransition()">PLAY</button>
+            </div>
+
+            <div id="uiTopWrapper" class="absolute top-0 left-0 w-full h-full pointer-events-none opacity-0">
+                <div class="absolute top-10 right-10 flex flex-col items-end gap-4 z-20 pointer-events-auto">
+                    <div class="glass-panel px-6 py-3 rounded-2xl border-4 border-yellow-400 flex items-center gap-3 w-[220px] justify-between bg-black/70 shadow-[0_0_15px_rgba(250,204,21,0.5)]">
+                        <span class="text-3xl">🪙</span>
+                        <span id="uiBanggoCoin" class="text-yellow-400 font-black text-3xl">0</span>
+                    </div>
+                    <div class="glass-panel px-6 py-3 rounded-2xl border-4 border-orange-400 flex items-center gap-3 w-[220px] justify-between bg-black/70 shadow-[0_0_15px_rgba(251,146,60,0.5)]">
+                        <img id="uiFeatherIcon" src="" class="w-8 h-8 object-contain drop-shadow-md">
+                        <span id="uiBanggoFeather" class="text-orange-400 font-black text-3xl">0</span>
+                    </div>
+                </div>
+
+                <div class="absolute top-10 left-10 flex flex-col gap-6 z-20 items-start pointer-events-auto">
+                    <div class="flex flex-row gap-5 items-center">
+                        <div class="flex flex-row items-center">
+                            <input type="file" id="photoUpload" accept="image/*" class="hidden" onchange="handlePhotoUpload(event)">
+                            <div id="profilePhotoBtn" class="w-[90px] h-[90px] rounded-[1.25rem] border-[4px] border-[#0ea5e9] bg-black/70 cursor-pointer overflow-hidden flex items-center justify-center shadow-[0_0_15px_rgba(14,165,233,0.5)] transition-all hover:brightness-110 active:brightness-90 z-10 relative" onclick="document.getElementById('photoUpload').click()" title="Ubah Foto Profil">
+                                <img id="profilePhotoImg" src="" class="w-full h-full object-cover hidden">
+                                <span id="profilePhotoPlaceholder" class="text-4xl drop-shadow-md">📷</span>
+                            </div>
+                            <input type="text" id="mainPlayerName" class="name-input-field w-[200px] h-[64px] border-[4px] border-l-0 border-[#0ea5e9] rounded-r-2xl -ml-5 pl-8 pr-2 z-0 relative shadow-[0_0_15px_rgba(14,165,233,0.3)] bg-[#f1f5f9]" maxlength="12" placeholder="NAMA HUNTER" value="HUNTER">
+                        </div>
+                        <div class="h-[90px] px-8 rounded-3xl border-[4px] border-yellow-400 bg-black/70 flex items-center justify-center shadow-[0_0_15px_rgba(250,204,21,0.5)] shrink-0" title="Skor Tertinggi Mode Rank">
+                            <span class="text-yellow-400 font-black text-4xl drop-shadow-md tracking-wider">🏆 <span id="uiBestScore">0</span></span>
+                        </div>
+                    </div>
+
+                    <div class="flex flex-col gap-6 items-start">
+                        <button id="btn-setting" class="transition-transform hover:scale-105 active:scale-95 flex items-center justify-center w-[64px] h-[64px]" onclick="handleBtnAction('btn-setting', showSetting)">
+                            <img id="imgBtnSetting" src="" alt="Setting" class="w-full h-full object-contain drop-shadow-lg">
+                        </button>
+                        <button id="btn-exit" class="transition-transform hover:scale-105 active:scale-95 flex items-center justify-center w-[64px] h-[64px]" onclick="handleBtnAction('btn-exit', confirmExitApp)">
+                            <img id="imgBtnExit" src="" alt="Exit" class="w-full h-full object-contain drop-shadow-lg">
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <div id="uiBottomWrapper" class="absolute top-0 left-0 w-full h-full pointer-events-none opacity-0">
+                <div class="absolute bottom-10 left-10 flex gap-4 z-20 pointer-events-auto">
+                    <button id="btn-lb" class="btn-green-small" data-i18n="lb" onclick="handleBtnAction('btn-lb', showLeaderboard)">LEADERBOARD</button>
+                    <button id="btn-login" class="btn-green-small" data-i18n="daily" onclick="handleBtnAction('btn-login', showDailyLogin)">DAILY REWARD</button>
+                    <button id="btn-gacha" class="btn-green-small" data-i18n="draw" onclick="handleBtnAction('btn-gacha', showGacha)">DRAW</button>
+                    <button id="btn-hunter" class="btn-green-small" data-i18n="hunter" onclick="handleBtnAction('btn-hunter', showCharacterScreen)">HUNTER</button>
+                </div>
+                <img id="studioLogo" class="studio-logo pointer-events-auto" src="" alt="Studio Logo">
+            </div>
+
+        </div>
+    </div>
+
+    <div id="gameplaySelectionLayer" class="screen-overlay hidden z-[60] !bg-transparent !backdrop-blur-none">
+        <img id="imgGameplayBg" src="" class="absolute inset-0 w-full h-full object-cover z-0 pointer-events-none">
+        <div class="scaled-group z-10">
+            <div class="modal-content relative flex items-center justify-center flex-col gap-10">
+                <h2 id="gsTitle" class="text-6xl font-black text-white drop-shadow-md tracking-widest uppercase italic mb-4">MODE</h2>
+                
+                <div id="gsIconsContainer" class="flex gap-10 min-h-[350px] items-center justify-center"></div>
+
+                <div id="gsDesc" class="text-3xl font-medium text-white drop-shadow-md text-center w-[1000px] h-[120px] whitespace-pre-wrap leading-relaxed mt-4">
+                    Pilih jenis gameplay untuk memulai.
+                </div>
+
+                <div id="gsBtnContainer" class="flex gap-8 w-[800px] justify-center mt-6">
+                    <button id="btnGsCancel" onclick="cancelGameplaySelection()" data-i18n="cancelBtn" class="btn-green-small flex-1 max-w-[350px] !text-4xl !py-6 !bg-gradient-to-b !from-red-500 !to-red-700 !shadow-[0_8px_0_#991b1b]">BATAL</button>
+                    <button id="btnGsStart" onclick="startGameplayNow()" data-i18n="startBtn" class="btn-green-small flex-1 max-w-[350px] !text-4xl !py-6 opacity-50 cursor-not-allowed pointer-events-none transition-all">START</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="disconnectLayer" class="screen-overlay hidden z-[100]">
+        <div class="scaled-group">
+            <div class="modal-content relative flex items-center justify-center">
+                <div class="relative w-[1000px] h-[600px] flex justify-center items-center">
+                    <img id="imgDisconnectBg" src="" class="absolute inset-0 w-full h-full object-fill pointer-events-none drop-shadow-2xl">
+                    <div class="absolute inset-0 pointer-events-auto flex flex-col items-center justify-center gap-10 p-12 text-center">
+                        <span class="text-7xl mb-4">📡</span>
+                        <h2 data-i18n="connLost" class="text-4xl font-black text-red-400 drop-shadow-md uppercase tracking-wider whitespace-pre-wrap leading-snug">SINYAL HILANG, SAYANG!\nMenunggu koneksi...</h2>
+                        <div class="flex gap-8 w-full px-12 mt-6">
+                            <button onclick="surrenderRank()" data-i18n="surrender" class="btn-green-small flex-1 !text-3xl !py-5 !bg-gradient-to-b !from-red-500 !to-red-700 !shadow-[0_8px_0_#991b1b]">MENYERAH</button>
+                            <button onclick="checkConnectionToResume()" data-i18n="waitSig" class="btn-green-small flex-1 !text-3xl !py-5 !bg-gradient-to-b !from-blue-500 !to-blue-700 !shadow-[0_8px_0_#1e3a8a]">TUNGGU SINYAL</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="exitLayer" class="screen-overlay hidden z-[100]">
+        <div class="scaled-group">
+            <div class="modal-content relative flex items-center justify-center">
+                <div class="relative w-[900px] h-[525px] flex justify-center items-center">
+                    <img id="imgExitBg" src="" class="absolute inset-0 w-full h-full object-fill pointer-events-none drop-shadow-2xl">
+                    <div class="absolute inset-0 pointer-events-auto flex flex-col items-center justify-center gap-10 p-12">
+                        <h2 data-i18n="exitConfirm" class="text-5xl font-black text-white text-center drop-shadow-md">KELUAR DARI GAME?</h2>
+                        <div class="flex gap-8 w-full px-12">
+                            <button onclick="exitApp()" data-i18n="yes" class="btn-green-small flex-1 !text-3xl !py-5 !bg-gradient-to-b !from-red-500 !to-red-700 !shadow-[0_8px_0_#991b1b]">YA</button>
+                            <button onclick="cancelExit()" data-i18n="no" class="btn-green-small flex-1 !text-3xl !py-5 !shadow-[0_8px_0_#15803d]">TIDAK</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="photoConfirmLayer" class="screen-overlay hidden z-[100]">
+        <div class="scaled-group">
+            <div class="modal-content relative flex items-center justify-center">
+                <div class="relative w-[900px] h-[650px] flex justify-center items-center">
+                    <img id="imgPhotoConfirmBg" src="" class="absolute inset-0 w-full h-full object-fill pointer-events-none drop-shadow-2xl">
+                    <div class="absolute inset-0 pointer-events-auto flex flex-col items-center justify-center gap-8 p-12">
+                        <h2 data-i18n="savePhotoConfirm" class="text-4xl font-black text-yellow-400 text-center drop-shadow-md uppercase tracking-widest">SIMPAN FOTO INI?</h2>
+                        <div class="w-[200px] h-[200px] rounded-3xl border-8 border-yellow-400 bg-black/70 overflow-hidden shadow-[0_0_20px_rgba(250,204,21,0.6)]">
+                            <img id="photoConfirmPreview" src="" class="w-full h-full object-cover">
+                        </div>
+                        <div class="flex gap-8 w-full px-12 mt-4">
+                            <button onclick="cancelPhoto()" data-i18n="cancelBtn" class="btn-green-small flex-1 !text-3xl !py-5 !bg-gradient-to-b !from-red-500 !to-red-700 !shadow-[0_8px_0_#991b1b]">BATAL</button>
+                            <button onclick="confirmPhoto()" data-i18n="saveBtn" class="btn-green-small flex-1 !text-3xl !py-5 !bg-gradient-to-b !from-blue-500 !to-blue-700 !shadow-[0_8px_0_#1e3a8a]">SIMPAN</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="settingLayer" class="screen-overlay hidden z-[60]">
+        <div class="scaled-group">
+            <div class="modal-content relative flex items-center justify-center">
+                <div class="relative w-[1000px] h-[750px] flex justify-center items-center">
+                    <img id="imgSettingBg" src="" class="absolute inset-0 w-full h-full object-fill pointer-events-none drop-shadow-2xl">
+                    <button onclick="hideSetting()" class="absolute top-[40px] left-[40px] z-[100] transition transform hover:scale-105 active:scale-95 pointer-events-auto">
+                        <img id="imgSettingClose" src="" class="w-20 h-20 drop-shadow-lg">
+                    </button>
+                    
+                    <div class="absolute inset-0 pointer-events-auto flex flex-col" style="top: 110px; right: 110px; bottom: 110px; left: 110px;">
+                        <h2 data-i18n="settings" class="text-5xl font-black text-yellow-400 text-center mb-10 drop-shadow-md tracking-widest uppercase">PENGATURAN</h2>
+                        
+                        <div class="flex flex-col gap-8 px-10">
+                            <div class="flex justify-between items-center bg-black/30 p-6 rounded-2xl border-2 border-yellow-700/50">
+                                <span data-i18n="bgm" class="text-4xl font-bold text-white uppercase tracking-wider">BGM</span>
+                                <div class="transform scale-150 origin-right">
+                                    <label class="switch">
+                                        <input type="checkbox" id="toggleBGM" checked onchange="toggleAudioSetting()">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center bg-black/30 p-6 rounded-2xl border-2 border-yellow-700/50">
+                                <span data-i18n="sfx" class="text-4xl font-bold text-white uppercase tracking-wider">SFX</span>
+                                <div class="transform scale-150 origin-right">
+                                    <label class="switch">
+                                        <input type="checkbox" id="toggleSFX" checked onchange="toggleAudioSetting()">
+                                        <span class="slider"></span>
+                                    </label>
+                                </div>
+                            </div>
+                            <div class="flex justify-between items-center bg-black/30 p-6 rounded-2xl border-2 border-yellow-700/50">
+                                <span data-i18n="lang" class="text-4xl font-bold text-white uppercase tracking-wider">BAHASA</span>
+                                
+                                <div class="relative w-[250px]" id="langDropdownContainer">
+                                    <div id="langSelectorHeader" class="bg-[#3b2818] text-white border-2 border-yellow-600 py-3 px-4 rounded-xl text-2xl font-bold cursor-pointer text-center uppercase" onclick="toggleLangDropdown()">INDONESIA</div>
+                                    <div id="langDropdown" class="hidden absolute top-[110%] left-0 w-full bg-[#1a1a1a] border-2 border-yellow-600 rounded-xl overflow-hidden z-[100] shadow-xl">
+                                        <div class="p-4 text-white text-xl font-bold hover:bg-yellow-600 cursor-pointer text-center uppercase" onclick="selectLang('id')">INDONESIA</div>
+                                        <div class="p-4 text-white text-xl font-bold hover:bg-yellow-600 cursor-pointer text-center uppercase" onclick="selectLang('en')">ENGLISH</div>
+                                        <div class="p-4 text-white text-xl font-bold hover:bg-yellow-600 cursor-pointer text-center uppercase" onclick="selectLang('mk')">MAKASSAR</div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="charScreenLayer" class="screen-overlay hidden z-[55]">
+        <img id="imgCharScreenBgFull" src="" class="absolute inset-0 w-full h-full object-cover opacity-80 z-0">
+        
+        <div class="scaled-group pointer-events-none z-10">
+            <div class="modal-content relative flex items-center">
+                
+                <div class="absolute inset-0 w-full h-full pointer-events-none z-50">
+                    <div id="levelUpEffect" class="absolute hidden flex-col items-center justify-center" style="top: 50%; left: 25%; transform: translate(-50%, -50%); width: 500px; height: 300px;">
+                        <span class="text-7xl text-yellow-300 drop-shadow-[0_0_15px_rgba(255,255,255,1)]">✨</span>
+                        <span class="text-6xl font-black text-white drop-shadow-[0_6px_6px_rgba(0,0,0,1)] italic tracking-wider" style="-webkit-text-stroke: 3px #ea580c;">LEVEL UP!</span>
+                    </div>
+                </div>
+
+                <img id="charScreenDisplay" class="title-character opacity-0" src="" alt="Character Portrait">
+
+                <button onclick="closeCharacterScreen()" class="absolute top-[60px] left-[60px] z-[100] transition transform hover:scale-105 active:scale-95 pointer-events-auto">
+                    <img id="imgCharClose" src="" class="w-20 h-20 drop-shadow-lg">
+                </button>
+
+                <div class="absolute bottom-[40px] left-[450px] transform -translate-x-1/2 flex items-center justify-center gap-6 pointer-events-auto z-50">
+                    <button onclick="animateCharChange(-1)" class="transition-transform hover:scale-105 active:scale-95 w-24 h-24">
+                        <img id="imgBtnPrev" src="" class="w-full h-full object-contain drop-shadow-lg">
+                    </button>
+                    <div class="relative flex items-center justify-center w-[350px] h-[80px]">
+                        <img id="imgPlaceName" src="" class="absolute inset-0 w-full h-full object-fill drop-shadow-lg">
+                        <div id="charNameDisplay" class="relative z-10 text-5xl font-black text-yellow-400 drop-shadow-lg uppercase italic tracking-wider text-center px-4 w-full truncate">BANGGO</div>
+                    </div>
+                    <button onclick="animateCharChange(1)" class="transition-transform hover:scale-105 active:scale-95 w-24 h-24">
+                        <img id="imgBtnNext" src="" class="w-full h-full object-contain drop-shadow-lg">
+                    </button>
+                </div>
+
+                <div class="absolute right-[80px] top-1/2 transform -translate-y-1/2 w-[850px] h-[750px] flex items-center justify-center pointer-events-auto">
+                    <img id="imgCharDetailBg" src="" class="absolute inset-0 w-full h-full object-fill pointer-events-none drop-shadow-2xl">
+                    
+                    <div id="scrollIndTop" class="absolute left-1/2 -translate-x-1/2 top-[95px] floating-triangle-top z-[100] opacity-0 transition-opacity duration-300 pointer-events-none"></div>
+                    <div id="scrollIndBottom" class="absolute left-1/2 -translate-x-1/2 bottom-[95px] floating-triangle-bottom z-[100] opacity-0 transition-opacity duration-300 pointer-events-none"></div>
+
+                    <div id="charDetailScrollWrapper" class="absolute inset-0 scroll-container-left z-20" style="top: 110px; right: 110px; bottom: 110px; left: 110px;">
+                        <div id="charDetailContent" class="flex flex-col scroll-content-left w-full min-h-full pl-6 pr-2 py-2">
+                            
+                            <div class="relative w-full flex items-start mb-6 shrink-0">
+                                <img id="charCardThumb" src="" class="w-[100px] h-[140px] object-contain rounded-xl shadow-[0_4px_10px_rgba(0,0,0,0.5)] shrink-0 z-20">
+                                
+                                <div class="flex flex-col ml-6 mt-2 flex-grow">
+                                    <div id="charDetailNameDisplay" class="text-4xl font-black text-yellow-400 drop-shadow-md uppercase italic tracking-wider text-left">NAMA</div>
+                                    <div id="charGenderDisplay" class="text-2xl font-bold uppercase tracking-widest text-white drop-shadow-md text-left mt-1">WANITA</div>
+                                </div>
+
+                                <div id="charRarityDisplay" class="absolute top-0 right-0 text-2xl font-black uppercase tracking-widest drop-shadow-md text-right">Normal (N)</div>
+                            </div>
+                            
+                            <div class="w-full h-1 bg-yellow-600/50 rounded mb-6 shrink-0"></div>
+                            
+                            <div id="charLoreDisplay" class="text-xl font-medium mb-10 leading-relaxed text-white drop-shadow-md text-left shrink-0">Narasi latar belakang.</div>
+                            
+                            <div id="charSkillBox" class="bg-[#0f172a]/80 border-4 border-blue-900 rounded-3xl p-8 mb-8 flex flex-col gap-2 shrink-0">
+                                <div id="charSkillTitle" class="text-blue-300 font-bold text-2xl uppercase tracking-widest"></div>
+                                <div id="charSkillDesc" class="text-xl text-blue-100 leading-relaxed whitespace-pre-wrap"></div>
+                            </div>
+
+                            <div class="flex-grow shrink-0"></div>
+
+                            <div id="charLockedMsg" data-i18n="locked" class="text-red-400 text-3xl font-bold text-center mt-4 mb-6 hidden shrink-0">LOCKED - DAPATKAN DI DRAW!</div>
+                            
+                            <div class="flex gap-6 w-full shrink-0 mt-4 mb-4">
+                                <button id="btnUpgradeChar" onclick="upgradePreviewedChar()" class="btn-equip flex-1 !bg-gradient-to-b !from-yellow-400 !to-yellow-600 !shadow-[0_8px_0_#b45309] !text-[#422006] hover:scale-105 active:scale-95 transition-transform disabled:opacity-50 disabled:cursor-not-allowed disabled:hover:scale-100 hidden !text-2xl !py-5">UPGRADE</button>
+                                <button id="btnEquipChar" onclick="equipPreviewedChar()" class="btn-equip btn-equip-main flex-1 hover:scale-105 active:scale-95 transition-transform disabled:hover:scale-100 hidden !text-2xl !py-5">EQUIPPED</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dailyLayer" class="screen-overlay hidden z-[60]">
+        <div class="scaled-group">
+            <div class="modal-content relative flex items-center justify-center">
+                <div class="relative w-[1300px] h-[800px] flex justify-center mt-12">
+                    <img id="imgDailyBg" src="" class="absolute inset-0 w-full h-full object-contain pointer-events-none drop-shadow-2xl">
+                    <button onclick="hideDailyLogin()" class="absolute top-[20px] left-[15px] z-50 transition transform hover:scale-105 active:scale-95 pointer-events-auto">
+                        <img id="imgDailyClose" src="" class="w-20 h-20 drop-shadow-lg">
+                    </button>
+                    <div class="absolute inset-0 flex pt-[200px] pb-[130px] px-[120px] gap-8 z-10 pointer-events-auto">
+                        <div id="dailyGridLeft" class="grid grid-cols-3 gap-x-6 gap-y-4 w-[65%] h-full"></div>
+                        <div id="dailyGridRight" class="w-[35%] h-full"></div>
+                    </div>
+                    <button id="btnClaimDaily" onclick="claimDaily()" class="absolute -bottom-6 left-1/2 transform -translate-x-1/2 w-[380px] h-[90px] rounded-[45px] font-black text-4xl uppercase tracking-wider z-50 pointer-events-auto transition-all"></button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="leaderboardLayer" class="screen-overlay hidden z-[55]">
+        <div class="scaled-group">
+            <div class="modal-content relative flex items-center justify-center">
+                <div class="lb-container">
+                    <img id="imgLbBg" src="" class="absolute inset-0 w-full h-full object-fill pointer-events-none drop-shadow-2xl">
+                    <button onclick="hideLeaderboard()" class="absolute top-[30px] left-[40px] z-[100] transition transform hover:scale-105 active:scale-95 pointer-events-auto">
+                        <img id="imgLbClose" src="" class="w-20 h-20 drop-shadow-lg">
+                    </button>
+                    
+                    <div class="absolute inset-0 pointer-events-auto flex flex-col items-center" style="top: 130px; right: 90px; bottom: 90px; left: 90px;">
+                        <div class="lb-table-wrapper">
+                            <table class="lb-table">
+                                <thead>
+                                    <tr>
+                                        <th style="width: 15%" data-i18n="rank">RANK</th>
+                                        <th style="width: 45%" data-i18n="name">NAME</th>
+                                        <th style="width: 20%" data-i18n="score">SCORE</th>
+                                        <th style="width: 20%" data-i18n="accuracy">ACCURACY</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="lb-table-body"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="gachaLayer" class="screen-overlay hidden z-[60]">
+        <div class="scaled-group">
+            <div class="modal-content relative flex items-center justify-center">
+                <div class="relative w-[1920px] h-[1080px] flex justify-center items-center">
+                    <img id="imgDrawBg" src="" class="absolute inset-0 w-full h-full object-contain pointer-events-none drop-shadow-2xl">
+                    
+                    <button onclick="hideGacha()" class="absolute top-[78px] left-[105px] z-[100] transition transform hover:scale-105 active:scale-95 pointer-events-auto">
+                        <img id="imgGachaClose" src="" class="w-20 h-20 drop-shadow-lg">
+                    </button>
+                    
+                    <div id="gachaResultBox" class="absolute top-[296px] bottom-[334px] left-[426px] right-[426px] flex items-center justify-center text-center flex-col z-10 pointer-events-none">
+                        <span class="text-pink-400 text-8xl font-black drop-shadow-lg">❓</span>
+                    </div>
+                    
+                    <div class="absolute top-[831px] left-1/2 transform -translate-x-1/2 z-50 pointer-events-auto">
+                        <button id="btnDrawAction" onclick="pullGacha()" class="play-btn-main play-btn-yellow !relative !left-auto !top-auto !w-[450px] !h-[110px] !text-5xl !bg-gradient-to-b !from-pink-500 !to-pink-700 !shadow-[0_8px_0_#831843] transition-all">DRAW (100 🪙)</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="pauseLayer" class="screen-overlay hidden z-[100]">
+        <div class="scaled-group">
+            <div class="modal-content relative flex items-center justify-center">
+                <div class="relative w-[900px] h-[525px] flex justify-center items-center">
+                    <img id="imgPauseBg" src="" class="absolute inset-0 w-full h-full object-fill pointer-events-none drop-shadow-2xl">
+                    <div class="absolute inset-0 pointer-events-auto flex flex-col items-center justify-center gap-10 p-12">
+                        <h2 class="text-5xl font-black text-white text-center drop-shadow-md uppercase italic tracking-wider">GAME PAUSED</h2>
+                        <div class="flex gap-8 w-full px-12">
+                            <button onclick="quitToMenu()" data-i18n="menu" class="btn-green-small flex-1 !text-3xl !py-5 !bg-gradient-to-b !from-red-500 !to-red-700 !shadow-[0_8px_0_#991b1b]">MENU</button>
+                            <button onclick="resumeGame()" class="btn-green-small flex-1 !text-3xl !py-5 !bg-gradient-to-b !from-blue-500 !to-blue-700 !shadow-[0_8px_0_#1e3a8a]">LANJUT</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="countdownLayer" class="hidden">
+        <div id="countdownGroup" class="scaled-group">
+            <div id="countdownText" class="countdown-text">3</div>
+        </div>
+    </div>
+
+    <div id="hud" class="ui-layer hidden">
+        
+        <div id="hudTimerGroup" class="absolute top-4 left-4 pointer-events-none z-50 origin-top-left transition-transform">
+            <div style="position: relative; display: inline-block;">
+                <img id="imgModalTimer" src="" style="display: block; width: auto; height: auto;">
+                <button onclick="pauseGame()" id="btn-pause-hud" class="fade-in-btn absolute pointer-events-auto transition-transform active:scale-95" style="top: 21px; left: 35px; border: none; background: transparent; padding: 0; outline: none; cursor: pointer;">
+                    <img id="imgBtnPause" src="">
+                </button>
+                <div class="absolute flex items-center justify-center" style="top: 71px; left: 175px; right: 47px; bottom: 37px;">
+                    <span id="timeVal" class="text-white font-black text-[3rem] drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)] leading-none text-center w-full">60</span>
+                </div>
+            </div>
+            <div id="frenzyTimeAdd" class="frenzy-time-add" data-i18n="add2Sec">+2 Detik</div>
+        </div>
+
+        <div id="hudScoreGroup" class="absolute top-4 right-4 pointer-events-none z-50 origin-top-right transition-transform">
+            <div style="position: relative; display: inline-block;">
+                <img id="imgModalScore" src="" style="display: block; width: auto; height: auto;">
+                <div class="absolute flex items-center justify-center" style="top: 71px; left: 47px; right: 175px; bottom: 37px;">
+                    <span id="scoreVal" class="text-[#facc15] font-black text-[3rem] drop-shadow-[0_4px_4px_rgba(0,0,0,0.8)] leading-none text-center w-full">0</span>
+                </div>
+            </div>
+        </div>
+
+        <div id="message-container"></div>
+        
+        <div id="gameplayTypeLabel" class="gameplay-type-label">FRENZY RUSH</div>
+
+        <div id="sniperAmmoHUD" class="sniper-ammo-container hidden"></div>
+    </div>
+
+    <div id="endScreen" class="screen-overlay hidden z-[70] !bg-transparent !backdrop-blur-none">
+        <div id="endGroup" class="scaled-group">
+            <div class="relative w-[1920px] h-[1080px] flex justify-center items-center">
+                <div class="absolute inset-0 z-0 pointer-events-none flex justify-center items-center">
+                    <img id="imgGameoverBg" src="" class="w-full h-full object-contain drop-shadow-2xl">
+                </div>
+                
+                <div class="absolute pointer-events-auto z-10" style="top: 199px; right: 343px; bottom: 199px; left: 343px;">
+                    
+                    <div class="absolute top-[40px] w-full flex flex-col items-center">
+                        <span data-i18n="totalScore" class="text-4xl font-black text-white tracking-widest drop-shadow-md uppercase">TOTAL SCORE</span>
+                        <span id="finalScore" class="text-[8rem] font-black text-[#facc15] drop-shadow-[0_8px_10px_rgba(0,0,0,0.5)] leading-none mt-4">0</span>
+                    </div>
+
+                    <div id="wrapper-btn-menu" class="absolute top-[180px] z-10 btn-start-center">
+                        <button id="btn-menu-end" data-i18n="menu" onclick="handleBtnAction('btn-menu-end', backToMenu)" class="end-btn-menu">MENU</button>
+                    </div>
+                    
+                    <div id="wrapper-btn-replay" class="absolute top-[180px] z-10 btn-start-center">
+                        <button id="btn-replay-end" data-i18n="playAgain" onclick="handleBtnAction('btn-replay-end', startCountdownGame)" class="end-btn-replay">PLAY\nAGAIN</button>
+                    </div>
+
+                    <div class="absolute bottom-[160px] left-1/2 -translate-x-1/2 flex gap-4 w-[450px]">
+                        <div class="flex-1 bg-[#1f2937]/90 h-[70px] rounded-[20px] flex flex-col items-center justify-center shadow-inner">
+                            <span data-i18n="accuracy" class="text-[0.7rem] text-gray-400 font-bold tracking-widest uppercase">ACCURACY</span>
+                            <span id="finalAccuracy" class="text-[#60a5fa] font-black text-2xl">0%</span>
+                        </div>
+                        <div class="flex-1 h-[70px] bg-[#1f2937]/90 rounded-[20px] shadow-inner flex items-center justify-center border-2 border-[#374151]">
+                            <span id="submitStatusText" class="text-[#9ca3af] font-black text-xl uppercase tracking-widest text-center px-4 w-full">MENYIMPAN...</span>
+                        </div>
+                    </div>
+
+                    <div id="starsContainer" class="absolute bottom-[20px] left-1/2 -translate-x-1/2 flex gap-4 items-center justify-center h-[120px]"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // ==========================================
+        // TRANSLATION & I18N SYSTEM
+        // ==========================================
+        const i18n = {
+            id: {
+                touchToStart: "SENTUH\nUNTUK MULAI", placeholderName: "NAMA HUNTER", lb: "LEADERBOARD", daily: "DAILY REWARD",
+                draw: "DRAW", hunter: "HUNTER", classic: "CLASSIC", rank: "RANK", play: "PLAY",
+                rank: "RANK", name: "NAME", score: "SCORE", accuracy: "ACCURACY",
+                equipped: "EQUIPPED", equip: "EQUIP", upgrade: "UPGRADE", locked: "LOCKED - DAPATKAN DI DRAW!",
+                settings: "PENGATURAN", lang: "BAHASA", claim: "KLAIM", claimed: "DIKLAIM",
+                totalScore: "TOTAL SKOR", submitScore: "KIRIM SKOR", submitted: "TERKIRIM",
+                menu: "MENU", playAgain: "MAIN\nLAGI", drawAction: "DRAW", day: "HARI", loading: "MEMUAT DATA",
+                bgm: "BGM", sfx: "SFX", exitConfirm: "KELUAR DARI GAME?", yes: "YA", no: "TIDAK",
+                skillLabel: "JURUS", activeLabel: "Durasi", cdLabel: "Waktu Jeda",
+                typeLabel: "Tipe", activeType: "Aktif", passiveType: "Pasif", noneLabel: "Tidak Ada",
+                savePhotoConfirm: "SIMPAN FOTO INI?", cancelBtn: "BATAL", startBtn: "START", saveBtn: "SIMPAN",
+                connLost: "SINYAL HILANG, SAYANG! 📡\nMenunggu koneksi...", waitSig: "TUNGGU SINYAL", surrender: "MENYERAH", rankOfflineWarning: "Gagal Upload Skor Rank karena Offline 💔",
+                frenzyDesc: "Waktu 30s. +2s tiap 5 kombo.\nUji kecepatan dan refleksmu!",
+                sniperDesc: "Tanpa batas waktu. 5 Peluru.\nMeleset = -1 Peluru.",
+                suddenDesc: "Tanpa batas waktu.\n1x Meleset = Game Over seketika.",
+                add2Sec: "+2 Detik", add3Sec: "+3 Detik", add1Ammo: "+1 Peluru", immune3s: "Kebal 3s"
+            },
+            en: {
+                touchToStart: "TOUCH\nTO START", placeholderName: "HUNTER NAME", lb: "LEADERBOARD", daily: "DAILY REWARD",
+                draw: "DRAW", hunter: "HUNTER", classic: "CLASSIC", rank: "RANK", play: "PLAY",
+                rank: "RANK", name: "NAME", score: "SCORE", accuracy: "ACCURACY",
+                equipped: "EQUIPPED", equip: "EQUIP", upgrade: "UPGRADE", locked: "LOCKED - GET IN DRAW!",
+                settings: "SETTINGS", lang: "LANGUAGE", claim: "CLAIM", claimed: "CLAIMED",
+                totalScore: "TOTAL SCORE", submitScore: "SUBMIT SCORE", submitted: "SUBMITTED",
+                menu: "MENU", playAgain: "PLAY\nAGAIN", drawAction: "DRAW", day: "DAY", loading: "LOAD RESOURCES",
+                bgm: "BGM", sfx: "SFX", exitConfirm: "EXIT THE GAME?", yes: "YES", no: "NO",
+                skillLabel: "SKILL", activeLabel: "Duration", cdLabel: "Cooldown",
+                typeLabel: "Type", activeType: "Active", passiveType: "Passive", noneLabel: "None",
+                savePhotoConfirm: "SAVE THIS PHOTO?", cancelBtn: "CANCEL", startBtn: "START", saveBtn: "SAVE",
+                connLost: "CONNECTION LOST! 📡\nWaiting for signal...", waitSig: "WAIT SIGNAL", surrender: "SURRENDER", rankOfflineWarning: "Failed to upload Rank Score (Offline) 💔",
+                frenzyDesc: "30s Time. +2s per 5 combo.\nTest your speed and reflex!",
+                sniperDesc: "No time limit. 5 Ammo.\nMiss = -1 Ammo.",
+                suddenDesc: "No time limit.\n1 Miss = Instant Game Over.",
+                add2Sec: "+2 Secs", add3Sec: "+3 Secs", add1Ammo: "+1 Ammo", immune3s: "Immune 3s"
+            },
+            mk: {
+                touchToStart: "TENTU'\nUNTU' MULAI", placeholderName: "ARENG HUNTER", lb: "PAPAN HUNTER", daily: "HADIAH SAHESSO",
+                draw: "TARIK", hunter: "HUNTER", classic: "KLASIK", rank: "RANK", play: "MAIN",
+                rank: "RANK", name: "ARENG", score: "SIKOR", accuracy: "AKURASI",
+                equipped: "DIPAKE MI", equip: "PAKE", upgrade: "KASINAI'", locked: "TAKONCI - AMBI' DI TARIK!",
+                settings: "ATORANG", lang: "BASA", claim: "AMBI'", claimed: "SUDAH DIAMBI'",
+                totalScore: "TOTAL SIKOR", submitScore: "KIRIM SIKOR", submitted: "TAKKIRIM",
+                menu: "MENU", playAgain: "MAIN\nPOLE", drawAction: "TARIK", day: "ESSO", loading: "MAMUAT DATA",
+                bgm: "BGM", sfx: "SFX", exitConfirm: "KALUARRI LINGKA?", yes: "IYO", no: "TENA",
+                skillLabel: "CARA'", activeLabel: "Wattu Aktip", cdLabel: "Wattu Passang",
+                typeLabel: "Macam", activeType: "Aktip", passiveType: "Pasip", noneLabel: "Tena",
+                savePhotoConfirm: "TAROI INI FOTO?", cancelBtn: "BATALLANG", startBtn: "GAS MI", saveBtn: "TAROI",
+                connLost: "ILANG SINYAL, SAYANG! 📡\nNattajeng koneksi...", waitSig: "TAJENG SINYAL", surrender: "MUNDUR MAMI", rankOfflineWarning: "Gagal Kirim Sikor Rank karna Offline 💔",
+                frenzyDesc: "Wattu 30s. +2s tiap 5 kombo.\nTes capatna jari-jarinu!",
+                sniperDesc: "Tena battas wattu. 5 Peluru.\nMeleset = -1 Peluru.",
+                suddenDesc: "Tena battas wattu.\nSikali Meleset = Langsung Game Over.",
+                add2Sec: "+2 Detik", add3Sec: "+3 Detik", add1Ammo: "+1 Peluru", immune3s: "Kebal 3s"
+            }
+        };
+
+        const langMap = { 'id': 'INDONESIA', 'en': 'ENGLISH', 'mk': 'MAKASSAR' };
+        let currentLang = localStorage.getItem('banggo_lang') || 'en';
+
+        let playerId = localStorage.getItem('banggo_player_id');
+        if (!playerId) {
+            playerId = 'user_' + Math.random().toString(36).substr(2, 9) + Date.now().toString(36);
+            localStorage.setItem('banggo_player_id', playerId);
+        }
+        
+        let globalBestScore = parseInt(localStorage.getItem('banggo_best_score')) || 0;
+        let tempPhotoBase64 = "";
+
+        function handlePhotoUpload(event) {
+            playSound('ui');
+            const file = event.target.files[0];
+            if (!file) return;
+            
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = new Image();
+                img.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    canvas.width = 90; canvas.height = 90;
+                    const ctx = canvas.getContext('2d');
+                    const size = Math.min(img.width, img.height);
+                    const sx = (img.width - size) / 2;
+                    const sy = (img.height - size) / 2;
+                    ctx.drawImage(img, sx, sy, size, size, 0, 0, 90, 90);
+                    
+                    tempPhotoBase64 = canvas.toDataURL('image/jpeg', 0.8);
+                    document.getElementById('photoConfirmPreview').src = tempPhotoBase64;
+                    openModal('photoConfirmLayer');
+                };
+                img.src = e.target.result;
+            };
+            reader.readAsDataURL(file);
+            event.target.value = '';
+        }
+
+        function cancelPhoto() { playSound('ui'); tempPhotoBase64 = ""; closeModal('photoConfirmLayer'); triggerFullscreen(); }
+
+        function confirmPhoto() {
+            playSound('ui');
+            if (tempPhotoBase64) {
+                localStorage.setItem('banggo_player_photo', tempPhotoBase64);
+                document.getElementById('profilePhotoImg').src = tempPhotoBase64;
+                document.getElementById('profilePhotoImg').classList.remove('hidden');
+                document.getElementById('profilePhotoPlaceholder').classList.add('hidden');
+                syncProfileToLeaderboard();
+            }
+            closeModal('photoConfirmLayer'); triggerFullscreen();
+        }
+
+        function updateLanguage() {
+            document.querySelectorAll('[data-i18n]').forEach(el => {
+                const key = el.getAttribute('data-i18n');
+                if(i18n[currentLang] && i18n[currentLang][key]) {
+                    if (el.tagName === 'INPUT' && el.type === 'text') el.placeholder = i18n[currentLang][key];
+                    else el.innerText = i18n[currentLang][key];
+                }
+            });
+
+            document.getElementById('mainPlayerName').placeholder = i18n[currentLang].placeholderName;
+            document.getElementById('langSelectorHeader').innerText = langMap[currentLang];
+            updateGameplaySelectionDesc();
+
+            if(document.getElementById('dailyLayer').classList.contains('active')) renderDailyGrid();
+            if(document.getElementById('charScreenLayer').classList.contains('active')) updateCharacterPreview();
+            
+            const btnDrawAction = document.getElementById('btnDrawAction');
+            if(btnDrawAction) { btnDrawAction.innerText = `${i18n[currentLang].drawAction} (100 🪙)`; }
+        }
+
+        const charDataRaw = [
+            { id: 'banggo', name: 'BANGGO', rarity: 'N', gender: 'Pria', skillName: 'Eagle Eye Focus', 
+              skillDescBase: { id: "Memperbesar area tembakan (Hitbox x2). Membantu agar tembakan tidak mudah meleset.", en: "Enlarges shooting area (Hitbox x2). Helps to prevent missing shots.", mk: "Kasilompo area tembakan (Hitbox x2). Kasi gampang ki nembak." }, 
+              duration: 5000, cooldown: 15000, durInc: 500, cdDec: 1000, isPassive: false,
+              lore: { id: "Pemburu veteran yang mengenal hutan ini seperti punggung tangannya sendiri. Ia mendedikasikan hidupnya untuk melindungi desa dari hama bangau emas.", en: "A veteran hunter who knows the forest like the back of his hand. He dedicated his life to protecting the village from golden crane pests.", mk: "Pemburu toayya yang naisseng kaminang ini kobbonga. Napassareang hidupna untu' jagai kampong pole hama bangau eja." }, 
+              img: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/character_banggo.png', cardImg: 'card_banggo' },
+            { id: 'eab', name: 'EAB', rarity: 'N', gender: 'Pria', skillName: 'Time Manipulation', 
+              skillDescBase: { id: "Melambatkan kecepatan terbang semua target sebesar 50%.", en: "Slows down all targets' flying speed by 50%.", mk: "Kasikurang lari terbangna semua target 50%." }, 
+              duration: 4000, cooldown: 20000, durInc: 500, cdDec: 1000, isPassive: false,
+              lore: { id: "Pemuda jenius yang menciptakan alat pengendali waktu dari barang rongsokan. Ia sering tersesat dalam dunianya sendiri yang penuh dengan roda gigi dan detak jam.", en: "A genius youth who invented a time-manipulating device from scavenged parts. He is often lost in his own world of gears and ticking clocks.", mk: "Anak muda palanro yang pare' alat pengendali wattu pole barang rombeng. Biasa bingung di dunianna sendiri yang panno roda gigi siagang jam." }, 
+              img: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/character_eab.png', cardImg: 'card_eab' },
+            { id: 'edy', name: 'EDY', rarity: 'N', gender: 'Pria', skillName: "Collector's Instinct", 
+              skillDescBase: { id: "Memberikan +2 Koin ekstra setiap target yang berhasil ditembak.", en: "Grants +2 extra Coins for every target successfully hit.", mk: "Nassare +2 Koin ektra punna kena target." }, 
+              duration: 5000, cooldown: 20000, durInc: 500, cdDec: 1000, isPassive: false,
+              lore: { id: "Pebisnis ulung yang melihat setiap bangau emas sebagai pundi-pundi koin terbang. Ia berburu murni untuk keuntungan dan monopoli pasar bulu emas.", en: "A savvy businessman who sees every golden crane as a flying coin pouch. He hunts purely for profit and the monopoly of the golden feather market.", mk: "Pabisnis jago yang kacinikang semua bangau eja battu koin. Anjallo berburu untu' untung siagang kuasai pasar bulu eja." }, 
+              img: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/character_edy.png', cardImg: 'card_edy' },
+            { id: 'ikra', name: 'IKRA', rarity: 'N', gender: 'Pria', skillName: 'Blind Luck', 
+              skillDescBase: { 
+                  id: "Keberuntungan konyol! Selama 4 detik, tembakan tidak perlu diarahkan. Cukup tekan tombol tembak, dan peluru akan otomatis mengenai 1 target acak di layar secara ajaib.", 
+                  en: "Silly luck! For 4s, no aiming required. Just tap shoot, and the bullet will magically hit 1 random target on screen.", 
+                  mk: "Hoki tong! 4 detik, tena perlu passang. Tembak mami sembarang, peluru pasti kena 1 burung di layar secara ajaib." 
+              }, 
+              duration: 4000, cooldown: 20000, durInc: 500, cdDec: 1000, isPassive: false,
+              lore: { id: "Pemuda desa dengan senapan rakitan kesayangannya. Meski ceroboh dan bidikannya sering meleset, ia memiliki keberuntungan aneh yang selalu memandu arah tembakannya.", en: "A village youth with his trusty homemade rifle. Though clumsy and often missing his mark, he possesses bizarre luck that guides his shots.", mk: "Anak muda kampung siagang bedil rakitanna. Walau saring meleset, nia' barakka' anehna yang selalu pimpin tembakanna." }, 
+              img: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/character_ikra.png', cardImg: 'card_ikra' },
+            { id: 'risa', name: 'RISA', rarity: 'R', gender: 'Wanita', skillName: 'Double Points', 
+              skillDescBase: { id: "Menggandakan perolehan poin per tembakan.", en: "Doubles point acquisition per shot.", mk: "Nakalidua poin na untu' sikali tembak." }, 
+              duration: 5000, cooldown: 15000, durInc: 500, cdDec: 1000, isPassive: false,
+              lore: { id: "Penembak jitu lincah yang sangat kompetitif. Baginya, berburu bukanlah tugas, melainkan olahraga ekstrem untuk meraih skor tertinggi di papan peringkat.", en: "An agile and highly competitive sniper. To her, hunting isn't a chore, but an extreme sport to secure the top spot on the leaderboard.", mk: "Penembak jitu lincah siagang saring balap. Untu' ia, berburu itu olahraga untu' dapa' ranking kaminang tinggia." }, 
+              img: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/character_risa.png', cardImg: 'card_risa' },
+            { id: 'remi', name: 'REMI', rarity: 'R', gender: 'Wanita', skillName: "Maid's Supply", 
+              skillDescBase: { 
+                  id: "Menyesuaikan dengan mode gameplay. Memberikan +3 detik di mode Frenzy, ATAU memulihkan 1 peluru di mode Sniper (maks. 5 peluru & 5x pakai), ATAU memberikan kekebalan dari 1x hukuman tembakan meleset selama 3 detik di mode Sudden Death.", 
+                  en: "Adapts to gameplay mode. Grants +3s in Frenzy, OR recovers 1 ammo in Sniper (max 5 ammo & 5x use), OR grants 3s immunity from 1 miss penalty in Sudden Death.", 
+                  mk: "Nasesuaikan siagang mode na. Nabbere +3 detik di Frenzy, ATAU napatamba 1 peluru di Sniper (maks. 5 peluru & 5x pake), ATAU kebal meleset 1x selama 3 detik di Sudden Death." 
+              }, 
+              duration: 0, cooldown: 20000, durInc: 0, cdDec: 1000, isPassive: false,
+              lore: { id: "Pelayan setia Jack yang tidak pernah mengeluh. Ia selalu membawa persediaan tanpa batas, memastikan tuannya tidak pernah kehabisan amunisi di medan pertempuran.", en: "Jack's fiercely loyal maid who never complains. She carries endless supplies, ensuring her master never runs out of ammo on the battlefield.", mk: "Pelayan setia Jack yang tena na saring ngeluh. Selalu bawa barang banya', pastikang tuanna tena na kehabisan peluru." }, 
+              img: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/character_remi.png', cardImg: 'card_remi' },
+            { id: 'lyra', name: 'LYRA', rarity: 'SR', gender: 'Wanita', skillName: "Sniper's Grace", isPassive: true,
+              skillDescBase: { id: "Memberikan Auto-Correction Shield. Karakter kebal dari 1x penalti tembakan meleset setiap 15 detik.", en: "Grants Auto-Correction Shield. Immune to 1 missed shot penalty every 15 seconds.", mk: "Nabbere tameng. Kebal 1x tembakan meleset tiap 15 detik." }, 
+              duration: 0, cooldown: 0, durInc: 0, cdDec: 0, 
+              lore: { id: "Penembak jitu dengan ketenangan luar biasa. Ritme napasnya yang stabil memungkinkannya untuk mengoreksi kesalahan sekecil apa pun sebelum peluru terlepas.", en: "A sniper with extraordinary composure. Her steady breathing allows her to correct even the slightest mistake before the bullet is fired.", mk: "Penembak jitu yang tanang dudu. Napasna yang stabil napabisa baji'i kesalahan sikebo' sebelum peluru lari." }, 
+              img: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/character_lyra.png', cardImg: 'card_lyra' },
+            { id: 'elena', name: 'ELENA', rarity: 'SR', gender: 'Wanita', skillName: 'Royal Decree', 
+              skillDescBase: { id: "Memaksa semua target di layar membesar 2x lipat, melambat 30%, dan menjatuhkan poin ganda selama 4 detik.", en: "Forces all targets to double in size, slow down by 30%, and drop double points for 4s.", mk: "Nakasalompo semua target 2x lipat, kasih pelan 30%, siagang poin ganda 4 detik." }, 
+              duration: 4000, cooldown: 25000, durInc: 500, cdDec: 1000, isPassive: false,
+              lore: { id: "Bangsawan elit yang menjadikan perburuan sebagai hiburan mewahnya. Aura kebangsawannya memengaruhi medan tempur, memaksa target untuk tunduk padanya.", en: "An elite noble who treats hunting as a luxurious pastime. Her royal aura commands the battlefield, forcing targets to submit to her presence.", mk: "Bangsawan elit yang pare' berburu jadi hiburan caradde'. Auranna pengaruh ki medan, napaksa target untu' tunduk." }, 
+              img: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/character_elena.png', cardImg: 'card_elena' },
+            { id: 'jack', name: 'JACK', rarity: 'SSR', gender: 'Pria', skillName: 'Gatling Overdrive', 
+              skillDescBase: { id: "Selama 4 detik, tembakan berubah menjadi area luas (Spread Shot), Cooldown menjadi 0, dan pemain kebal terhadap segala bentuk hukuman tembakan meleset.", en: "For 4s, shots become Spread Shot, 0 Cooldown, and immune to all missed shot penalties.", mk: "Selama 4 detik, tembakan jari lompo areana, 0 passang, siagang kebal pole hukuman meleset." }, 
+              duration: 4000, cooldown: 20000, durInc: 500, cdDec: 1000, isPassive: false,
+              lore: { id: "Mantan tentara bayaran elit dengan kecintaan pada artileri berat. Ia percaya bahwa tidak ada masalah yang tidak bisa diselesaikan dengan tembakan beruntun.", en: "A former elite mercenary with a love for heavy artillery. He believes there's no problem that can't be solved with overwhelming firepower.", mk: "Mantan tantara elit yang ngacini senjata lompo. Napercaya tena masalah yang tena na bisa diselesaikan siagang tembakan banya'." }, 
+              img: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/character_jack.png', cardImg: 'card_jack' },
+            { id: 'silas', name: 'SILAS', rarity: 'UR', gender: 'Pria', skillName: 'Time Freeze', 
+              skillDescBase: { id: "Menghentikan batas waktu permainan, membekukan pergerakan semua burung, dan menghapus sistem hukuman tembakan meleset sepenuhnya selama 3 detik.", en: "Stops the timer, freezes all birds, and completely removes missed shot penalties for 3s.", mk: "Kasi pelan wattu, kasi beku semua burung, siagang hilang hukuman meleset 3 detik." }, 
+              duration: 3000, cooldown: 30000, durInc: 500, cdDec: 1000, isPassive: false,
+              lore: { id: "Sang Pengendali Waktu yang misterius. Keberadaannya melampaui usia manusia biasa, ia berburu sekadar untuk mengisi kekosongan keabadian.", en: "The enigmatic Time Controller. His existence transcends human age, hunting merely to pass the endless void of eternity.", mk: "Pangendali Wattu yang misterius. Hidupna lebih toayya pole tau biasa, anjallo berburu cuman untu' isi wattu kosongna." }, 
+              img: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/character_silas.png', cardImg: 'card_silas' }
+        ];
+
+        const rarityOrder = { 'N': 1, 'R': 2, 'SR': 3, 'SSR': 4, 'UR': 5 };
+        const charData = charDataRaw.sort((a, b) => rarityOrder[a.rarity] - rarityOrder[b.rarity]);
+
+        let unlockedChars = JSON.parse(localStorage.getItem('banggo_unlocked_chars')) || ['banggo'];
+        let equippedCharId = localStorage.getItem('banggo_equipped') || 'banggo';
+        let charLevels = JSON.parse(localStorage.getItem('banggo_char_levels')) || { banggo: 1, eab: 1, edy: 1, risa: 1, lyra: 1, jack: 1, silas: 1, elena: 1, remi: 1, ikra: 1 };
+        let currentPreviewIndex = 0;
+
+        let activeSkill = null; let skillEndTime = 0; let skillCooldownEndTime = 0; let skillBtnRect = { x: 0, y: 0, w: 80, h: 80 }; let isSkillBtnPressed = false;
+        
+        let lyraCooldownTimer = 0;
+        let remiSuddenImmunityEnd = 0;
+        let remiSniperSkillCount = 0;
+
+        const SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbxMWHq5XShl6EoSep8qtA1tdt378yxSEfelcby6BWbP_nFFeyAko2b39bz5-qplzC-kvg/exec';
+        
+        let banggoCoin = parseInt(localStorage.getItem('banggo_coin')) || 0;
+        let banggoFeathers = parseInt(localStorage.getItem('banggo_feathers')) || 0;
+        let lastLoginDate = localStorage.getItem('banggo_last_login') || "";
+        let loginStreak = parseInt(localStorage.getItem('banggo_login_streak')) || 0;
+        
+        let allowBGM = true; let allowSFX = true;
+
+        let gameMode = 'classic';
+        let gameplayType = null;
+        let sniperAmmo = 5;
+        let isGachaRolling = false;
+        let gachaInterval = null;
+
+        const notifQueue = [];
+        let isNotifPlaying = false;
+
+        function showTopNotif(iconSrc, text) {
+            notifQueue.push({ iconSrc, text });
+            if (!isNotifPlaying) playNextNotif();
+        }
+
+        function playNextNotif() {
+            if (notifQueue.length === 0) { isNotifPlaying = false; return; }
+            isNotifPlaying = true; const notif = notifQueue.shift();
+            
+            const container = document.getElementById('topNotifContainer');
+            const el = document.createElement('div');
+            el.className = 'bg-[#3b413a] border-2 border-[#576056] rounded-[10px] px-4 py-[5px] flex items-center justify-center gap-[10px] shadow-[0_4px_10px_rgba(0,0,0,0.5)] transform -translate-y-[150%] opacity-0 transition-all duration-300 pointer-events-none min-w-[166px] h-[46px]';
+            el.innerHTML = `<img src="${notif.iconSrc}" class="w-[21px] h-[21px] object-contain drop-shadow-md"><span class="text-[#fde047] font-bold text-[13px] drop-shadow-md whitespace-pre-wrap text-center leading-tight">${notif.text}</span>`;
+            container.appendChild(el);
+
+            requestAnimationFrame(() => { requestAnimationFrame(() => { el.classList.remove('-translate-y-[150%]', 'opacity-0'); el.classList.add('translate-y-0', 'opacity-100'); }); });
+            setTimeout(() => { el.classList.remove('translate-y-0', 'opacity-100'); el.classList.add('-translate-y-[150%]', 'opacity-0'); setTimeout(() => { el.remove(); playNextNotif(); }, 300); }, 2500);
+        }
+
+        function playTitleInAnim() {
+            const titleLayer = document.getElementById('titleLayer');
+            titleLayer.classList.remove('hidden');
+            
+            const topW = document.getElementById('uiTopWrapper');
+            const botW = document.getElementById('uiBottomWrapper');
+            const leftW = document.getElementById('uiLeftWrapper');
+            const rightW = document.getElementById('uiRightWrapper');
+            
+            [topW, botW, leftW, rightW].forEach(el => {
+                el.classList.remove('anim-top-in', 'anim-top-out', 'anim-bot-in', 'anim-bot-out', 'anim-left-in', 'anim-left-out', 'anim-right-in', 'anim-right-out');
+                void el.offsetWidth;
+            });
+
+            topW.classList.add('anim-top-in');
+            botW.classList.add('anim-bot-in');
+            
+            setTimeout(() => {
+                leftW.classList.add('anim-left-in');
+                rightW.classList.add('anim-right-in');
+                
+                setTimeout(() => {
+                    if(gameState === 'MENU') document.getElementById('titleChar').classList.add('anim-char-idle');
+                }, 800);
+            }, 500);
+        }
+
+        function playTitleOutAnim(callback) {
+            document.getElementById('titleChar').classList.remove('anim-char-idle');
+
+            const topW = document.getElementById('uiTopWrapper');
+            const botW = document.getElementById('uiBottomWrapper');
+            const leftW = document.getElementById('uiLeftWrapper');
+            const rightW = document.getElementById('uiRightWrapper');
+            
+            [topW, botW, leftW, rightW].forEach(el => {
+                el.classList.remove('anim-top-in', 'anim-top-out', 'anim-bot-in', 'anim-bot-out', 'anim-left-in', 'anim-left-out', 'anim-right-in', 'anim-right-out');
+                void el.offsetWidth;
+            });
+
+            leftW.classList.add('anim-left-out');
+            rightW.classList.add('anim-right-out');
+            topW.classList.add('anim-top-out');
+            botW.classList.add('anim-bot-out');
+
+            setTimeout(() => {
+                if(callback) callback();
+            }, 800);
+        }
+
+        window.addEventListener('offline', handleOffline);
+        window.addEventListener('online', handleOnline);
+
+        function handleOffline() {
+            if (gameState === 'PLAY' && gameMode === 'rank') {
+                pauseGame();
+                openModal('disconnectLayer');
+            }
+        }
+
+        function handleOnline() {
+            const pendingSync = localStorage.getItem('banggo_need_sync');
+            if (pendingSync) {
+                try {
+                    const data = JSON.parse(pendingSync);
+                    saveScoreAPI(playerId, data.name, data.score, data.acc, data.photo).then(() => {
+                        showTopNotif(images.iconFeather ? images.iconFeather.src : '', "Skor Offline Berhasil\nDi-Upload!");
+                        localStorage.removeItem('banggo_need_sync');
+                    });
+                } catch(e) {}
+            }
+        }
+
+        function surrenderRank() {
+            playSound('ui');
+            closeModal('disconnectLayer');
+            backToMenu();
+        }
+
+        function checkConnectionToResume() {
+            playSound('ui');
+            if (navigator.onLine) {
+                closeModal('disconnectLayer');
+                resumeGame();
+            } else {
+                showTopNotif(images.btnExit ? images.btnExit.src : '', "Koneksi masih terputus.");
+            }
+        }
+
+        async function syncProfileToLeaderboard() {
+            const name = document.getElementById('mainPlayerName').value.trim() || 'HUNTER';
+            const photo = localStorage.getItem('banggo_player_photo') || '';
+            
+            if (globalBestScore > 0) {
+                showTopNotif(images.btnSetting ? images.btnSetting.src : '', "UPDATING PROFILE...");
+                let localData = JSON.parse(localStorage.getItem('banggo_lb_rank')) || [];
+                let myRecord = localData.find(x => x.id === playerId);
+                let accToSend = myRecord ? myRecord.accuracy : "0%";
+
+                try {
+                    if (SCRIPT_URL.includes('script.google.com')) { 
+                        let fd = new FormData(); 
+                        fd.append('id', playerId); fd.append('name', name); fd.append('score', globalBestScore); 
+                        fd.append('accuracy', accToSend); fd.append('photo', photo);
+                        await fetch(SCRIPT_URL, { method: 'POST', body: fd, mode: 'no-cors' }); 
+                    }
+                    showTopNotif(images.iconFeather ? images.iconFeather.src : '', "PROFILE LEADERBOARD\nUPDATED!");
+                } catch(e) {
+                    showTopNotif(images.btnExit ? images.btnExit.src : '', "UPDATE FAILED!\nNETWORK ERROR");
+                }
+            } else {
+                showTopNotif(images.iconFeather ? images.iconFeather.src : '', "PROFILE SAVED!\n(NO HIGHSCORE YET)");
+            }
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const nameInput = document.getElementById('mainPlayerName');
+            const savedName = localStorage.getItem('banggo_player_name');
+            if (savedName) nameInput.value = savedName;
+            
+            nameInput.addEventListener('change', (e) => { 
+                localStorage.setItem('banggo_player_name', e.target.value.trim() || 'HUNTER');
+                syncProfileToLeaderboard();
+                triggerFullscreen();
+            });
+            nameInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') nameInput.blur(); });
+            
+            document.getElementById('uiBestScore').innerText = globalBestScore;
+            const savedPhoto = localStorage.getItem('banggo_player_photo');
+            if (savedPhoto) {
+                document.getElementById('profilePhotoImg').src = savedPhoto;
+                document.getElementById('profilePhotoImg').classList.remove('hidden');
+                document.getElementById('profilePhotoPlaceholder').classList.add('hidden');
+            }
+
+            updateLanguage(); updateTitleCharacterImage(); updateNotifications();
+            handleOnline();
+            
+            document.addEventListener('click', function(event) {
+                const container = document.getElementById('langDropdownContainer');
+                if (container && !container.contains(event.target)) document.getElementById('langDropdown').classList.add('hidden');
+            });
+        });
+
+        function updateNotifications() {
+            const today = new Date().toDateString(); const canClaimDaily = lastLoginDate !== today;
+            const dailyBtn = document.getElementById('btn-login'); let dailyDot = document.getElementById('notif-daily');
+            if(!dailyDot) { dailyDot = document.createElement('div'); dailyDot.id = 'notif-daily'; dailyDot.className = 'absolute -top-2 -right-2 w-6 h-6 bg-red-600 rounded-full border-2 border-white shadow-md animate-bounce pointer-events-none z-50'; dailyBtn.style.position = 'relative'; dailyBtn.appendChild(dailyDot); }
+            dailyDot.style.display = canClaimDaily ? 'block' : 'none';
+
+            let canUpgradeAny = false;
+            unlockedChars.forEach(charId => { const stats = getSkillStats(charId); if (stats.lvl < 3 && banggoFeathers >= stats.lvl) canUpgradeAny = true; });
+            const hunterBtn = document.getElementById('btn-hunter'); let hunterDot = document.getElementById('notif-hunter');
+            if(!hunterDot) { hunterDot = document.createElement('div'); hunterDot.id = 'notif-hunter'; hunterDot.className = 'absolute -top-2 -right-2 w-6 h-6 bg-red-600 rounded-full border-2 border-white shadow-md animate-bounce pointer-events-none z-50'; hunterBtn.style.position = 'relative'; hunterBtn.appendChild(hunterDot); }
+            hunterDot.style.display = canUpgradeAny ? 'block' : 'none';
+        }
+
+        function saveRPGData() {
+            localStorage.setItem('banggo_coin', banggoCoin); localStorage.setItem('banggo_feathers', banggoFeathers);
+            localStorage.setItem('banggo_unlocked_chars', JSON.stringify(unlockedChars)); localStorage.setItem('banggo_equipped', equippedCharId);
+            localStorage.setItem('banggo_char_levels', JSON.stringify(charLevels)); localStorage.setItem('banggo_last_login', lastLoginDate); localStorage.setItem('banggo_login_streak', loginStreak);
+            updateRPG_UI(); updateNotifications();
+        }
+
+        function updateRPG_UI() { document.getElementById('uiBanggoCoin').innerText = banggoCoin; document.getElementById('uiBanggoFeather').innerText = banggoFeathers; }
+        function updateTitleCharacterImage() { const charObj = charData.find(c => c.id === equippedCharId); if(charObj && images[`char_${charObj.id}`]) { document.getElementById('titleChar').src = images[`char_${charObj.id}`].src; } }
+        function getSkillStats(charId) { const char = charData.find(c => c.id === charId); const lvl = charLevels[charId] || 1; const currentDur = char.duration + (lvl - 1) * char.durInc; const currentCd = char.cooldown - (lvl - 1) * char.cdDec; return { dur: currentDur, cd: currentCd, lvl: lvl }; }
+
+        function openModal(layerId) { const layer = document.getElementById(layerId); layer.classList.remove('hidden'); void layer.offsetWidth; layer.classList.add('active'); }
+        function closeModal(layerId, callback) { const layer = document.getElementById(layerId); layer.classList.remove('active'); setTimeout(() => { layer.classList.add('hidden'); if(callback) callback(); }, 300); }
+
+        function showSetting() { playTitleOutAnim(() => { document.getElementById('titleLayer').classList.add('hidden'); openModal('settingLayer'); }); }
+        function hideSetting() { playSound('ui'); closeModal('settingLayer', () => playTitleInAnim()); }
+        function confirmExitApp() { playSound('ui'); openModal('exitLayer'); }
+        function cancelExit() { playSound('ui'); closeModal('exitLayer'); }
+        function exitApp() { playSound('ui'); window.close(); }
+        
+        function pauseGame() { if(gameState !== 'PLAY') return; playSound('ui'); gameState = 'PAUSE'; openModal('pauseLayer'); }
+        function resumeGame() { playSound('ui'); closeModal('pauseLayer'); gameState = 'PLAY'; }
+        function quitToMenu() { playSound('ui'); closeModal('pauseLayer'); backToMenu(); }
+
+        function toggleAudioSetting() {
+            allowBGM = document.getElementById('toggleBGM').checked; allowSFX = document.getElementById('toggleSFX').checked;
+            if(!allowBGM) { stopSound('bgm'); stopSound('combo_bgm'); } else { if(audioBank['bgm']) audioBank['bgm'].volume = 1.0; if(audioBank['combo_bgm'] && comboCount >= 3) audioBank['combo_bgm'].volume = 1.0; if (gameState === 'MENU' || gameState === 'WAITING_START') playTitleBGM(); }
+            if(!allowSFX) { stopSound('ambience'); stopCharScreenVoice(); stopGameplayVoice(); } else { if(audioBank['ambience']) audioBank['ambience'].volume = 0.8; ensureAmbiencePlaying(); playSound('ui'); }
+        }
+        function toggleLangDropdown() { playSound('ui'); document.getElementById('langDropdown').classList.toggle('hidden'); }
+        function selectLang(langCode) { playSound('ui'); currentLang = langCode; localStorage.setItem('banggo_lang', currentLang); document.getElementById('langDropdown').classList.add('hidden'); updateLanguage(); }
+
+        const GACHA_COST = 100; let isDrawing = false;
+        function showGacha() { playTitleOutAnim(() => { document.getElementById('titleLayer').classList.add('hidden'); document.getElementById('gachaResultBox').innerHTML = '<span class="text-pink-400 text-8xl font-black drop-shadow-lg">❓</span>'; updateRPG_UI(); const btnDraw = document.getElementById('btnDrawAction'); btnDraw.innerText = `${i18n[currentLang].drawAction} (100 🪙)`; if (banggoCoin < GACHA_COST) { btnDraw.style.filter = 'grayscale(100%)'; btnDraw.style.cursor = 'not-allowed'; } else { btnDraw.style.filter = 'none'; btnDraw.style.cursor = 'pointer'; } openModal('gachaLayer'); }); }
+        function hideGacha() { if(isDrawing) return; playSound('ui'); closeModal('gachaLayer', () => playTitleInAnim()); }
+
+        function pullGacha() {
+            if (isDrawing) return; const btnDraw = document.getElementById('btnDrawAction');
+            if (banggoCoin < GACHA_COST) { playSound('ui'); btnDraw.classList.add('animate-pulse'); setTimeout(() => btnDraw.classList.remove('animate-pulse'), 300); return; }
+            isDrawing = true; banggoCoin -= GACHA_COST; saveRPGData(); btnDraw.style.filter = 'grayscale(100%)'; btnDraw.style.cursor = 'not-allowed'; playSound('draw');
+            
+            const resultBox = document.getElementById('gachaResultBox'); 
+            const flashPool = [images.itemCoin.src, images.card_banggo.src, images.card_eab.src, images.card_edy.src, images.card_risa.src]; 
+            if(images.card_lyra) flashPool.push(images.card_lyra.src); if(images.card_jack) flashPool.push(images.card_jack.src); if(images.card_silas) flashPool.push(images.card_silas.src); if(images.card_elena) flashPool.push(images.card_elena.src); if(images.card_remi) flashPool.push(images.card_remi.src); if(images.card_ikra) flashPool.push(images.card_ikra.src);
+            
+            let flashIdx = 0; resultBox.innerHTML = `<img id="drawFlashImg" src="${flashPool[0]}" class="draw-flashing w-[80%] h-[80%] object-contain drop-shadow-lg">`;
+            const flashImg = document.getElementById('drawFlashImg'); const flashInterval = setInterval(() => { flashIdx = (flashIdx + 1) % flashPool.length; flashImg.src = flashPool[flashIdx]; }, 100); 
+            
+            setTimeout(() => {
+                clearInterval(flashInterval); stopSound('draw'); playSound('reward'); const roll = Math.random(); let resultHtml = "";
+                if (roll < 0.60) {
+                    const coinWon = Math.floor(Math.random() * 81) + 20; banggoCoin += coinWon;
+                    resultHtml = `<img src="${images.itemCoin.src}" class="anim-gacha-result max-w-[60%] max-h-[60%] object-contain drop-shadow-2xl"><span class="anim-gacha-result text-yellow-400 text-5xl font-black mt-6 drop-shadow-lg border-black" style="-webkit-text-stroke: 2px #422006;">+ ${coinWon} 🪙</span>`;
+                } else {
+                    const isRare = Math.random() < 0.20; let targetRarity = 'N';
+                    if (isRare) { const r = Math.random(); if (r < 0.02) targetRarity = 'UR'; else if (r < 0.1) targetRarity = 'SSR'; else if (r < 0.4) targetRarity = 'SR'; else targetRarity = 'R'; }
+                    let pool = charData.filter(c => c.rarity === targetRarity); if(pool.length === 0) pool = charData.filter(c => c.rarity === 'N'); 
+                    const randomChar = pool[Math.floor(Math.random() * pool.length)]; const cardImgSrc = images[randomChar.cardImg] ? images[randomChar.cardImg].src : images.card_risa.src;
+
+                    if (unlockedChars.includes(randomChar.id)) { banggoCoin += 200; resultHtml = `<img src="${cardImgSrc}" class="anim-gacha-result max-w-[60%] max-h-[60%] object-contain rounded-[1.5rem] drop-shadow-2xl border-4 border-yellow-400"><span class="anim-gacha-result text-orange-400 text-4xl font-bold mt-6 text-center drop-shadow-lg bg-black/50 px-4 py-2 rounded-xl">Duplicate Hunter!<br><span class="text-yellow-400 text-3xl">+200 🪙</span></span></span>`; } 
+                    else { unlockedChars.push(randomChar.id); resultHtml = `<img src="${cardImgSrc}" class="anim-gacha-result max-w-[60%] max-h-[60%] object-contain rounded-[1.5rem] drop-shadow-[0_0_40px_rgba(251,191,36,0.9)]"><span class="anim-gacha-result text-green-400 text-5xl font-black mt-6 drop-shadow-lg bg-black/50 px-6 py-2 rounded-xl border-2 border-green-400">✨ NEW HUNTER! ✨</span>`; }
+                }
+                saveRPGData(); resultBox.innerHTML = resultHtml; setTimeout(() => { isDrawing = false; if (banggoCoin >= GACHA_COST) { btnDraw.style.filter = 'none'; btnDraw.style.cursor = 'pointer'; } }, 500); 
+            }, 2500); 
+        }
+
+        let isCharAnimating = false;
+        function showCharacterScreen() {
+            playTitleOutAnim(() => {
+                document.getElementById('titleLayer').classList.add('hidden');
+                const eqIndex = charData.findIndex(c => c.id === equippedCharId); currentPreviewIndex = eqIndex >= 0 ? eqIndex : 0; updateCharacterPreview();
+                openModal('charScreenLayer'); setTimeout(() => { document.getElementById('charScreenDisplay').classList.remove('opacity-0'); updateScrollIndicators(); playCharScreenVoice(charData[currentPreviewIndex].id, 'character'); }, 300);
+            });
+        }
+        function closeCharacterScreen() {
+            playSound('ui'); stopCharScreenVoice(); document.getElementById('charScreenDisplay').classList.add('opacity-0');
+            closeModal('charScreenLayer', () => {
+                updateTitleCharacterImage();
+                playTitleInAnim();
+            });
+        }
+        
+        // FIX DARI SERA: Safety check agar suara nggak muter kalau layar udah diclose
+        function animateCharChange(direction) {
+            if(isCharAnimating) return; isCharAnimating = true; playSound('ui');
+            const displayImg = document.getElementById('charScreenDisplay'); displayImg.style.transform = `translateX(${direction * -150}%)`; displayImg.style.opacity = '0';
+            setTimeout(() => {
+                currentPreviewIndex += direction; if (currentPreviewIndex < 0) currentPreviewIndex = charData.length - 1; if (currentPreviewIndex >= charData.length) currentPreviewIndex = 0; updateCharacterPreview();
+                displayImg.style.transition = 'none'; displayImg.style.transform = `translateX(${direction * 150}%)`; void displayImg.offsetWidth; 
+                displayImg.style.transition = 'transform 0.4s cubic-bezier(0.22, 1, 0.36, 1), opacity 0.3s'; displayImg.style.transform = 'translateX(0)'; displayImg.style.opacity = '1';
+                setTimeout(() => { 
+                    isCharAnimating = false; 
+                    updateScrollIndicators(); 
+                    if (document.getElementById('charScreenLayer').classList.contains('active')) {
+                        playCharScreenVoice(charData[currentPreviewIndex].id, 'character'); 
+                    }
+                }, 400);
+            }, 300);
+        }
+        
+        function updateScrollIndicators() {
+            const scrollContainer = document.getElementById('charDetailScrollWrapper'); const indTop = document.getElementById('scrollIndTop'); const indBottom = document.getElementById('scrollIndBottom');
+            if(!scrollContainer || !indTop || !indBottom) return; const isScrollable = scrollContainer.scrollHeight > scrollContainer.clientHeight + 2; 
+            if (!isScrollable) { indTop.style.opacity = '0'; indBottom.style.opacity = '0'; return; }
+            const isAtTop = scrollContainer.scrollTop <= 2; const isAtBottom = Math.abs(scrollContainer.scrollHeight - scrollContainer.clientHeight - scrollContainer.scrollTop) <= 2;
+            indTop.style.opacity = isAtTop ? '0' : '1'; indBottom.style.opacity = isAtBottom ? '0' : '1';
+        }
+        document.getElementById('charDetailScrollWrapper').addEventListener('scroll', updateScrollIndicators);
+
+        function updateCharacterPreview() {
+            const char = charData[currentPreviewIndex]; const isUnlocked = unlockedChars.includes(char.id); const isEquipped = equippedCharId === char.id; const stats = getSkillStats(char.id);
+            document.getElementById('charNameDisplay').innerText = char.name; document.getElementById('charDetailNameDisplay').innerText = char.name;
+            const thumbSrc = images[char.cardImg] ? images[char.cardImg].src : ''; const charCardThumb = document.getElementById('charCardThumb'); charCardThumb.src = thumbSrc; charCardThumb.style.filter = 'none'; 
+            
+            let rarityColor = ''; let blinkClass = '';
+            if (char.rarity === 'UR') { rarityColor = 'text-transparent bg-clip-text bg-gradient-to-r from-red-500 via-yellow-400 to-blue-500'; blinkClass = 'anim-rarity-blink'; }
+            else if (char.rarity === 'SSR') { rarityColor = 'text-[#ffd700] drop-shadow-[0_0_5px_rgba(255,215,0,0.8)]'; blinkClass = 'anim-rarity-blink'; }
+            else if (char.rarity === 'SR') rarityColor = 'text-yellow-300';
+            else if (char.rarity === 'R') rarityColor = 'text-blue-400';
+            else rarityColor = 'text-green-400';
+            const rarityNames = { 'N': 'Normal (N)', 'R': 'Rare (R)', 'SR': 'Super Rare (SR)', 'SSR': 'Super Super Rare (SSR)', 'UR': 'Ultra Rare (UR)' };
+            const rarityEl = document.getElementById('charRarityDisplay'); rarityEl.className = `absolute top-0 right-0 text-2xl font-black uppercase tracking-widest drop-shadow-md text-right ${rarityColor} ${blinkClass}`; rarityEl.innerText = rarityNames[char.rarity];
+            document.getElementById('charGenderDisplay').innerText = char.gender; document.getElementById('charLoreDisplay').innerText = char.lore[currentLang];
+            
+            let typeText = char.isPassive ? i18n[currentLang].passiveType : i18n[currentLang].activeType; let activeText = (char.isPassive || char.duration===0) ? '∞' : (stats.dur/1000) + 's'; let cdText = (char.isPassive || char.cooldown===0) ? i18n[currentLang].noneLabel : (stats.cd/1000) + 's';
+            document.getElementById('charSkillTitle').innerHTML = `${i18n[currentLang].skillLabel} : <span class="text-white">${char.skillName} (Lv.${stats.lvl})</span>`; document.getElementById('charSkillDesc').innerText = `${i18n[currentLang].typeLabel} : ${typeText}\n\n${char.skillDescBase[currentLang]}\n${i18n[currentLang].activeLabel} : ${activeText} | ${i18n[currentLang].cdLabel} : ${cdText}`;
+            
+            const displayImg = document.getElementById('charScreenDisplay'); if(images[`char_${char.id}`]) { displayImg.src = images[`char_${char.id}`].src; } displayImg.style.filter = isUnlocked ? "none" : "grayscale(100%) brightness(40%)";
+            const btnEquip = document.getElementById('btnEquipChar'); const btnUpgrade = document.getElementById('btnUpgradeChar'); const lockedMsg = document.getElementById('charLockedMsg');
+            btnEquip.className = 'btn-equip btn-equip-main flex-1 transition-transform !text-2xl !py-5'; 
+            if (!isUnlocked) { lockedMsg.classList.remove('hidden'); btnEquip.classList.add('hidden'); btnUpgrade.classList.add('hidden'); } 
+            else {
+                lockedMsg.classList.add('hidden'); btnEquip.classList.remove('hidden'); btnUpgrade.classList.remove('hidden');
+                if (isEquipped) { btnEquip.innerText = i18n[currentLang].equipped; btnEquip.classList.add('equipped'); btnEquip.disabled = true; } else { btnEquip.innerText = i18n[currentLang].equip; btnEquip.disabled = false; }
+                if (stats.lvl >= 3) { btnUpgrade.innerText = "MAX LEVEL"; btnUpgrade.disabled = true; } else { const cost = stats.lvl; btnUpgrade.innerHTML = `${i18n[currentLang].upgrade} (${cost} <img src="${images.iconFeather.src}" class="inline w-6 h-6 object-contain align-middle -mt-1">)`; btnUpgrade.disabled = banggoFeathers < cost; }
+            }
+            setTimeout(updateScrollIndicators, 50);
+        }
+
+        function upgradePreviewedChar() { const char = charData[currentPreviewIndex]; const stats = getSkillStats(char.id); if (stats.lvl >= 3) return; const cost = stats.lvl; if (banggoFeathers >= cost) { banggoFeathers -= cost; charLevels[char.id] = stats.lvl + 1; saveRPGData(); playSound('ui'); playSound('reward'); updateCharacterPreview(); showLevelUpFx(); } }
+        function showLevelUpFx() { const fxObj = document.getElementById('levelUpEffect'); fxObj.classList.remove('hidden', 'anim-level-up'); void fxObj.offsetWidth; fxObj.classList.add('anim-level-up'); setTimeout(() => { fxObj.classList.add('hidden'); fxObj.classList.remove('anim-level-up'); }, 1500); }
+        function equipPreviewedChar() { const char = charData[currentPreviewIndex]; if (!unlockedChars.includes(char.id) || equippedCharId === char.id) return; playSound('ui'); equippedCharId = char.id; saveRPGData(); updateCharacterPreview(); playCharScreenVoice(char.id, 'equipped'); }
+
+        async function getLeaderboard() {
+            try { const response = await fetch(SCRIPT_URL, { method: 'GET', redirect: 'follow' }); if (!response.ok) throw new Error(); return await response.json(); } 
+            catch (error) { return JSON.parse(localStorage.getItem('banggo_lb_rank')) || []; }
+        }
+
+        async function saveScoreAPI(id, name, score, accuracy, photo) {
+            let localData = JSON.parse(localStorage.getItem('banggo_lb_rank')) || []; 
+            let existing = localData.find(x => x.id === id);
+            if(existing) { if(score > existing.score) { existing.score = score; existing.name = name; existing.accuracy = accuracy; existing.photo = photo; } } 
+            else { localData.push({id: id, name: name, score: score, accuracy: accuracy, photo: photo}); }
+            localData.sort((a,b) => b.score - a.score); localStorage.setItem('banggo_lb_rank', JSON.stringify(localData.slice(0, 31)));
+            
+            try { 
+                if (SCRIPT_URL.includes('script.google.com')) { 
+                    let fd = new FormData(); 
+                    fd.append('id', id); fd.append('name', name); fd.append('score', score); fd.append('accuracy', accuracy); fd.append('photo', photo);
+                    await fetch(SCRIPT_URL, { method: 'POST', body: fd, mode: 'no-cors' }); 
+                } 
+            } catch(e) { throw e; }
+        }
+
+        async function renderLeaderboardTable() {
+            const tbody = document.getElementById('lb-table-body'); tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #9ca3af;">Loading Hunters...</td></tr>';
+            const data = await getLeaderboard(); tbody.innerHTML = '';
+            if (!data || data.length === 0) { tbody.innerHTML = '<tr><td colspan="4" style="text-align: center; color: #9ca3af;">No Data</td></tr>'; return; }
+            
+            data.forEach((row, index) => { 
+                let accVal = row.accuracy || "0%";
+                if(typeof accVal === 'number' || (typeof accVal === 'string' && !accVal.includes('%'))) { let parsed = parseFloat(accVal); if (parsed > 0 && parsed <= 1) parsed *= 100; accVal = Math.round(parsed) + '%'; }
+                let photoHtml = row.photo ? `<img src="${row.photo}" class="inline-block w-10 h-10 rounded-full border-2 border-yellow-400 align-middle mr-3 object-cover shadow-lg shrink-0">` : `<span class="inline-block w-10 h-10 rounded-full border-2 border-gray-400 bg-gray-700 align-middle mr-3 text-center text-xl leading-10 shrink-0 shadow-lg">👤</span>`;
+                
+                let rowStyle = row.id === playerId ? 'background: rgba(250, 204, 21, 0.2);' : '';
+                
+                const tr = document.createElement('tr'); 
+                tr.style = rowStyle;
+                tr.innerHTML = `<td>#${row.rank || index + 1}</td>
+                                <td><div class="flex items-center">${photoHtml} <span class="truncate max-w-[200px]">${(row.name || "Anonim").toUpperCase()}</span></div></td>
+                                <td>${row.score !== undefined ? row.score : 0}</td>
+                                <td>${accVal}</td>`; 
+                tbody.appendChild(tr); 
+            });
+        }
+
+        function showLeaderboard() { playTitleOutAnim(() => { document.getElementById('titleLayer').classList.add('hidden'); openModal('leaderboardLayer'); renderLeaderboardTable(); }); }
+        function hideLeaderboard() { playSound('ui'); closeModal('leaderboardLayer', () => playTitleInAnim()); }
+        
+        async function submitScoreDirect(acc) {
+            const statusEl = document.getElementById('submitStatusText');
+            statusEl.className = "text-[#9ca3af] font-black text-xl uppercase tracking-widest text-center px-4 w-full";
+            
+            if (gameMode === 'classic') { statusEl.innerText = "CLASSIC MODE"; return; }
+
+            if (score > globalBestScore || globalBestScore === 0) {
+                globalBestScore = score; localStorage.setItem('banggo_best_score', globalBestScore); document.getElementById('uiBestScore').innerText = globalBestScore;
+                
+                if (!navigator.onLine) {
+                    statusEl.innerText = "SAVED OFFLINE"; let playerName = document.getElementById('mainPlayerName').value.trim() || 'HUNTER'; let photo = localStorage.getItem('banggo_player_photo') || '';
+                    localStorage.setItem('banggo_need_sync', JSON.stringify({name: playerName, score: score, acc: acc+"%", photo: photo}));
+                    showTopNotif(images.btnExit ? images.btnExit.src : '', i18n[currentLang].rankOfflineWarning); return;
+                }
+
+                statusEl.innerText = "UPLOADING...";
+                try {
+                    let playerName = document.getElementById('mainPlayerName').value.trim() || 'HUNTER'; let photo = localStorage.getItem('banggo_player_photo') || '';
+                    
+                    const timeoutPromise = new Promise((_, reject) => setTimeout(() => reject(new Error('timeout')), 10000));
+                    await Promise.race([saveScoreAPI(playerId, playerName, score, acc + "%", photo), timeoutPromise]);
+
+                    statusEl.innerText = "NEW RECORD SAVED!"; statusEl.classList.remove('text-[#9ca3af]'); statusEl.classList.add('text-[#4ade80]');
+                } catch (error) {
+                    statusEl.innerText = "NETWORK ERROR"; statusEl.classList.remove('text-[#9ca3af]'); statusEl.classList.add('text-[#ef4444]');
+                    localStorage.setItem('banggo_need_sync', JSON.stringify({name: document.getElementById('mainPlayerName').value.trim(), score: score, acc: acc+"%", photo: localStorage.getItem('banggo_player_photo') || ''}));
+                }
+            } else { statusEl.innerText = "NOT A HIGH SCORE"; }
+        }
+
+        function showDailyLogin() { playTitleOutAnim(() => { document.getElementById('titleLayer').classList.add('hidden'); updateRPG_UI(); renderDailyGrid(); openModal('dailyLayer'); }); }
+        function hideDailyLogin() { playSound('ui'); closeModal('dailyLayer', () => playTitleInAnim()); }
+        
+        function renderDailyGrid() { 
+            const gridLeft = document.getElementById('dailyGridLeft'); const gridRight = document.getElementById('dailyGridRight');
+            gridLeft.innerHTML = ''; gridRight.innerHTML = '';
+            const today = new Date().toDateString(); const isClaimedToday = lastLoginDate === today;
+            let displayDay = (loginStreak % 7) + 1; if (isClaimedToday) { displayDay = loginStreak % 7 === 0 ? 7 : loginStreak % 7; }
+
+            for (let i = 1; i <= 6; i++) {
+                const isPast = (i <= displayDay && isClaimedToday) || (i < displayDay && !isClaimedToday);
+                const isTodayTarget = (i === displayDay && !isClaimedToday);
+                const rewardAmount = 10 + (i * 10); let overlay = '';
+                if (isPast) overlay = '<div class="absolute inset-0 bg-black/60 rounded-[15%] flex items-center justify-center"><span class="text-green-400 font-bold text-5xl">✓</span></div>';
+                else if (isTodayTarget) overlay = '<div class="absolute inset-0 border-4 border-[#a3e635] rounded-[15%] shadow-[0_0_15px_#a3e635] animate-pulse"></div>';
+
+                gridLeft.innerHTML += `
+                    <div class="relative w-full h-full flex items-center justify-center">
+                        <div class="relative flex flex-col bg-contain bg-center bg-no-repeat" style="width: 100%; aspect-ratio: 255/288; background-image: url('${images.dailySlot1.src}');">
+                            <div class="w-full flex items-center justify-center pt-2" style="height: 21.875%;">
+                                <span class="text-white font-bold text-[1.4rem] drop-shadow-md uppercase" style="font-family: 'Fredoka', sans-serif; transform: rotate(-2deg);">${i18n[currentLang].day} ${i}</span>
+                            </div>
+                            <div class="w-full flex items-center justify-center" style="height: 56.25%;">
+                                <img src="${images.itemCoin.src}" class="max-h-[80%] max-w-[80%] object-contain drop-shadow-md">
+                            </div>
+                            <div class="w-full flex items-center justify-center pb-2" style="height: 21.875%;">
+                                <span class="text-yellow-400 font-black text-2xl drop-shadow-md" style="transform: translateY(-10px);">${rewardAmount}</span>
+                            </div>
+                            ${overlay}
+                        </div>
+                    </div>
+                `;
+            }
+
+            const i = 7; const isPast7 = (i <= displayDay && isClaimedToday) || (i < displayDay && !isClaimedToday); const isTodayTarget7 = (i === displayDay && !isClaimedToday); let overlay7 = '';
+            if (isPast7) overlay7 = '<div class="absolute inset-0 bg-black/60 rounded-[1rem] flex items-center justify-center"><span class="text-green-400 font-bold text-6xl">✓</span></div>'; else if (isTodayTarget7) overlay7 = '<div class="absolute inset-0 border-4 border-[#a3e635] rounded-[1rem] shadow-[0_0_20px_#a3e635] animate-pulse"></div>';
+
+            const targetWeek = isClaimedToday && displayDay === 7 ? Math.floor((loginStreak - 1) / 7) : Math.floor(loginStreak / 7);
+            const rewardIndex = targetWeek % 4; let day7RewardImg = ''; let day7RewardText = ''; let imgStyle = 'max-h-[90%] max-w-[90%] object-contain drop-shadow-lg';
+            if (rewardIndex === 0) { day7RewardImg = images.iconFeather.src; day7RewardText = `Golden Feather<br><span class="text-sm flex items-center justify-center gap-1">+ 1 <img src="${images.iconFeather.src}" class="w-4 h-4 object-contain"></span>`; } 
+            else if (rewardIndex === 1) { day7RewardImg = images.itemCoin.src; day7RewardText = `Gold Pouch<br><span class="text-sm">+ 200 🪙</span>`; } 
+            else if (rewardIndex === 2) { day7RewardImg = images.iconFeather.src; day7RewardText = `Double Feathers<br><span class="text-sm flex items-center justify-center gap-1">+ 2 <img src="${images.iconFeather.src}" class="w-4 h-4 object-contain"></span>`; } 
+            else { day7RewardImg = images.card_risa.src; day7RewardText = `Hunter Risa (Rare)<br><span class="text-sm flex items-center justify-center gap-1">+ 1 <img src="${images.iconFeather.src}" class="w-4 h-4 object-contain"></span>`; imgStyle += ' rounded-[1rem]'; }
+
+            gridRight.innerHTML = `
+                <div class="relative w-full h-full flex items-center justify-center">
+                    <div class="relative flex flex-col bg-contain bg-center bg-no-repeat" style="width: 100%; height: 100%; background-image: url('${images.dailySlot2.src}');">
+                        <div class="w-full flex items-center justify-center pt-8" style="height: 21.875%;">
+                            <span class="text-white font-bold text-[1.8rem] drop-shadow-md uppercase" style="font-family: 'Fredoka', sans-serif; transform: rotate(-2deg) translateY(10px);">${i18n[currentLang].day} 7</span>
+                        </div>
+                        <div class="w-full flex items-center justify-center" style="height: 56.25%;">
+                            <img src="${day7RewardImg}" class="${imgStyle}">
+                        </div>
+                        <div class="w-full flex flex-col items-center justify-center leading-tight pb-6" style="height: 21.875%;">
+                            <span class="text-yellow-400 font-bold text-[1.1rem] text-center drop-shadow-md" style="font-family: 'Fredoka', sans-serif; transform: translateY(-20px);">${day7RewardText}</span>
+                        </div>
+                        ${overlay7}
+                    </div>
+                </div>
+            `;
+
+            const btn = document.getElementById('btnClaimDaily');
+            if (isClaimedToday) { btn.innerText = i18n[currentLang].claimed; btn.className = "absolute -bottom-6 left-1/2 transform -translate-x-1/2 w-[380px] h-[90px] rounded-[45px] font-black text-4xl uppercase tracking-wider z-50 pointer-events-auto transition-all bg-gradient-to-b from-[#4b5563] to-[#374151] shadow-[0_10px_0_#1f2937] text-[#9ca3af] scale-[0.95] translate-y-[5px]"; btn.disabled = true; } 
+            else { btn.innerText = i18n[currentLang].claim; btn.className = "absolute -bottom-6 left-1/2 transform -translate-x-1/2 w-[380px] h-[90px] rounded-[45px] font-black text-4xl uppercase tracking-wider z-50 pointer-events-auto transition-all bg-gradient-to-b from-[#a3e635] to-[#4d7c0f] shadow-[0_10px_0_#3f6212] text-white cursor-pointer hover:scale-105 active:scale-95 active:translate-y-[5px] active:shadow-[0_4px_0_#3f6212]"; btn.disabled = false; }
+        }
+
+        function claimDaily() {
+            const today = new Date().toDateString(); if (lastLoginDate === today) return; playSound('ui'); let rewardDay = (loginStreak % 7) + 1;
+            if (rewardDay === 7) { const targetWeek = Math.floor(loginStreak / 7); const rewardIndex = targetWeek % 4; if (rewardIndex === 0) { banggoFeathers += 1; } else if (rewardIndex === 1) { banggoCoin += 200; } else if (rewardIndex === 2) { banggoFeathers += 2; } else { banggoFeathers += 1; if (!unlockedChars.includes('risa')) { unlockedChars.push('risa'); } else { banggoCoin += 200; } } } 
+            else { banggoCoin += (10 + (rewardDay * 10)); }
+            loginStreak++; lastLoginDate = today; saveRPGData(); renderDailyGrid();
+        }
+
+        const assetsConfig = {
+            bg: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/sky.png', bgMountain: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/mountain.png', bgTrees: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/forest.png', cloud: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/cloud.png',
+            bgMode: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/background_mode.png', bullet: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/bullet.png',
+            banggoFly: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/bangau_fly.png', banggoDown: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/bangau_down.png', goldFly: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/bangau_emas_fly.png', goldDown: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/bangau_emas_down.png',
+            shotFx: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/shot.png', crosshair: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/crosshair.png', scope: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/scope.png',
+            btnShotLower: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/button_shot_lower.png', btnShotReload: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/button_shot_reload.png',
+            btnShotBanggo: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/button_shot_banggo.png', btnShotEab: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/button_shot_eab.png', btnShotEdy: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/button_shot_edy.png', btnShotRisa: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/button_shot_risa.png', btnShotLyra: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/button_shot_lyra.png', btnSkill: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/button_skill.png',
+            btnShotJack: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/button_shot_jack.png', btnShotSilas: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/button_shot_silas.png',
+            btnShotElena: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/button_shot_elena.png', btnShotRemi: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/button_shot_remi.png', btnShotIkra: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/button_shot_ikra.png',
+            titleLogo: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/banggo_hunter_logo.png', titleTree: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/title_background.png', studioLogo: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/studio_logo.png', starGold: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/star.png',
+            dailyModal: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/daily_login_modal.png', dailySlot1: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/daily_slot_1.png', dailySlot2: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/daily_slot_2.png', itemCoin: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/item_coin.png', iconFeather: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/icon_feather.png', btnClose: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/button_close.png', card_banggo: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/normal_card_banggo.png', card_eab: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/normal_card_eab.png', card_edy: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/normal_card_edy.png', card_risa: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/rare_card_risa.png', card_lyra: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/superrare_card_lyra.png', card_jack: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/supersuperrare_card_jack.png', card_silas: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/ultrarare_card_silas.png', card_elena: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/superrare_card_elena.png', card_remi: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/rare_card_remi.png', card_ikra: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/normal_card_ikra.png',
+            modalDraw: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/modal_draw_screen.png', btnSetting: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/button_setting.png', btnExit: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/button_exit.png',
+            modalDetail: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/modal_detail.png', modalLeaderboard: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/modal_leaderboard.png', btnPrev: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/button_prev.png', btnNext: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/button_next.png', placeName: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/place_name.png',
+            charScreenBg: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/character_screen_background.png', gameoverBg: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/gameover_background.png', modalTimer: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/modal_timer.png', modalScore: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/modal_score.png', btnPause: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/button_pause.png',
+            iconFrenzy: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/icon_frenzyrush.png', iconSniper: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/icon_sniperelite.png', iconSudden: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/icon_suddendeath.png',
+            skillGauge: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/skill_gauge.png'
+        };
+        charData.forEach(c => { assetsConfig[`char_${c.id}`] = c.img; });
+
+        const sfxUrls = {
+            gun: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/gun_shot.mp3', hit: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/hit.mp3', ui: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/button.mp3', bgm: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/title_screen_bgm.mp3', ambience: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/ambience.mp3', doubleshot: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/doubleshot.mp3', trippleshot: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/trippleshot.mp3', sky_reaper: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/sky_reaper.mp3', feather_frenzy: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/feather_frenzy.mp3', banggo_slayer: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/banggo_slayer.mp3', gold_banggo_down: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/gold_banggo_down.mp3', timesup: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/timesup.mp3', star_1: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/1_star.mp3', star_2: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/2_star.mp3', star_3: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/3_star.mp3', no_star: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/no_star.mp3', share: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/share.mp3', countdown: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/countdown.mp3', combo_bgm: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/combo_frenzy.mp3', draw: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/draw.mp3', reward: 'https://udankkeramat.github.io/Banggo-Hunter-Asset/reward.mp3'
+        };
+        charDataRaw.forEach(c => { sfxUrls[`${c.id}_voice_character`] = `https://udankkeramat.github.io/Banggo-Hunter-Asset/${c.id}_voice_character.mp3`; sfxUrls[`${c.id}_voice_equipped`] = `https://udankkeramat.github.io/Banggo-Hunter-Asset/${c.id}_voice_equipped.mp3`; sfxUrls[`${c.id}_voice_gameplay`] = `https://udankkeramat.github.io/Banggo-Hunter-Asset/${c.id}_voice_gameplay.mp3`; });
+
+        const images = {}; const audioBank = {}; const shotPool = []; const SHOT_POOL_SIZE = 10; let shotPoolIndex = 0; let assetsLoadedCount = 0; const totalAssets = Object.keys(assetsConfig).length + Object.keys(sfxUrls).length;
+        let bgmFadeInterval = null; let countdownInterval = null; let comboBgmFadeInterval = null; let currentSequenceAudio = null; let sequenceListener = null; let endScreenAudios = []; let currentVoiceAudio = null; let currentGameplayVoice = null;
+
+        function updateLoadingProgress(onComplete) {
+            assetsLoadedCount++; const barFill = document.getElementById('loadingBarFill'); barFill.style.width = ((assetsLoadedCount / totalAssets) * 100) + '%';
+            if (assetsLoadedCount >= totalAssets) {
+                if(images.titleLogo) document.getElementById('titleLogo').src = images.titleLogo.src; if(images.titleTree) document.getElementById('titleBgTree').src = images.titleTree.src; if(images.studioLogo) document.getElementById('studioLogo').src = images.studioLogo.src; if(images.iconFeather) document.getElementById('uiFeatherIcon').src = images.iconFeather.src; if(images.dailyModal) document.getElementById('imgDailyBg').src = images.dailyModal.src; if(images.modalDraw) document.getElementById('imgDrawBg').src = images.modalDraw.src; if(images.gameoverBg) document.getElementById('imgGameoverBg').src = images.gameoverBg.src;
+                if(images.bgMode) document.getElementById('imgGameplayBg').src = images.bgMode.src;
+                if(images.modalDetail) { document.getElementById('imgSettingBg').src = images.modalDetail.src; document.getElementById('imgCharDetailBg').src = images.modalDetail.src; document.getElementById('imgExitBg').src = images.modalDetail.src; document.getElementById('imgPauseBg').src = images.modalDetail.src; document.getElementById('imgPhotoConfirmBg').src = images.modalDetail.src; document.getElementById('imgDisconnectBg').src = images.modalDetail.src; }
+                if(images.modalLeaderboard) document.getElementById('imgLbBg').src = images.modalLeaderboard.src; if(images.btnSetting) document.getElementById('imgBtnSetting').src = images.btnSetting.src; if(images.btnExit) document.getElementById('imgBtnExit').src = images.btnExit.src; if(images.btnPrev) document.getElementById('imgBtnPrev').src = images.btnPrev.src; if(images.btnNext) document.getElementById('imgBtnNext').src = images.btnNext.src; if(images.placeName) document.getElementById('imgPlaceName').src = images.placeName.src; if(images.charScreenBg) document.getElementById('imgCharScreenBgFull').src = images.charScreenBg.src;
+                if(images.btnClose) { document.getElementById('imgDailyClose').src = images.btnClose.src; const lbClose = document.getElementById('imgLbClose'); if(lbClose) lbClose.src = images.btnClose.src; const gcClose = document.getElementById('imgGachaClose'); if(gcClose) gcClose.src = images.btnClose.src; const stClose = document.getElementById('imgSettingClose'); if(stClose) stClose.src = images.btnClose.src; const chClose = document.getElementById('imgCharClose'); if(chClose) chClose.src = images.btnClose.src; }
+                if(images.modalTimer) document.getElementById('imgModalTimer').src = images.modalTimer.src; if(images.modalScore) document.getElementById('imgModalScore').src = images.modalScore.src; if(images.btnPause) document.getElementById('imgBtnPause').src = images.btnPause.src;
+
+                for (let i = 0; i < SHOT_POOL_SIZE; i++) { const aud = new Audio(); aud.src = sfxUrls.gun; aud.volume = 1.0; aud.preload = 'auto'; shotPool.push(aud); }
+                updateRPG_UI(); updateTitleCharacterImage(); setTimeout(onComplete, 800);
+            }
+        }
+
+        function loadResources(onComplete) {
+            for (let key in assetsConfig) { const img = new Image(); img.crossOrigin = "Anonymous"; img.src = assetsConfig[key]; img.onload = () => { images[key] = img; updateLoadingProgress(onComplete); }; img.onerror = () => { updateLoadingProgress(onComplete); }; }
+            for(let key in sfxUrls) { const aud = new Audio(); aud.src = sfxUrls[key]; aud.preload = 'auto'; if(key === 'bgm' || key === 'ambience' || key === 'combo_bgm') aud.loop = true; aud.volume = (key === 'ambience') ? 0.8 : (key === 'combo_bgm' ? 0 : 1.0); audioBank[key] = aud; const onAudioLoad = () => { if (!aud.loadedMark) { aud.loadedMark = true; updateLoadingProgress(onComplete); } }; aud.addEventListener('canplaythrough', onAudioLoad, { once: true }); aud.addEventListener('error', onAudioLoad, { once: true }); setTimeout(() => { if(!aud.loadedMark) { aud.loadedMark = true; updateLoadingProgress(onComplete); } }, 30000); aud.load(); }
+        }
+
+        function warmUpAudio() { 
+            const keys = ['timesup', 'star_1', 'star_2', 'star_3', 'share', 'no_star', 'reward', 'combo_bgm']; 
+            keys.forEach(k => { 
+                if(audioBank[k]) { 
+                    const a = audioBank[k]; 
+                    a.volume = 0; 
+                    a.playPromise = a.play(); 
+                    if (a.playPromise !== undefined) { 
+                        a.playPromise.then(() => { 
+                            a.pause(); 
+                            a.currentTime = 0; 
+                            a.volume = (k === 'combo_bgm') ? 0 : 1.0; 
+                        }).catch(e => { }); 
+                    } 
+                } 
+            }); 
+        }
+        
+        function playSound(name) { 
+            const isBGM = (name === 'bgm' || name === 'combo_bgm'); if (!allowSFX && !isBGM) return null; if (!allowBGM && isBGM) return null;
+            const original = audioBank[name]; 
+            if(original) { if(name === 'bgm' || name === 'ambience') { if(original.paused) { original.playPromise = original.play(); if (original.playPromise !== undefined) { original.playPromise.catch(()=>{}); } } } else { const clone = original.cloneNode(); clone.volume = original.volume; clone.playPromise = clone.play(); if (clone.playPromise !== undefined) { clone.playPromise.catch(()=>{}); } return clone; } } 
+            return null; 
+        }
+
+        function stopCharScreenVoice() { if(currentVoiceAudio) { currentVoiceAudio.onended = null; currentVoiceAudio.pause(); currentVoiceAudio.currentTime = 0; currentVoiceAudio = null; if(allowBGM && audioBank['bgm'] && gameState !== 'PLAY') { audioBank['bgm'].volume = 1.0; } } }
+        function playCharScreenVoice(charId, type) { if(!allowSFX) return; stopCharScreenVoice(); const soundId = `${charId}_voice_${type}`; const original = audioBank[soundId]; if(original) { if(allowBGM && audioBank['bgm']) { audioBank['bgm'].volume = 0.2; } const clone = original.cloneNode(); clone.volume = 1.0; clone.onended = () => { if(allowBGM && audioBank['bgm'] && gameState !== 'PLAY') { audioBank['bgm'].volume = 1.0; } }; clone.playPromise = clone.play(); if (clone.playPromise !== undefined) { clone.playPromise.catch((e)=>{ if(allowBGM && audioBank['bgm'] && gameState !== 'PLAY') audioBank['bgm'].volume = 1.0; }); } currentVoiceAudio = clone; } else { if(allowBGM && audioBank['bgm'] && gameState !== 'PLAY') audioBank['bgm'].volume = 1.0; } }
+        function stopGameplayVoice() { if(currentGameplayVoice) { currentGameplayVoice.onended = null; currentGameplayVoice.pause(); currentGameplayVoice.currentTime = 0; currentGameplayVoice = null; } }
+        function playGameplayVoice(charId) { if(!allowSFX) return; stopGameplayVoice(); const soundId = `${charId}_voice_gameplay`; const original = audioBank[soundId]; if(original) { const clone = original.cloneNode(); clone.volume = 1.0; clone.playPromise = clone.play(); if (clone.playPromise !== undefined) { clone.playPromise.catch((e)=>{}); } currentGameplayVoice = clone; } }
+        function playShotSound() { if(!allowSFX || shotPool.length === 0) return; const sound = shotPool[shotPoolIndex]; sound.currentTime = 0; sound.playPromise = sound.play(); if(sound.playPromise !== undefined) { sound.playPromise.catch(()=>{}); } shotPoolIndex = (shotPoolIndex + 1) % SHOT_POOL_SIZE; }
+        
+        function stopSound(name) { const original = audioBank[name]; if(original) { if (original.playPromise !== undefined) { original.playPromise.then(() => { original.pause(); original.currentTime = 0; }).catch(()=>{}); } else { original.pause(); original.currentTime = 0; } } }
+        function ensureAmbiencePlaying() { if(!allowSFX) return; const amb = audioBank['ambience']; if(amb && amb.paused) { amb.volume = 0.8; amb.playPromise = amb.play(); if(amb.playPromise !== undefined) amb.playPromise.catch(()=>{}); } }
+        
+        function playTitleBGM() { if(!allowBGM) return; const bgm = audioBank['bgm']; if(!bgm) return; if(bgmFadeInterval) { clearInterval(bgmFadeInterval); bgmFadeInterval = null; } bgm.volume = 1.0; if(bgm.paused) { bgm.playPromise = bgm.play(); if (bgm.playPromise !== undefined) bgm.playPromise.catch(()=>{}); } }
+        function fadeOutTitleBGM() { const bgm = audioBank['bgm']; if(!bgm || bgm.paused) return; const stepTime = 100; const volStep = bgm.volume / 20; if(bgmFadeInterval) clearInterval(bgmFadeInterval); bgmFadeInterval = setInterval(() => { if (gameState === 'MENU' || gameState === 'WAITING_START') { clearInterval(bgmFadeInterval); bgmFadeInterval = null; if(allowBGM) bgm.volume = 1.0; return; } if(bgm.volume > volStep) { bgm.volume -= volStep; } else { bgm.volume = 0; clearInterval(bgmFadeInterval); bgmFadeInterval = null; if (bgm.playPromise !== undefined) { bgm.playPromise.then(() => { bgm.pause(); }).catch(()=>{}); } else { bgm.pause(); } } }, stepTime); }
+        function playComboBGM(vol) { if(!allowBGM) return; const bgm = audioBank['combo_bgm']; if(!bgm) return; if(comboBgmFadeInterval) { clearInterval(comboBgmFadeInterval); comboBgmFadeInterval = null; } bgm.volume = vol; if(bgm.paused) { bgm.playPromise = bgm.play(); if(bgm.playPromise !== undefined) bgm.playPromise.catch(()=>{}); } }
+        function fadeOutComboBGM() { const bgm = audioBank['combo_bgm']; const cv = document.getElementById('comboVideo'); if(cv) { cv.pause(); cv.currentTime = 0; } if(!bgm || bgm.paused || bgm.volume === 0) return; if(comboBgmFadeInterval) clearInterval(comboBgmFadeInterval); const volStep = bgm.volume / 10; comboBgmFadeInterval = setInterval(() => { if(bgm.volume > volStep) bgm.volume -= volStep; else { bgm.volume = 0; clearInterval(comboBgmFadeInterval); comboBgmFadeInterval = null; if (bgm.playPromise !== undefined) { bgm.playPromise.then(() => { bgm.pause(); }).catch(()=>{}); } else { bgm.pause(); } } }, 100); }
+
+        const canvas = document.getElementById('gameCanvas'); const ctx = canvas.getContext('2d');
+        let gameState = 'LOADING'; let lastTime = 0;
+        let shotCooldownTime = 0; const SHOT_COOLDOWN_MS = 1500;
+        let cameraOffset = { x: 0, y: 0 }; let crosshairOffset = { y: 0 }; const CAMERA_Y_LIMIT = 300; let crosshairScale = 1.0; let crosshairRotation = 0;
+        let analogInput = { x: 0, y: 0, activeTouch: false, originX: 0, originY: 0, currX: 0, currY: 0 }; let shotBtnRect = { x: 0, y: 0, w: 100, h: 100 }; let isShotBtnPressed = false;
+        let crosshairEntryParams = { progress: 0 };
+        let score = 0, hits = 0, shotsFired = 0, timeLeft = 60, screenShake = 0; let timerInterval = null;
+        const birds = [], bgBirds = [], clouds = [], effects = [], scorePopups = []; let comboCount = 0; let lastHitTime = 0; const COMBO_TIMEOUT_MS = 3000;
+
+        const BASE_SPAWN = { speedMin: 4, speedMax: 7, spawnRate: 0.03 };
+
+        function resize() {
+            canvas.width = window.innerWidth; canvas.height = window.innerHeight;
+            let scaleRef = canvas.height / 1080; if (scaleRef > 1.2) scaleRef = 1.2; if (scaleRef < 0.4) scaleRef = 0.4; 
+            shotBtnRect.w = 589 * scaleRef; shotBtnRect.h = 414 * scaleRef; shotBtnRect.x = canvas.width - shotBtnRect.w; shotBtnRect.y = canvas.height - shotBtnRect.h;
+            let oldShotBtnBase = 200 * scaleRef; skillBtnRect.w = oldShotBtnBase * 0.66; skillBtnRect.h = skillBtnRect.w; skillBtnRect.x = canvas.width - skillBtnRect.w - (91 * scaleRef); skillBtnRect.y = shotBtnRect.y - skillBtnRect.h - (10 * scaleRef);
+            analogInput.originX = 100; analogInput.originY = canvas.height - 100;
+            const groupScale = Math.min(window.innerWidth / 1920, window.innerHeight / 1080);
+            document.querySelectorAll('.scaled-group').forEach(group => { group.style.transform = `translate(-50%, -50%) scale(${groupScale})`; });
+            
+            let hudScaleRef = canvas.height / 1080; if (hudScaleRef > 1.2) hudScaleRef = 1.2; if (hudScaleRef < 0.4) hudScaleRef = 0.4;
+            const hudTimer = document.getElementById('hudTimerGroup'); const hudScore = document.getElementById('hudScoreGroup');
+            if(hudTimer) hudTimer.style.transform = `scale(${hudScaleRef})`; if(hudScore) hudScore.style.transform = `scale(${hudScaleRef})`;
+        }
+        
+        window.addEventListener('resize', resize); window.addEventListener('orientationchange', () => setTimeout(resize, 300));
+        const triggerFullscreen = () => { const elem = document.documentElement; if (!document.fullscreenElement) { if (elem.requestFullscreen) { elem.requestFullscreen().then(() => { if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(()=>{}); }).catch(()=>{}); } else if (elem.webkitRequestFullscreen) { elem.webkitRequestFullscreen(); if (screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(()=>{}); } } };
+
+        const ANIM_SPEED_0_1S = 6; 
+        class SpriteAnim { constructor(img, frames, speed, loop = true) { this.img = img; this.totalFrames = frames; this.speed = speed; this.loop = loop; this.currentFrame = 0; this.tick = 0; this.finished = false; this.frameWidth = this.img.width / this.totalFrames; this.frameHeight = this.img.height; } update() { if (this.finished) return; this.tick++; if (this.tick > this.speed) { this.tick = 0; this.currentFrame++; if (this.currentFrame >= this.totalFrames) { if (this.loop) this.currentFrame = 0; else { this.currentFrame = this.totalFrames - 1; this.finished = true; } } } } draw(ctx, x, y, w, h, flipX = false) { const sx = this.currentFrame * this.frameWidth; ctx.save(); ctx.translate(x, y); if (flipX) ctx.scale(-1, 1); ctx.drawImage(this.img, sx, 0, this.frameWidth, this.frameHeight, -w/2, -h/2, w, h); ctx.restore(); } }
+
+        // FIX DARI SERA: Ubah jumlah frame animasi BackgroundBird dari 4 jadi 8
+        class BackgroundBird {
+            constructor() { this.reset(); }
+            reset() { this.active = true; this.scale = 0.05 + Math.random() * 0.1; this.baseSize = 400 * this.scale; const spawnRight = Math.random() > 0.5; const spawnOffset = canvas.width / 2 + 200; this.x = cameraOffset.x + (spawnRight ? spawnOffset : -spawnOffset); this.y = cameraOffset.y - (canvas.height * 0.4) + (Math.random() * canvas.height * 0.15); this.direction = spawnRight ? -1 : 1; this.speed = (Math.random() * 1.5 + 0.5); this.animFly = new SpriteAnim(images.banggoFly, 8, ANIM_SPEED_0_1S + 2, true); }
+            update() { if (!this.active) return; this.x += this.speed * this.direction; this.animFly.update(); if (Math.abs(this.x - cameraOffset.x) > canvas.width * 2) this.active = false; }
+            render(ctx, camX, camY) { if (!this.active) return; const drawX = this.x - (camX * 0.5); const drawY = this.y - camY; if (drawX < -100 || drawX > canvas.width + 100 || drawY < -600 || drawY > canvas.height + 600) return; const shouldFlip = this.direction === -1; const ar = this.animFly.frameWidth / this.animFly.frameHeight; ctx.save(); ctx.globalAlpha = 0.5; ctx.filter = 'blur(2px)'; this.animFly.draw(ctx, drawX, drawY, this.baseSize * ar, this.baseSize, shouldFlip); ctx.restore(); }
+        }
+
+        // FIX DARI SERA: Ubah jumlah frame animasi Bird dari 4 jadi 8
+        class Bird {
+            constructor() { this.reset(); }
+            reset() {
+                this.active = true; this.state = 'flying'; 
+                
+                let multiplier50 = Math.floor(score / 50);
+                let multiplier100 = Math.floor(score / 100);
+                
+                let speedBoost = Math.pow(1.1, multiplier50); 
+                let scaleShrink = Math.pow(0.9, multiplier100); 
+                let goldChance = Math.max(0.01, 0.1 - (multiplier100 * 0.02));
+
+                this.isGold = Math.random() < goldChance; 
+                if (activeSkill === 'elena') this.isGold = true;
+                this.type = this.isGold ? 'gold' : 'normal';
+                
+                let rawScale = 0.25 + Math.random() * 0.35;
+                this.scale = rawScale * scaleShrink;
+                this.baseSize = 400 * this.scale; 
+                this.hitboxRadius = this.baseSize * 0.35;
+                
+                const spawnRight = Math.random() > 0.5; const spawnOffset = canvas.width / 2 + 400;
+                this.x = cameraOffset.x + (spawnRight ? spawnOffset : -spawnOffset); 
+                this.y = cameraOffset.y - (canvas.height * 0.2) + (Math.random() * canvas.height * 0.3);
+                this.direction = spawnRight ? -1 : 1; 
+                
+                let baseSpd = (Math.random() * (BASE_SPAWN.speedMax - BASE_SPAWN.speedMin) + BASE_SPAWN.speedMin) * (rawScale + 0.5) * speedBoost;
+                if (gameplayType === 'frenzy') baseSpd *= 1.5;
+                
+                this.speed = baseSpd; if(this.isGold) this.speed *= 1.2;
+                this.bobOffset = Math.random() * Math.PI * 2; this.bobSpeed = 0.002 + Math.random() * 0.004;
+                this.animFly = new SpriteAnim(this.isGold ? images.goldFly : images.banggoFly, 8, ANIM_SPEED_0_1S, true); this.animDown = new SpriteAnim(this.isGold ? images.goldDown : images.banggoDown, 4, ANIM_SPEED_0_1S, true);
+            }
+            update() {
+                if (!this.active) return;
+                if (activeSkill === 'silas' && this.state === 'flying') return; 
+                if (this.state === 'flying') { 
+                    let currentSpeed = this.speed; 
+                    if (activeSkill === 'eab') currentSpeed *= 0.5; 
+                    if (activeSkill === 'elena') currentSpeed *= 0.7; 
+                    
+                    this.x += currentSpeed * this.direction; 
+                    this.y += Math.sin(Date.now() * this.bobSpeed + this.bobOffset) * 2; 
+                    this.animFly.update(); 
+                    if (Math.abs(this.x - cameraOffset.x) > canvas.width * 2) this.active = false; 
+                }
+                else if (this.state === 'dying') { 
+                    this.y += 12; this.x += this.direction * 2; 
+                    this.animDown.update(); 
+                    if (this.y - cameraOffset.y > canvas.height + 600) this.active = false; 
+                }
+            }
+            render(ctx, camX, camY) {
+                if (!this.active) return; const drawX = this.x - camX; const drawY = this.y - camY;
+                if (drawX < -300 || drawX > canvas.width + 300 || drawY < -600 || drawY > canvas.height + 600) return;
+                const shouldFlip = this.direction === -1;
+                
+                let drawSize = this.baseSize;
+                if (activeSkill === 'elena') drawSize *= 2; 
+                
+                if (this.state === 'flying') { 
+                    const ar = this.animFly.frameWidth / this.animFly.frameHeight; 
+                    this.animFly.draw(ctx, drawX, drawY, drawSize * ar, drawSize, shouldFlip); 
+                } 
+                else { 
+                    const ar = this.animDown.frameWidth / this.animDown.frameHeight; 
+                    const drawW = drawSize * 0.8; 
+                    this.animDown.draw(ctx, drawX, drawY, drawW, drawW / ar, shouldFlip); 
+                }
+            }
+            checkHit(camX, camY, chOffsetY) { 
+                if (this.state !== 'flying') return false; 
+                let currentHitbox = this.hitboxRadius; 
+                if (activeSkill === 'banggo') currentHitbox *= 2; 
+                if (activeSkill === 'elena') currentHitbox *= 2; 
+                if (activeSkill === 'jack') currentHitbox *= 4; 
+                return Math.hypot((this.x - camX) - 0, (this.y - camY) - chOffsetY) < currentHitbox; 
+            }
+            die() { this.state = 'dying'; playSound('hit'); effects.push(new ShotEffect(this.x, this.y)); }
+        }
+
+        class Cloud {
+            constructor() { this.reset(true); }
+            reset() { this.active = true; this.y = -canvas.height * 0.1 + Math.random() * (canvas.height * 0.4); this.x = cameraOffset.x * 0.3 + (Math.random() * canvas.width * 2 - canvas.width); this.speed = 0.2 + Math.random() * 0.5; this.scale = 0.6 + Math.random() * 0.6; this.opacity = 0; this.maxOpacity = 0.4 + Math.random() * 0.3; this.life = 0; this.duration = 600 + Math.random() * 800; this.timer = 0; this.fadeInDur = 100; this.fadeOutDur = 100; }
+            update() { this.x += this.speed; this.timer++; if (this.timer < this.fadeInDur) this.opacity = (this.timer / this.fadeInDur) * this.maxOpacity; else if (this.timer > this.duration - this.fadeOutDur) { const remaining = this.duration - this.timer; this.opacity = (remaining / this.fadeOutDur) * this.maxOpacity; if (this.opacity <= 0) { this.opacity = 0; this.reset(); } } else this.opacity = this.maxOpacity; }
+            render(ctx, camX, camY) { const drawX = this.x - (camX * 0.3); const w = 400 * this.scale; const h = 200 * this.scale; ctx.globalAlpha = this.opacity; ctx.drawImage(images.cloud, drawX - w/2, this.y - h/2, w, h); ctx.globalAlpha = 1.0; }
+        }
+
+        class ShotEffect { constructor(x, y) { this.x = x; this.y = y; this.active = true; this.anim = new SpriteAnim(images.shotFx, 4, ANIM_SPEED_0_1S - 2, false); this.rotation = Math.random() * Math.PI * 2; } update() { this.anim.update(); if (this.anim.finished) this.active = false; } render(ctx, camX, camY) { ctx.save(); ctx.translate(this.x - camX, this.y - camY); ctx.rotate(this.rotation); this.anim.draw(ctx, 0, 0, 250, 250); ctx.restore(); } }
+
+        class ScorePopup {
+            constructor(text, x, y) { this.text = text; this.x = x + (Math.random() * 100 - 50); this.y = y + (Math.random() * 100 - 50); this.life = 1.0; this.active = true; }
+            update() { this.y -= 2; this.life -= 0.03; if (this.life <= 0) this.active = false; }
+            render(ctx, camX, camY) { if (!this.active) return; ctx.save(); ctx.globalAlpha = Math.max(0, this.life); ctx.font = "900 3rem 'Fredoka', sans-serif"; ctx.fillStyle = "#a3e635"; ctx.strokeStyle = "#166534"; ctx.lineWidth = 4; ctx.textAlign = "center"; ctx.strokeText(this.text, this.x - camX, this.y - camY); ctx.fillText(this.text, this.x - camX, this.y - camY); ctx.restore(); }
+        }
+
+        function setGameMode(mode) {
+            playSound('ui'); gameMode = mode;
+            document.getElementById('btn-classic').classList[mode === 'classic' ? 'add' : 'remove']('active');
+            document.getElementById('btn-rank').classList[mode === 'rank' ? 'add' : 'remove']('active');
+            
+            const btnPlay = document.getElementById('btn-play-title');
+            if (mode === 'classic') { btnPlay.classList.remove('play-btn-yellow'); btnPlay.classList.add('play-btn-blue'); } 
+            else { btnPlay.classList.remove('play-btn-blue'); btnPlay.classList.add('play-btn-yellow'); }
+        }
+
+        function updateGameplaySelectionDesc() {
+            const el = document.getElementById('gsDesc');
+            if (!gameplayType && gameMode === 'classic') { el.innerText = i18n[currentLang].classic === 'CLASSIC' ? 'Select a gameplay mode.' : 'Pilih jenis gameplay.'; return; } 
+            else if (!gameplayType && gameMode === 'rank') { el.innerText = 'Acak mode permainan...'; return; }
+            
+            if(gameplayType === 'frenzy') el.innerText = "FRENZY RUSH\n" + i18n[currentLang].frenzyDesc;
+            else if(gameplayType === 'sniper') el.innerText = "SNIPER ELITE\n" + i18n[currentLang].sniperDesc;
+            else if(gameplayType === 'sudden') el.innerText = "SUDDEN DEATH\n" + i18n[currentLang].suddenDesc;
+        }
+
+        function playGameTransition() {
+            if(gameMode === 'rank' && !navigator.onLine) { showTopNotif(images.btnExit ? images.btnExit.src : '', "Rank Mode Butuh\nKoneksi Internet!"); return; }
+            handleBtnAction('btn-play-title', () => {
+                document.getElementById('splashOverlay').classList.add('splash-active');
+                setTimeout(() => { playTitleOutAnim(() => openGameplaySelection()); }, 200);
+            });
+        }
+
+        function openGameplaySelection() {
+            gameplayType = null;
+            const container = document.getElementById('gsIconsContainer');
+            const title = document.getElementById('gsTitle');
+            const btnStart = document.getElementById('btnGsStart');
+            const btnCancel = document.getElementById('btnGsCancel');
+            
+            container.innerHTML = '';
+            btnStart.classList.add('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
+            
+            if (gameMode === 'classic') {
+                title.innerText = i18n[currentLang].classic + " MODE"; title.className = "text-6xl font-black text-blue-400 drop-shadow-md tracking-widest uppercase italic mb-4";
+                btnCancel.classList.remove('hidden');
+                const modes = ['frenzy', 'sniper', 'sudden'];
+                modes.forEach(m => {
+                    const iconSrc = images['icon'+m.charAt(0).toUpperCase()+m.slice(1)].src;
+                    const el = document.createElement('div'); el.className = 'gs-icon-wrapper unselected'; el.innerHTML = `<img src="${iconSrc}">`;
+                    el.onclick = () => selectClassicMode(m, el); container.appendChild(el);
+                });
+                updateGameplaySelectionDesc();
+            } else {
+                title.innerText = i18n[currentLang].rank + " MODE"; title.className = "text-6xl font-black text-yellow-400 drop-shadow-md tracking-widest uppercase italic mb-4";
+                btnCancel.classList.add('hidden');
+                
+                const el = document.createElement('div'); el.className = 'gs-slot-machine gs-rolling'; el.innerHTML = `<img id="gachaRollImg" src="${images.iconFrenzy.src}">`; container.appendChild(el);
+                updateGameplaySelectionDesc();
+                
+                let counter = 0; const pool = ['frenzy', 'sniper', 'sudden']; const imgEl = document.getElementById('gachaRollImg');
+                isGachaRolling = true; btnCancel.classList.add('opacity-50', 'pointer-events-none'); playSound('draw');
+                
+                gachaInterval = setInterval(() => {
+                    counter++; let rnd = pool[counter % 3]; imgEl.src = images['icon'+rnd.charAt(0).toUpperCase()+rnd.slice(1)].src;
+                    if (counter >= 30) {
+                        clearInterval(gachaInterval); isGachaRolling = false; gameplayType = pool[Math.floor(Math.random() * pool.length)];
+                        imgEl.src = images['icon'+gameplayType.charAt(0).toUpperCase()+gameplayType.slice(1)].src;
+                        el.classList.remove('gs-rolling'); el.style.borderColor = '#4ade80'; el.style.boxShadow = '0 0 50px rgba(74, 222, 128, 0.8), inset 0 0 20px rgba(0,0,0,0.8)';
+                        playSound('reward'); updateGameplaySelectionDesc(); btnStart.classList.remove('opacity-50', 'cursor-not-allowed', 'pointer-events-none'); btnCancel.classList.remove('opacity-50', 'pointer-events-none');
+                    }
+                }, 100);
+            }
+            openModal('gameplaySelectionLayer');
+        }
+
+        function selectClassicMode(mode, element) {
+            playSound('ui'); gameplayType = mode;
+            const container = document.getElementById('gsIconsContainer'); container.querySelectorAll('.gs-icon-wrapper').forEach(el => { el.classList.remove('selected'); el.classList.add('unselected'); });
+            element.classList.remove('unselected'); element.classList.add('selected'); updateGameplaySelectionDesc();
+            const btnStart = document.getElementById('btnGsStart'); btnStart.classList.remove('opacity-50', 'cursor-not-allowed', 'pointer-events-none');
+        }
+
+        function cancelGameplaySelection() {
+            if (isGachaRolling) return;
+            playSound('ui');
+            closeModal('gameplaySelectionLayer', () => { playTitleInAnim(); });
+        }
+
+        function startGameplayNow() {
+            if (!gameplayType) return;
+            playSound('ui');
+            closeModal('gameplaySelectionLayer', () => startCountdownGame());
+        }
+
+        function handleTouchStart(e) { 
+            if (gameState !== 'PLAY') return; if (e.target !== canvas) return; e.preventDefault(); 
+            const charObj = charData.find(c => c.id === equippedCharId);
+            let isRemiSkillDisabled = (equippedCharId === 'remi' && gameplayType === 'sniper' && (sniperAmmo >= 5 || remiSniperSkillCount >= 5));
+            
+            for (let i = 0; i < e.changedTouches.length; i++) { 
+                const t = e.changedTouches[i]; 
+                if (t.clientX > shotBtnRect.x && t.clientX < shotBtnRect.x + shotBtnRect.w && t.clientY > shotBtnRect.y && t.clientY < shotBtnRect.y + shotBtnRect.h) { isShotBtnPressed = true; shoot(); continue; } 
+                if (t.clientX > skillBtnRect.x && t.clientX < skillBtnRect.x + skillBtnRect.w && t.clientY > skillBtnRect.y && t.clientY < skillBtnRect.y + skillBtnRect.h && (!charObj || !charObj.isPassive) && !isRemiSkillDisabled) { isSkillBtnPressed = true; activateSkill(); continue; } 
+                if (t.clientX < canvas.width / 2) { analogInput.activeTouch = true; analogInput.id = t.identifier; analogInput.originX = t.clientX; analogInput.originY = t.clientY; analogInput.currX = t.clientX; analogInput.currY = t.clientY; } 
+            } 
+        }
+        function handleTouchMove(e) { if (gameState !== 'PLAY') return; e.preventDefault(); for (let i = 0; i < e.changedTouches.length; i++) { const t = e.changedTouches[i]; if (analogInput.activeTouch && t.identifier === analogInput.id) { analogInput.currX = t.clientX; analogInput.currY = t.clientY; let dx = analogInput.currX - analogInput.originX; let dy = analogInput.currY - analogInput.originY; const maxRadius = 60; const dist = Math.hypot(dx, dy); if (dist > maxRadius) { const angle = Math.atan2(dy, dx); dx = Math.cos(angle) * maxRadius; dy = Math.sin(angle) * maxRadius; } analogInput.x = dx / maxRadius; analogInput.y = dy / maxRadius; } } }
+        function handleTouchEnd(e) { for (let i = 0; i < e.changedTouches.length; i++) { const t = e.changedTouches[i]; if (analogInput.activeTouch && t.identifier === analogInput.id) { analogInput.activeTouch = false; analogInput.x = 0; analogInput.y = 0; } isShotBtnPressed = false; isSkillBtnPressed = false; } }
+        
+        window.addEventListener('mousemove', (e) => { if (gameState === 'PLAY' && !analogInput.activeTouch) { const sensitivity = 1.5; cameraOffset.x += e.movementX * sensitivity; cameraOffset.y += e.movementY * sensitivity; } });
+        window.addEventListener('mousedown', (e) => {
+            if (gameState !== 'PLAY') return; if (e.target !== canvas) return; const charObj = charData.find(c => c.id === equippedCharId);
+            let isRemiSkillDisabled = (equippedCharId === 'remi' && gameplayType === 'sniper' && (sniperAmmo >= 5 || remiSniperSkillCount >= 5));
+            if (e.button === 0) { if (e.clientX > shotBtnRect.x && e.clientY > shotBtnRect.y) { isShotBtnPressed = true; shoot(); } else if (e.clientX > skillBtnRect.x && e.clientX < skillBtnRect.x + skillBtnRect.w && e.clientY > skillBtnRect.y && e.clientY < skillBtnRect.y + skillBtnRect.h && (!charObj || !charObj.isPassive) && !isRemiSkillDisabled) { isSkillBtnPressed = true; activateSkill(); } else { shoot(); } } else if (e.button === 2) { if ((!charObj || !charObj.isPassive) && !isRemiSkillDisabled) activateSkill(); }
+        });
+        window.addEventListener('mouseup', () => { isShotBtnPressed = false; isSkillBtnPressed = false; });
+        window.addEventListener('contextmenu', (e) => { if (gameState === 'PLAY') e.preventDefault(); });
+        canvas.addEventListener('touchstart', handleTouchStart, {passive: false}); canvas.addEventListener('touchmove', handleTouchMove, {passive: false}); canvas.addEventListener('touchend', handleTouchEnd);
+        function handleBtnAction(btnId, callback) { const btn = document.getElementById(btnId); playSound('ui'); btn.classList.add('pressed'); setTimeout(() => { btn.classList.remove('pressed'); if(callback) callback(); }, 250); }
+
+        function activateSkill() {
+            const charObj = charData.find(c => c.id === equippedCharId); if (charObj && charObj.isPassive) return;
+            
+            if (equippedCharId === 'remi' && gameplayType === 'sniper' && (sniperAmmo >= 5 || remiSniperSkillCount >= 5)) return;
+
+            const now = Date.now(); if (now < skillCooldownEndTime || activeSkill) return; if (!charObj) return;
+            const stats = getSkillStats(equippedCharId); activeSkill = equippedCharId; skillEndTime = now + stats.dur; skillCooldownEndTime = now + stats.cd;
+            
+            showTopNotif(images.btnSkill.src, `${i18n[currentLang].skillLabel} ACTIVATED:\n${charObj.skillName.toUpperCase()}`);
+            playGameplayVoice(equippedCharId);
+
+            if (equippedCharId === 'remi') {
+                if (gameplayType === 'frenzy') { timeLeft += 3; updateHUD(); showFloatingText(i18n[currentLang].add3Sec || "+3 Detik"); }
+                else if (gameplayType === 'sniper') { 
+                    sniperAmmo++; remiSniperSkillCount++; updateAmmoUI(); showFloatingText(i18n[currentLang].add1Ammo || "+1 Ammo"); 
+                }
+                else if (gameplayType === 'sudden') { remiSuddenImmunityEnd = Date.now() + 3000; showFloatingText(i18n[currentLang].immune3s || "Immune 3s"); }
+            }
+        }
+
+        function updateAmmoUI() {
+            if (gameplayType !== 'sniper') return;
+            const container = document.getElementById('sniperAmmoHUD'); container.innerHTML = '';
+            for(let i=1; i<=5; i++) {
+                const b = document.createElement('img');
+                b.src = images.bullet ? images.bullet.src : '';
+                b.className = 'w-[30px] h-[54px] object-contain transition-all duration-200 drop-shadow-md';
+                if(i > sniperAmmo) b.classList.add('grayscale', 'opacity-50', 'brightness-50');
+                container.appendChild(b);
+            }
+        }
+
+        function showFrenzyTimeAdd() {
+            const el = document.getElementById('frenzyTimeAdd'); el.classList.remove('frenzy-anim-show');
+            void el.offsetWidth; el.classList.add('frenzy-anim-show');
+        }
+
+        function shoot() {
+            const now = Date.now(); 
+            let currentCooldown = SHOT_COOLDOWN_MS; 
+            if (activeSkill !== 'jack' && now < shotCooldownTime) return;
+
+            shotsFired++; screenShake = 10; 
+            if (activeSkill === 'jack') shotCooldownTime = 0; else shotCooldownTime = now + currentCooldown; 
+            playShotSound();
+            crosshairScale = 1.4; crosshairRotation = (Math.random() - 0.5) * 0.5; crosshairOffset.y -= 25; if(crosshairOffset.y < -canvas.height*0.4) crosshairOffset.y = -canvas.height*0.4;
+
+            let hit = false; let hitBird = null;
+
+            if (activeSkill === 'ikra') {
+                let onScreenBirds = birds.filter(b => {
+                    if (!b.active || b.state !== 'flying') return false;
+                    const drawX = b.x - cameraOffset.x;
+                    return (drawX > -100 && drawX < canvas.width + 100);
+                });
+                if (onScreenBirds.length > 0) {
+                    hit = true; hitBird = onScreenBirds[Math.floor(Math.random() * onScreenBirds.length)];
+                    crosshairOffset.y = (hitBird.y - cameraOffset.y) - canvas.height/2; hitBird.die();
+                }
+            } 
+            else {
+                for (let i = birds.length - 1; i >= 0; i--) { 
+                    const b = birds[i]; 
+                    if (b.checkHit(cameraOffset.x, cameraOffset.y, crosshairOffset.y)) { hit = true; hitBird = b; b.die(); if (activeSkill !== 'jack') break; } 
+                }
+            }
+            
+            if (hit) {
+                hits++; if (now - lastHitTime > COMBO_TIMEOUT_MS) { comboCount = 0; fadeOutComboBGM(); } lastHitTime = now; comboCount++;
+                let pointsAdded = 0; let popText = "";
+                
+                if (hitBird.isGold) { 
+                    pointsAdded = 10; score += pointsAdded; popText = "GOLD BANGGO DOWN!"; playSound('gold_banggo_down'); 
+                    if (Math.random() < 0.05) { banggoFeathers++; saveRPGData(); showTopNotif(images.iconFeather.src, '1 Golden Feather\nDrop!'); }
+                } else { 
+                    pointsAdded = (comboCount > 5) ? 6 : comboCount; score += pointsAdded; 
+                    if (comboCount === 2) { popText = "DOUBLE SHOT"; playSound('doubleshot'); } else if (comboCount === 3) { popText = "TRIPPLE SHOT"; playSound('trippleshot'); } else if (comboCount === 4) { popText = "SKY REAPER"; playSound('sky_reaper'); } else if (comboCount === 5) { popText = "FEATHER FRENZY"; playSound('feather_frenzy'); } else if (comboCount > 5) { popText = "BANGGO SLAYER!"; playSound('banggo_slayer'); } 
+                }
+
+                if (comboCount >= 3) { const cv = document.getElementById('comboVideo'); if(cv && cv.paused) { cv.playPromise = cv.play(); if(cv.playPromise !== undefined) cv.playPromise.catch(()=>{}); } playComboBGM(comboCount >= 5 ? 1.0 : 0.5); }
+                
+                if (activeSkill === 'risa') { score += pointsAdded; pointsAdded *= 2; popText += " (x2)"; }
+                if (activeSkill === 'elena') { score += pointsAdded; pointsAdded *= 2; popText += " (x2)"; }
+                if (activeSkill === 'edy') { banggoCoin += 2; saveRPGData(); popText += " (+2 🪙)"; }
+                
+                scorePopups.push(new ScorePopup(`+${pointsAdded}`, hitBird.x, hitBird.y));
+                updateHUD(); if(popText) showFloatingText(popText); crosshairScale = 1.6;
+
+                if (gameplayType === 'frenzy' && comboCount > 0 && comboCount % 5 === 0) { timeLeft += 2; showFrenzyTimeAdd(); updateHUD(); }
+
+            } else { 
+                let immuneToMiss = false;
+                if (activeSkill === 'jack') immuneToMiss = true;
+                if (activeSkill === 'silas') immuneToMiss = true;
+                if (activeSkill === 'ikra') immuneToMiss = true;
+                if (equippedCharId === 'lyra' && Date.now() > lyraCooldownTimer) { immuneToMiss = true; lyraCooldownTimer = Date.now() + 15000; showFloatingText("Auto-Correction Shield!"); }
+                if (equippedCharId === 'remi' && Date.now() < remiSuddenImmunityEnd) immuneToMiss = true;
+
+                if (immuneToMiss) return; 
+
+                if (gameplayType === 'sniper') { sniperAmmo--; updateAmmoUI(); if (sniperAmmo <= 0) endGame(); } 
+                else if (gameplayType === 'sudden') { endGame(); }
+
+                comboCount = 0; fadeOutComboBGM(); 
+            }
+        }
+
+        function showFloatingText(text) { const container = document.getElementById('message-container'); const el = document.createElement('div'); el.className = 'pop-text'; el.innerText = text; container.appendChild(el); setTimeout(() => el.remove(), 1500); }
+        
+        function spawnManager() { 
+            if (clouds.length < 5) clouds.push(new Cloud()); 
+            if (bgBirds.length < 8 && Math.random() < 0.08) { let bb = bgBirds.find(x => !x.active); if (!bb) { bb = new BackgroundBird(); bgBirds.push(bb); } else bb.reset(); }
+            
+            let currentSpawnRate = BASE_SPAWN.spawnRate;
+            if (gameplayType === 'frenzy') currentSpawnRate *= 2; 
+
+            if (Math.random() < currentSpawnRate) { let b = birds.find(x => !x.active); if (!b) { b = new Bird(); birds.push(b); } else b.reset(); } 
+        }
+
+        function updateHUD() { 
+            document.getElementById('scoreVal').innerText = score; 
+            const timeEl = document.getElementById('timeVal');
+            if (gameplayType === 'sniper' || gameplayType === 'sudden') { timeEl.innerText = "∞"; } else { timeEl.innerText = timeLeft; }
+        }
+
+        function initGame() {
+            let splashFinished = false; let loadingFinished = false;
+            setTimeout(() => { const splash = document.getElementById('customSplashScreen'); if (splash) { splash.style.display = 'none'; splashFinished = true; tryShowStart(); } }, 5000); 
+            loadResources(() => { loadingFinished = true; tryShowStart(); });
+            function tryShowStart() { if (splashFinished && loadingFinished) { document.getElementById('loadingScreen').style.backgroundColor = 'transparent'; document.getElementById('loadingGroup').classList.add('hidden'); document.getElementById('startGroup').classList.remove('hidden'); gameState = 'WAITING_START'; } }
+        }
+        
+        function startExperience() { if(gameState === 'WAITING_START') { warmUpAudio(); playTitleBGM(); triggerFullscreen(); document.getElementById('loadingScreen').classList.add('hidden'); backToMenu(); } }
+        
+        function stopAudioSequence() { 
+            if(currentSequenceAudio) { if (currentSequenceAudio.playPromise !== undefined) { currentSequenceAudio.playPromise.then(() => { currentSequenceAudio.pause(); currentSequenceAudio.currentTime = 0; currentSequenceAudio.onended = null; }).catch(()=>{}); } else { currentSequenceAudio.pause(); currentSequenceAudio.currentTime = 0; currentSequenceAudio.onended = null; } if(sequenceListener) { currentSequenceAudio.removeEventListener('ended', sequenceListener); } currentSequenceAudio = null; sequenceListener = null; } 
+            endScreenAudios.forEach(a => { a.onended = null; a.pause(); a.currentTime = 0; }); endScreenAudios = [];
+        }
+
+        function backToMenu() {
+            if(countdownInterval) { clearInterval(countdownInterval); countdownInterval = null; } if(timerInterval) { clearInterval(timerInterval); timerInterval = null; }
+            stopSound('countdown'); stopSound('timesup'); stopSound('combo_bgm'); stopAudioSequence(); stopGameplayVoice();
+            
+            document.getElementById('topNotifContainer').innerHTML = ''; notifQueue.length = 0; isNotifPlaying = false;
+            gameState = 'MENU'; screenShake = 0; cameraOffset = { x:0, y:0 }; activeSkill = null;
+            ensureAmbiencePlaying(); playTitleBGM(); updateRPG_UI();
+
+            document.getElementById('endScreen').classList.remove('active'); document.getElementById('endScreen').classList.add('hidden'); 
+            document.getElementById('hud').classList.add('hidden'); document.getElementById('countdownLayer').classList.add('hidden'); 
+            document.getElementById('leaderboardLayer').classList.add('hidden'); document.getElementById('btn-pause-hud').classList.remove('visible'); 
+            
+            playTitleInAnim();
+            resize();
+        }
+
+        function startCountdownGame() {
+            stopAudioSequence(); document.getElementById('titleLayer').classList.add('hidden'); document.getElementById('endScreen').classList.remove('active'); stopGameplayVoice();
+            document.getElementById('endScreen').classList.add('hidden'); document.getElementById('leaderboardLayer').classList.add('hidden'); 
+            document.getElementById('hud').classList.remove('hidden'); 
+            
+            if (gameMode === 'rank') {
+                document.getElementById('btn-pause-hud').style.display = 'none';
+            } else {
+                document.getElementById('btn-pause-hud').style.display = 'block';
+                document.getElementById('btn-pause-hud').classList.remove('visible');
+            }
+            
+            document.getElementById('message-container').innerHTML = ''; document.getElementById('starsContainer').innerHTML = ''; 
+            
+            const frenzyTimeAddEl = document.getElementById('frenzyTimeAdd');
+            if(frenzyTimeAddEl) { frenzyTimeAddEl.classList.remove('frenzy-anim-show'); void frenzyTimeAddEl.offsetWidth; }
+            
+            score = 0; shotsFired = 0; hits = 0; comboCount = 0; birds.length = 0; bgBirds.length = 0; effects.length = 0; clouds.length = 0; scorePopups.length = 0; for(let i=0; i<3; i++) clouds.push(new Cloud()); 
+            
+            if (gameplayType === 'frenzy') timeLeft = 30; else timeLeft = 60;
+
+            if (gameplayType === 'sniper') { sniperAmmo = 5; document.getElementById('sniperAmmoHUD').classList.remove('hidden'); updateAmmoUI(); } 
+            else { document.getElementById('sniperAmmoHUD').classList.add('hidden'); }
+
+            const labelEl = document.getElementById('gameplayTypeLabel');
+            labelEl.innerText = gameplayType === 'frenzy' ? 'FRENZY RUSH' : (gameplayType === 'sniper' ? 'SNIPER ELITE' : 'SUDDEN DEATH');
+            if (gameMode === 'rank') labelEl.style.color = '#facc15'; else labelEl.style.color = '#60a5fa';
+
+            updateHUD(); cameraOffset = { x: 0, y: 0 }; crosshairOffset.y = 0; activeSkill = null; skillEndTime = 0; skillCooldownEndTime = 0; remiSniperSkillCount = 0;
+            ensureAmbiencePlaying(); fadeOutTitleBGM(); stopSound('combo_bgm'); playSound('countdown'); 
+            gameState = 'COUNTDOWN'; const countLayer = document.getElementById('countdownLayer'); const countText = document.getElementById('countdownText'); countLayer.classList.remove('hidden');
+            let count = 3; countText.innerText = count;
+            
+            const triggerAnim = () => { countText.style.animation = 'none'; countText.offsetHeight; countText.style.animation = 'countdownPop 0.8s forwards'; }; triggerAnim();
+            
+            if(countdownInterval) clearInterval(countdownInterval);
+            countdownInterval = setInterval(() => { count--; if(count > 0) { countText.innerText = count; triggerAnim(); } else if (count === 0) { countText.innerText = "LETS HUNT!"; triggerAnim(); } else { clearInterval(countdownInterval); countdownInterval = null; countLayer.classList.add('hidden'); runGameplay(); } }, 1000);
+        }
+
+        function runGameplay() {
+            gameState = 'PLAY'; shotCooldownTime = 0; crosshairEntryParams.progress = 0;
+            const charObj = charData.find(c => c.id === equippedCharId); if(charObj && charObj.isPassive) { playGameplayVoice(equippedCharId); }
+            setTimeout(() => { if(gameState === 'PLAY' && gameMode !== 'rank') document.getElementById('btn-pause-hud').classList.add('visible'); }, 2000);
+            
+            if(timerInterval) clearInterval(timerInterval);
+            
+            if (gameplayType === 'frenzy') {
+                timerInterval = setInterval(() => { 
+                    if(gameState !== 'PLAY') return; if(activeSkill === 'silas') return; 
+                    timeLeft--; updateHUD(); if(timeLeft <= 0) endGame(); 
+                }, 1000);
+            }
+        }
+
+        function endGame() {
+            gameState = 'END'; clearInterval(timerInterval);
+            if(audioBank['ambience']) audioBank['ambience'].volume = 0.2; fadeOutComboBGM(); stopGameplayVoice();
+            document.getElementById('hud').classList.add('hidden');
+            
+            let coinReward = Math.floor(score / 5);
+            if (gameMode === 'classic') coinReward = Math.floor(coinReward / 2);
+            if (coinReward > 0) { banggoCoin += coinReward; saveRPGData(); }
+
+            const acc = shotsFired > 0 ? Math.min(100, Math.round((hits / shotsFired) * 100)) : 0; showEndScreenAnimations(acc); resize();
+        }
+
+        function showEndScreenAnimations(acc) {
+            gameState = 'END';
+            const endScreen = document.getElementById('endScreen'); endScreen.classList.remove('hidden'); void endScreen.offsetWidth; endScreen.classList.add('active'); 
+            const btnMenuWrap = document.getElementById('wrapper-btn-menu'); const btnReplayWrap = document.getElementById('wrapper-btn-replay');
+            btnMenuWrap.classList.remove('btn-go-left'); btnMenuWrap.classList.add('btn-start-center'); btnReplayWrap.classList.remove('btn-go-right'); btnReplayWrap.classList.add('btn-start-center');
+            
+            const finalScoreEl = document.getElementById('finalScore'); let displayScore = 0;
+            const animateScore = () => { const diff = score - displayScore; if(diff > 0) displayScore += Math.ceil(diff / 10); else displayScore = score; finalScoreEl.innerText = displayScore; if(displayScore < score) requestAnimationFrame(animateScore); }; requestAnimationFrame(animateScore);
+            document.getElementById('finalAccuracy').innerText = acc + "%";
+            const starsContainer = document.getElementById('starsContainer'); starsContainer.innerHTML = '';
+            
+            let starCount = 0; if (score > 150) starCount = 3; else if (score > 100) starCount = 2; else if (score > 50) starCount = 1; else starCount = 0; 
+            endScreenAudios = [];
+
+            const playStarSequence = () => {
+                for(let i = 0; i < starCount; i++) { setTimeout(() => { if (gameState !== 'END') return; const img = document.createElement('img'); img.src = images.starGold.src; img.className = 'star-icon'; starsContainer.appendChild(img); void img.offsetWidth; img.classList.add('visible'); let snd = playSound('reward'); if(snd) endScreenAudios.push(snd); }, i * 300); }
+                let starSoundName = starCount === 1 ? 'star_1' : (starCount === 2 ? 'star_2' : (starCount === 3 ? 'star_3' : 'no_star')); let seqPlayedTotal = false;
+
+                const triggerMenuButtons = () => {
+                    submitScoreDirect(acc); 
+                    btnMenuWrap.classList.remove('btn-start-center'); btnMenuWrap.classList.add('btn-go-left'); btnReplayWrap.classList.remove('btn-start-center'); btnReplayWrap.classList.add('btn-go-right');
+                };
+
+                const playTotalAndShare = () => {
+                    if(!seqPlayedTotal && gameState === 'END') {
+                        seqPlayedTotal = true; let totalSfx = playSound(starSoundName);
+                        let isTriggered = false;
+                        
+                        const safeTrigger = () => {
+                            if (!isTriggered && gameState === 'END') {
+                                isTriggered = true;
+                                triggerMenuButtons();
+                                currentSequenceAudio = playSound('share'); 
+                                if(currentSequenceAudio) endScreenAudios.push(currentSequenceAudio);
+                            }
+                        };
+
+                        if(totalSfx) { 
+                            endScreenAudios.push(totalSfx); 
+                            currentSequenceAudio = totalSfx; 
+                            totalSfx.onended = safeTrigger; 
+                            setTimeout(safeTrigger, 2000); 
+                        } 
+                        else { 
+                            safeTrigger();
+                        }
+                    }
+                };
+                const delay = starCount > 0 ? (starCount * 300) + 500 : 500; setTimeout(playTotalAndShare, delay);
+            };
+            
+            let timesupSfx = playSound('timesup'); let seqPlayed = false; if(timesupSfx) endScreenAudios.push(timesupSfx);
+            const triggerSeq = () => { if(!seqPlayed && gameState === 'END') { seqPlayed = true; playStarSequence(); } };
+            if (timesupSfx) { currentSequenceAudio = timesupSfx; timesupSfx.onended = triggerSeq; setTimeout(triggerSeq, 2500); } else { setTimeout(triggerSeq, 1500); }
+        }
+
+        function drawLayer(ctx, img, factorX, factorY, scaleMode) {
+            if (!img) return; const bgW = canvas.width; let xPos = -(cameraOffset.x * factorX) % bgW; if (xPos > 0) xPos -= bgW; let drawH, drawW, yPos;
+            if (scaleMode === 'cover') { const bgH = canvas.height; const scaledH = bgH * 1.2; const offsetY = (bgH - scaledH) / 2; yPos = -(cameraOffset.y * factorY) + offsetY; drawW = bgW + 2; drawH = scaledH; } 
+            else { const aspect = img.width / img.height; drawW = bgW; drawH = drawW / aspect; yPos = canvas.height - drawH - (cameraOffset.y * factorY); if (yPos + drawH < canvas.height) yPos = canvas.height - drawH; }
+            ctx.drawImage(img, xPos, yPos, drawW + 1, drawH); ctx.drawImage(img, xPos + drawW, yPos, drawW + 1, drawH);
+        }
+
+        function drawParallaxBG(ctx) { drawLayer(ctx, images.bg, 0.2, 0.0, 'cover'); drawLayer(ctx, images.bgMountain, 0.3, 0.15, 'contain'); drawLayer(ctx, images.bgTrees, 0.6, 0.3, 'contain'); }
+
+        function drawControls(ctx) {
+            let scaleRef = canvas.height / 1080; if (scaleRef > 1.2) scaleRef = 1.2; if (scaleRef < 0.4) scaleRef = 0.4;
+            let drawShotX = shotBtnRect.x; if (isShotBtnPressed) drawShotX += 14 * scaleRef; 
+            
+            if (images.btnShotLower) { ctx.drawImage(images.btnShotLower, drawShotX, shotBtnRect.y, shotBtnRect.w, shotBtnRect.h); }
+            if (images.btnShotReload) { let percent = 1; const now = Date.now(); if (now < shotCooldownTime) { percent = 1 - ((shotCooldownTime - now) / SHOT_COOLDOWN_MS); } let clipW = 73 + (321 - 73) * percent; let drawClipW = clipW * (shotBtnRect.w / 589); ctx.drawImage(images.btnShotReload, 0, 0, clipW, 414, drawShotX, shotBtnRect.y, drawClipW, shotBtnRect.h); }
+            
+            let charCap = equippedCharId.charAt(0).toUpperCase() + equippedCharId.slice(1); let btnCharImg = images['btnShot' + charCap] || images.btnShotBanggo;
+            if (btnCharImg) { ctx.drawImage(btnCharImg, drawShotX, shotBtnRect.y, shotBtnRect.w, shotBtnRect.h); }
+
+            const charObj = charData.find(c => c.id === equippedCharId);
+            if (images.btnSkill && (!charObj || !charObj.isPassive)) {
+                let isRemiSkillDisabled = (equippedCharId === 'remi' && gameplayType === 'sniper' && (sniperAmmo >= 5 || remiSniperSkillCount >= 5));
+                
+                let sDrawX = skillBtnRect.x; let sDrawY = skillBtnRect.y; let sDrawW = skillBtnRect.w; let sDrawH = skillBtnRect.h;
+                if (isSkillBtnPressed && !isRemiSkillDisabled) { const sScale = 0.9; sDrawX += (sDrawW - sDrawW * sScale) / 2; sDrawY += (sDrawH - sDrawH * sScale) / 2; sDrawW *= sScale; sDrawH *= sScale; }
+                
+                ctx.save();
+                if (isRemiSkillDisabled) {
+                    ctx.globalAlpha = 0.4;
+                    ctx.filter = 'grayscale(100%)';
+                }
+                ctx.drawImage(images.btnSkill, sDrawX, sDrawY, sDrawW, sDrawH);
+                ctx.restore();
+
+                const now = Date.now();
+                if (now < skillCooldownEndTime && !isRemiSkillDisabled) { const stats = getSkillStats(equippedCharId); const percent = (skillCooldownEndTime - now) / stats.cd; ctx.beginPath(); ctx.moveTo(sDrawX + sDrawW/2, sDrawY + sDrawH/2); ctx.arc(sDrawX + sDrawW/2, sDrawY + sDrawH/2, sDrawW/2, -Math.PI/2, -Math.PI/2 + (Math.PI * 2 * percent), false); ctx.closePath(); ctx.fillStyle = 'rgba(0, 0, 0, 0.7)'; ctx.fill(); }
+            }
+
+            if (analogInput.activeTouch) { ctx.beginPath(); ctx.arc(analogInput.originX, analogInput.originY, 60, 0, Math.PI*2); ctx.fillStyle = 'rgba(255, 255, 255, 0.1)'; ctx.lineWidth = 2; ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)'; ctx.stroke(); ctx.fill(); ctx.beginPath(); ctx.arc(analogInput.currX, analogInput.currY, 25, 0, Math.PI*2); ctx.fillStyle = 'rgba(156, 163, 175, 0.8)'; ctx.fill(); } 
+            else if ('ontouchstart' in window) { ctx.beginPath(); ctx.arc(analogInput.originX, analogInput.originY, 40, 0, Math.PI*2); ctx.fillStyle = 'rgba(255, 255, 255, 0.1)'; ctx.fill(); ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)'; ctx.stroke(); }
+        }
+
+        function gameLoop(timestamp) {
+            const dt = timestamp - lastTime; lastTime = timestamp; ctx.clearRect(0, 0, canvas.width, canvas.height);
+            if (images.bg) drawParallaxBG(ctx);
+            const viewCenterX = cameraOffset.x - canvas.width/2; const viewCenterY = cameraOffset.y - canvas.height/2;
+            
+            if (activeSkill && Date.now() > skillEndTime) activeSkill = null;
+
+            if (gameState === 'PLAY') {
+                const sensitivity = 8; 
+                if (analogInput.activeTouch) { cameraOffset.x += analogInput.x * sensitivity; cameraOffset.y += analogInput.y * sensitivity; }
+                if (cameraOffset.y < -CAMERA_Y_LIMIT) cameraOffset.y = -CAMERA_Y_LIMIT; if (cameraOffset.y > CAMERA_Y_LIMIT) cameraOffset.y = CAMERA_Y_LIMIT;
+                crosshairOffset.y *= 0.9;
+                
+                spawnManager(); birds.forEach(b => b.update()); bgBirds.forEach(bb => bb.update()); clouds.forEach(c => c.update()); effects.forEach(e => e.update()); scorePopups.forEach(sp => sp.update());
+                
+                for(let i=effects.length-1; i>=0; i--) if(!effects[i].active) effects.splice(i,1);
+                for(let i=scorePopups.length-1; i>=0; i--) if(!scorePopups[i].active) scorePopups.splice(i,1);
+                for(let i=bgBirds.length-1; i>=0; i--) if(!bgBirds[i].active) bgBirds.splice(i,1);
+                
+                if(screenShake > 0) screenShake *= 0.9; if(screenShake < 0.5) screenShake = 0;
+                crosshairScale += (1.0 - crosshairScale) * 0.2; crosshairRotation *= 0.8;
+                if(comboCount > 0 && Date.now() - lastHitTime > COMBO_TIMEOUT_MS) { comboCount = 0; fadeOutComboBGM(); }
+            }
+            if(gameState === 'PLAY' || gameState === 'MENU' || gameState === 'COUNTDOWN' || gameState === 'END' ) { clouds.forEach(c => c.render(ctx, viewCenterX, viewCenterY)); }
+            if(gameState === 'PLAY' || gameState === 'MENU' || gameState === 'COUNTDOWN' || gameState === 'END' ) {
+                ctx.save(); let shakeX = (Math.random() - 0.5) * screenShake; let shakeY = (Math.random() - 0.5) * screenShake; ctx.translate(shakeX, shakeY);
+                bgBirds.forEach(bb => bb.render(ctx, viewCenterX, viewCenterY));
+                const sortedBirds = [...birds].sort((a, b) => a.scale - b.scale); sortedBirds.forEach(b => b.render(ctx, viewCenterX, viewCenterY));
+                effects.forEach(e => e.render(ctx, viewCenterX, viewCenterY)); scorePopups.forEach(sp => sp.render(ctx, viewCenterX, viewCenterY));
+                ctx.restore();
+            }
+            if(gameState === 'MENU' || gameState === 'LOADING' || gameState === 'WAITING_START' || gameState === 'COUNTDOWN' || gameState === 'END') { ctx.fillStyle = 'rgba(0,0,0,0.7)'; ctx.fillRect(0,0,canvas.width, canvas.height); }
+            if (gameState === 'PLAY' || gameState === 'PAUSE') {
+                if (images.scope || images.crosshair) { if (crosshairEntryParams.progress < 0.99) crosshairEntryParams.progress += (1 - crosshairEntryParams.progress) * 0.1; else crosshairEntryParams.progress = 1; }
+                const entryScaleFactor = 1 + (9 * (1 - crosshairEntryParams.progress)); const entryAlpha = crosshairEntryParams.progress;
+
+                if (images.scope) {
+                    ctx.save(); const chX = canvas.width/2; const chY = canvas.height/2 + crosshairOffset.y; ctx.translate(chX, chY); ctx.scale(crosshairScale * entryScaleFactor, crosshairScale * entryScaleFactor); ctx.rotate(crosshairRotation); ctx.globalAlpha = entryAlpha;
+                    const sx = 0; const sy = 68; const sW = images.scope.width; const sH = images.scope.height - 136; const aspect = sW / sH; let drawW = canvas.width; let drawH = canvas.width / aspect; if (drawH < canvas.height) { drawH = canvas.height; drawW = canvas.height * aspect; } drawW *= 1.2; drawH *= 1.2; 
+                    ctx.drawImage(images.scope, sx, sy, sW, sH, -drawW/2, -drawH/2, drawW, drawH); 
+                    
+                    if (activeSkill && skillEndTime > Date.now()) {
+                        const charObj = charData.find(c => c.id === activeSkill);
+                        if (charObj && charObj.duration > 0 && images.skillGauge) {
+                            const stats = getSkillStats(activeSkill);
+                            const percent = Math.max(0, (skillEndTime - Date.now()) / stats.dur);
+                            const gW = images.skillGauge.width; const gH = images.skillGauge.height;
+                            const dGaugeW = gW * (drawW / sW); const dGaugeH = gH * (drawH / sH);
+                            const dX = -drawW/2 + (1253 / sW) * drawW;
+                            const dY = -drawH/2 + ((411 - 68) / sH) * drawH; 
+                            
+                            const srcY = gH * (1 - percent);
+                            const srcH = gH * percent;
+                            const destY = dY + dGaugeH * (1 - percent);
+                            const destH = dGaugeH * percent;
+                            
+                            if (srcH > 0) {
+                                ctx.drawImage(images.skillGauge, 0, srcY, gW, srcH, dX, destY, dGaugeW, destH);
+                            }
+                        }
+                    }
+
+                    ctx.restore();
+                }
+
+                const cv = document.getElementById('comboVideo'); if (comboCount >= 3 && !cv.paused && cv.readyState >= 2) { ctx.save(); ctx.globalAlpha = 0.5; ctx.globalCompositeOperation = 'screen'; ctx.drawImage(cv, 0, 0, canvas.width, canvas.height); ctx.restore(); }
+                if (images.crosshair) {
+                    let chSize = 100 * crosshairScale * entryScaleFactor; ctx.save(); const chX = canvas.width/2; const chY = canvas.height/2 + crosshairOffset.y; ctx.translate(chX, chY); ctx.rotate(crosshairRotation); ctx.globalAlpha = entryAlpha;
+                    if (activeSkill === 'banggo') { chSize *= 1.5; ctx.shadowColor = "#ff0000"; ctx.shadowBlur = 20; }
+                    ctx.drawImage(images.crosshair, -chSize/2, -chSize/2, chSize, chSize); ctx.restore();
+                } 
+                drawControls(ctx);
+            }
+            requestAnimationFrame(gameLoop);
+        }
+
+        resize(); initGame(); requestAnimationFrame(gameLoop);
+
+    </script>
+<script>
+        (function injectPWA() {
+            // 1. Suntik Manifest diam-diam ke dalam <head>
+            const manifestLink = document.createElement('link');
+            manifestLink.rel = 'manifest';
+            manifestLink.href = 'manifest.json';
+            document.head.appendChild(manifestLink);
+
+            // 2. Panggil Satpam Service Worker (sw.js)
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('sw.js')
+                        .then(reg => console.log('Sera berhasil pasang Service Worker! Scope:', reg.scope))
+                        .catch(err => console.error('Aduh, Service Worker-nya gagal Sayang:', err));
+                });
+            }
+        })();
+    </script>
+</body>
+</html>
