@@ -2,7 +2,7 @@
 <html lang="id">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Joker App Project</title>
     
     <!-- SUNTIKAN PWA (Manifest & Theme Color) -->
@@ -602,8 +602,6 @@
 
     async function ensureFullscreen() {
         try {
-            // Hilangkan pengecekan isRunningAsPWA agar API HTML5 Fullscreen tetap ter-trigger paksa, 
-            // sehingga bar navigasi HP di bawah pasti hilang sepenuhnya.
             if (!document.fullscreenElement) { await document.documentElement.requestFullscreen(); }
             if (screen.orientation && screen.orientation.lock) { await screen.orientation.lock('landscape'); }
         } catch (e) {}
@@ -706,9 +704,10 @@
     function handleTapToContinue() {
         if(!downloadComplete) return; downloadComplete = false; tapToContinueReady = false;
         
-        // Memaksa eksekusi HTML5 Fullscreen API pada interaksi/tap pertama user (bahkan dalam PWA)
-        // Ini memastikan bilah navigasi (back/home/recent apps) Android benar-benar tenggelam.
         ensureFullscreen(); 
+        
+        // Pancingan awal agar tombol "Back" Android bisa dicegat oleh History API
+        history.pushState({ trapped: true }, null, location.href);
 
         document.getElementById('loading-page').style.opacity = '0';
         setTimeout(() => { document.getElementById('loading-page').style.display = 'none'; initMainMenu(); }, 500);
@@ -1425,6 +1424,58 @@
             wrapper.appendChild(table);
         }
     }
+
+    // =======================================================================
+    // -- PENCEGAHAN BACK BUTTON & AUTO FULLSCREEN SAAT RESUME/MINIMIZE --
+    // =======================================================================
+
+    // 1. Menjebak Tombol Back (History API)
+    window.addEventListener('popstate', (e) => {
+        // Pancingan dihidupkan lagi agar tombol "Back" Android selanjutnya tetap terperangkap
+        history.pushState({ trapped: true }, null, location.href);
+        
+        // Cek apakah notifikasi Exit App (atau notifikasi lainnya) sedang terbuka
+        const notifModal = document.getElementById('notification-modal');
+        if (notifModal.style.display === 'flex') {
+            notifModal.style.display = 'none'; // Tutup notifikasi exit
+            AudioSys.playSFX('close.mp3');
+            return; // Selesai sampai di sini
+        }
+
+        // Cek apakah ada Modal Overlay lainnya yang sedang terbuka (Log, Tutorial, Option, dll)
+        let modalClosed = false;
+        document.querySelectorAll('.modal-overlay').forEach(m => {
+            if (m.style.display === 'flex') {
+                m.style.display = 'none';
+                modalClosed = true;
+            }
+        });
+
+        if (modalClosed) {
+            AudioSys.playSFX('close.mp3');
+            if (logEditable) cancelLogEdit(); // Batalkan edit log jika sedang aktif
+            return; // Selesai, karena tombol back berfungsi menutup modal
+        }
+
+        // Jika tidak ada modal yang terbuka sama sekali, anggap user menekan tombol "Exit App"
+        confirmExit();
+    });
+
+    // 2. Agresif Enforce Fullscreen saat aplikasi dibuka kembali (Maximize dari Minimize WhatsApp/Home)
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            ensureFullscreen();
+            // Tembak ulang dalam jeda singkat untuk memastikan layar bersih dari indikator OS
+            setTimeout(ensureFullscreen, 500);
+            setTimeout(ensureFullscreen, 1000);
+        }
+    });
+
+    // 3. Memaksa fullscreen kembali setiap kali layar disentuh.
+    // Jika karena suatu sistem OS (notifikasi luar, alarm, dsb) bar atas muncul, 
+    // interaksi sentuhan pertama pemain ke dalam game akan seketika menyembunyikannya.
+    window.addEventListener('touchstart', ensureFullscreen, { passive: true });
+    window.addEventListener('click', ensureFullscreen, { passive: true });
 
 </script>
 
