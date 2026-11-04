@@ -594,9 +594,16 @@
     }
     window.addEventListener('resize', resizeApp); window.addEventListener('orientationchange', resizeApp); resizeApp();
 
+    // FUNGSI CEK PWA
+    function isRunningAsPWA() {
+        return window.matchMedia('(display-mode: standalone)').matches || 
+               window.matchMedia('(display-mode: fullscreen)').matches || 
+               window.navigator.standalone === true;
+    }
+
     async function ensureFullscreen() {
         try {
-            if (!document.fullscreenElement) { await document.documentElement.requestFullscreen(); }
+            if (!document.fullscreenElement && !isRunningAsPWA()) { await document.documentElement.requestFullscreen(); }
             if (screen.orientation && screen.orientation.lock) { await screen.orientation.lock('landscape'); }
         } catch (e) {}
     }
@@ -614,7 +621,7 @@
     fsOverlay.addEventListener('touchstart', handleFsInteraction, {capture: true, passive: false});
 
     document.addEventListener('fullscreenchange', () => {
-        if (!document.fullscreenElement) fsOverlay.style.display = 'block'; 
+        if (!document.fullscreenElement && !isRunningAsPWA()) fsOverlay.style.display = 'block'; 
         else fsOverlay.style.display = 'none';
     });
 
@@ -636,7 +643,14 @@
     avatarNamesList.forEach(n => assets.push(`avatar_${n}.png`, `${n}.mp3`));
 
     window.onload = () => {
-        if (!document.fullscreenElement) { fsOverlay.style.display = 'block'; }
+        if (!document.fullscreenElement && !isRunningAsPWA()) { 
+            fsOverlay.style.display = 'block'; 
+        } else {
+            fsOverlay.style.display = 'none';
+            if (isRunningAsPWA() && screen.orientation && screen.orientation.lock) {
+                screen.orientation.lock('landscape').catch(e => {});
+            }
+        }
         
         document.getElementById('splash-page').style.display = 'flex';
         setTimeout(() => { document.getElementById('splash-page').style.opacity = '1'; }, 50);
