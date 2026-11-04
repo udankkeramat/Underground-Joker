@@ -594,16 +594,17 @@
     }
     window.addEventListener('resize', resizeApp); window.addEventListener('orientationchange', resizeApp); resizeApp();
 
-    // FUNGSI CEK PWA
     function isRunningAsPWA() {
-        return window.matchMedia('(display-mode: standalone)').matches || 
-               window.matchMedia('(display-mode: fullscreen)').matches || 
+        return window.matchMedia('(display-mode: fullscreen)').matches || 
+               window.matchMedia('(display-mode: standalone)').matches || 
                window.navigator.standalone === true;
     }
 
     async function ensureFullscreen() {
         try {
-            if (!document.fullscreenElement && !isRunningAsPWA()) { await document.documentElement.requestFullscreen(); }
+            // Hilangkan pengecekan isRunningAsPWA agar API HTML5 Fullscreen tetap ter-trigger paksa, 
+            // sehingga bar navigasi HP di bawah pasti hilang sepenuhnya.
+            if (!document.fullscreenElement) { await document.documentElement.requestFullscreen(); }
             if (screen.orientation && screen.orientation.lock) { await screen.orientation.lock('landscape'); }
         } catch (e) {}
     }
@@ -704,6 +705,11 @@
 
     function handleTapToContinue() {
         if(!downloadComplete) return; downloadComplete = false; tapToContinueReady = false;
+        
+        // Memaksa eksekusi HTML5 Fullscreen API pada interaksi/tap pertama user (bahkan dalam PWA)
+        // Ini memastikan bilah navigasi (back/home/recent apps) Android benar-benar tenggelam.
+        ensureFullscreen(); 
+
         document.getElementById('loading-page').style.opacity = '0';
         setTimeout(() => { document.getElementById('loading-page').style.display = 'none'; initMainMenu(); }, 500);
     }
@@ -1430,7 +1436,6 @@
                 .then((registration) => {
                     console.log('PWA ServiceWorker berhasil didaftarkan dengan scope:', registration.scope);
                     
-                    // Cek otomatis jika ada update pada file sw.js itu sendiri
                     registration.onupdatefound = () => {
                         const installingWorker = registration.installing;
                         installingWorker.onstatechange = () => {
