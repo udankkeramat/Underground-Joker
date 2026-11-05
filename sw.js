@@ -1,27 +1,9 @@
-const CACHE_NAME = 'joker-app-assets-v3';
+const CACHE_NAME = 'joker-app-assets-v4';
+const TEMP_CACHE = 'joker-temp';
 const BASE_URL = 'https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/';
-
-// Pre-cache hanya untuk App Shell inti agar PWA bisa terdeteksi offline
-let coreAssets = [
-    './',
-    './index.html',
-    './manifest.json',
-    BASE_URL + 'logo.png',
-    BASE_URL + 'button.png'
-];
 
 self.addEventListener('install', (event) => {
     self.skipWaiting();
-    event.waitUntil(
-        caches.open(CACHE_NAME).then(async (cache) => {
-            for (let url of coreAssets) {
-                try {
-                    const response = await fetch(url);
-                    if (response.ok) { await cache.put(url, response); }
-                } catch (err) {}
-            }
-        })
-    );
 });
 
 self.addEventListener('activate', (event) => {
@@ -29,26 +11,26 @@ self.addEventListener('activate', (event) => {
         caches.keys().then((cacheNames) => {
             return Promise.all(
                 cacheNames.map((name) => {
-                    if (name !== CACHE_NAME) return caches.delete(name);
+                    if (name !== CACHE_NAME && name !== TEMP_CACHE) return caches.delete(name);
                 })
             );
         }).then(() => self.clients.claim())
     );
 });
 
-// Strategi: Stale-While-Revalidate (Otomatis caching jika ada file yang ditarik saat main)
+// Intercept fetch untuk memprioritaskan cache, 
+// serta memperbaiki bug range request (mp3/mp4 sering gagal di beberapa browser)
 self.addEventListener('fetch', (event) => {
     if (event.request.method !== 'GET') return;
+    
     event.respondWith(
-        caches.match(event.request).then((cachedResponse) => {
-            const fetchPromise = fetch(event.request).then((networkResponse) => {
-                if (networkResponse && networkResponse.status === 200) {
-                    const responseToCache = networkResponse.clone();
-                    caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
-                }
+        caches.match(event.request, { ignoreSearch: true }).then((cachedResponse) => {
+            if (cachedResponse) {
+                return cachedResponse;
+            }
+            return fetch(event.request).then((networkResponse) => {
                 return networkResponse;
             }).catch(() => {});
-            return cachedResponse || fetchPromise;
         })
     );
 });
