@@ -45,9 +45,14 @@
         
         #loading-page { background-image: url('https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/background_screen4.png'); background-size: cover; background-position: center; flex-direction: column; align-items: center; justify-content: flex-end; padding-bottom: 120px; z-index: 800; }
         
-        #loading-elements, #tap-to-continue { transition: opacity 0.5s ease; }
-        #tap-to-continue { position: absolute; bottom: 120px; color: white; font-size: 55px; font-weight: bold; text-shadow: 0 0 10px #f1c40f; animation: pulseText 1.5s infinite; cursor: pointer; display: none; opacity: 0; }
-        @keyframes pulseText { 0% { opacity: 0.5; transform: scale(0.95); } 50% { opacity: 1; transform: scale(1.05); } 100% { opacity: 0.5; transform: scale(0.95); } }
+        #loading-elements { transition: opacity 0.5s ease; display: flex; flex-direction: column; align-items: center; }
+
+        .corner-btn { position: absolute; top: 40px; cursor: pointer; transition: transform 0.1s; display: flex; align-items: center; justify-content: center; z-index: 950; }
+        .corner-btn:active { transform: scale(0.9); }
+        .corner-btn img { width: 220px; height: auto; object-fit: contain; }
+        .corner-btn span { position: absolute; color: white; font-size: 40px; font-weight: bold; text-transform: uppercase; text-shadow: 2px 2px 4px #000; pointer-events: none; }
+        #btn-update-assets { left: 40px; }
+        #btn-begin-app { right: 40px; }
 
         .loading-text { color: white; font-size: 32px; margin-bottom: 20px; font-weight: bold; text-align: center; }
         .loading-bar-bg { width: 600px; height: 20px; border: 2px solid #fff; border-radius: 10px; position: relative; overflow: hidden; }
@@ -228,16 +233,24 @@
         <img id="logo" src="https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/logo.png" alt="Logo">
     </div>
 
-    <!-- LOADING AWAL (DOWNLOAD) -->
-    <div id="loading-page" class="page" onclick="handleTapToContinue()">
+    <!-- LOADING SCREEN BARU (MANUAL DOWNLOAD) -->
+    <div id="loading-page" class="page">
+        <div id="btn-update-assets" class="corner-btn" onclick="forceUpdateAssets()">
+            <img src="https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/button.png">
+            <span>Update</span>
+        </div>
+        <div id="btn-begin-app" class="corner-btn" onclick="handleBeginApp()">
+            <img src="https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/button.png">
+            <span>Begin</span>
+        </div>
+
         <div id="loading-elements">
-            <div class="loading-text" id="lbl-loading">Mengunduh & Sinkronisasi Asset...</div>
-            <div style="position: relative;">
+            <div class="loading-text" id="lbl-loading">0% Assets downloaded</div>
+            <div id="loading-bar-container" style="position: relative; display: none;">
                 <div class="loading-bar-bg"><div class="loading-bar-fill" id="loading-fill"></div></div>
                 <div class="loading-percent" id="loading-percent">0%</div>
             </div>
         </div>
-        <div id="tap-to-continue">Tap screen to Continue</div>
     </div>
 
     <!-- MAIN MENU -->
@@ -273,11 +286,13 @@
                 <img src="https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/exit_app.png" id="btn-exit-menu" class="top-menu-btn" onclick="confirmExit()">
                 <img src="https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/language.png" id="btn-lang-menu" class="top-menu-btn" onclick="openModal('lang-modal')">
             </div>
-            
             <img src="https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/sound.png" id="btn-sound-menu" class="top-menu-btn" onclick="openModal('sound-modal')" style="position: absolute; left: 1544px; top: 33px; z-index: 10;">
             
-            <img src="https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/tutorial.png" id="btn-tutorial-main" class="top-menu-btn" onclick="openModal('tutorial-modal')" style="position: absolute; left: 46px; bottom: 96px; z-index: 10;">
-            <img src="https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/load.png" id="btn-load-main" class="top-menu-btn" onclick="confirmLoadGame()" style="position: absolute; left: 211px; bottom: 96px; z-index: 10; display: none;">
+            <!-- Perubahan Posisi Button Tutorial dan Load menjadi Flex Container (Jarak presisi 75px) -->
+            <div style="position: absolute; left: 46px; bottom: 96px; display: flex; gap: 75px; z-index: 10;">
+                <img src="https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/tutorial.png" id="btn-tutorial-main" class="top-menu-btn" onclick="openModal('tutorial-modal')">
+                <img src="https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/load.png" id="btn-load-main" class="top-menu-btn" onclick="confirmLoadGame()" style="display: none;">
+            </div>
         </div>
     </div>
 
@@ -415,9 +430,7 @@
 
     const i18n = {
         id: {
-            loading: "Mengunduh & Sinkronisasi Asset...",
             preload: "MEMUAT ASET...",
-            tap_continue: "Tap screen to Continue",
             round: "Round",
             match_lbl: "Match",
             players_lbl: "PLAYERS",
@@ -452,9 +465,7 @@
             `
         },
         en: {
-            loading: "Downloading & Syncing Assets...",
             preload: "LOADING ASSETS...",
-            tap_continue: "Tap screen to Continue",
             round: "Round",
             match_lbl: "Match",
             players_lbl: "PLAYERS",
@@ -548,7 +559,6 @@
     let logRoundsData = [], logScreenHistory = [], logScreenHistoryIndex = 0;
     let tempLogRoundsData = []; 
     let logEditable = false; let isWinnerState = false; let savedWinnerIndices = [];
-    let downloadComplete = false; let tapToContinueReady = false;
     
     const avatarNamesList = ["kamaruddin", "rustam", "suardi", "ridwan", "rizal", "rudy", "fajrin", "arya", "juragan", "tolingu"];
     
@@ -564,10 +574,7 @@
     function isRunningAsPWA() { return window.matchMedia('(display-mode: fullscreen)').matches || window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; }
     async function ensureFullscreen() { try { if (!document.fullscreenElement) await document.documentElement.requestFullscreen(); if (screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape'); } catch (e) {} }
 
-    function handleFsInteraction(e) {
-        e.stopPropagation(); e.preventDefault();
-        ensureFullscreen().then(() => { if (appState === 'loading' && tapToContinueReady) handleTapToContinue(); });
-    }
+    function handleFsInteraction(e) { e.stopPropagation(); e.preventDefault(); ensureFullscreen(); }
     const fsOverlay = document.getElementById('fullscreen-overlay');
     fsOverlay.addEventListener('click', handleFsInteraction, {capture: true}); fsOverlay.addEventListener('pointerdown', handleFsInteraction, {capture: true}); fsOverlay.addEventListener('touchstart', handleFsInteraction, {capture: true, passive: false});
     document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && !isRunningAsPWA()) fsOverlay.style.display = 'block'; else fsOverlay.style.display = 'none'; });
@@ -575,7 +582,7 @@
     const assets = [
         'logo.png', 'background.png', 'background_classic.mp4', 'background_farm.mp4', 'menu_screen.png', 'background_screen4.png',
         'thumbnail_classic_on.png', 'thumbnail_classic_off.png', 'thumbnail_farm_on.png', 'thumbnail_farm_off.png',
-        'players_count.png', 'goal_score.png', 'sound.png', 'tutorial.png', 'exit_app.png', 'start.png', 'main_menu.png', 'next_match.png', 'load.png',
+        'players_count.png', 'goal_score.png', 'sound.png', 'tutorial.png', 'exit_app.png', 'start.png', 'main_menu.png', 'next_match.png', 'load.png', 'button.png',
         'option.png', 'players.png', 'star.png', 'star_2.png', 'use.png', 'back.png', 'border_avatar.png', 'badge.png',
         'flag_1_classic.png', 'flag_2_classic.png', 'flag_3_classic.png', 'flag_4_classic.png', 'flag_5_classic.png',
         'flag_1_farm.png', 'flag_2_farm.png', 'flag_3_farm.png', 'flag_4_farm.png', 'flag_5_farm.png',
@@ -597,45 +604,84 @@
         setTimeout(() => { 
             document.getElementById('splash-page').style.opacity = '0';
             setTimeout(() => { 
-                document.getElementById('splash-page').style.display = 'none'; document.getElementById('loading-page').style.display = 'flex'; appState = 'loading';
-                setTimeout(() => { document.getElementById('loading-page').style.opacity = '1'; loadAssets(); }, 50);
+                document.getElementById('splash-page').style.display = 'none'; 
+                document.getElementById('loading-page').style.display = 'flex'; 
+                appState = 'loading';
+                setTimeout(() => { 
+                    document.getElementById('loading-page').style.opacity = '1'; 
+                    checkAssetsPercentage(); 
+                }, 50);
             }, 500);
         }, 2000);
     };
 
-    async function loadAssets() {
-        let loaded = 0; const total = assets.length;
-        const fill = document.getElementById('loading-fill'); const percent = document.getElementById('loading-percent');
-        let cache = null; if ('caches' in window && window.location.protocol !== 'file:') { try { cache = await caches.open('joker-app-assets-v2'); } catch(e){} }
-
-        for (let urlStr of assets) {
-            let url = BASE_URL + urlStr;
-            if (cache) {
-                try {
-                    const cachedRes = await cache.match(url); let needsUpdate = true;
-                    if (cachedRes) {
-                        const headRes = await fetch(url, { method: 'HEAD' });
-                        if (headRes.headers.get('etag') === cachedRes.headers.get('etag') || headRes.headers.get('content-length') === cachedRes.headers.get('content-length')) needsUpdate = false;
-                    }
-                    if (needsUpdate) { const fetchRes = await fetch(url); if (fetchRes.ok) await cache.put(url, fetchRes.clone()); }
-                } catch(e){}
-            }
-            if (!url.endsWith('.mp3') && !url.endsWith('.mp4') && !url.endsWith('.ttf')) { await new Promise(r => { let img = new Image(); img.onload=r; img.onerror=r; img.src=url; }); }
-            loaded++; let p = Math.floor((loaded/total)*100); fill.style.width = p+'%'; percent.innerText = p+'%';
+    // Fungsi menghitung persentase aset offline yang sudah ada di Cache tanpa mendownload paksa
+    async function checkAssetsPercentage() {
+        let percent = 0;
+        if ('caches' in window) {
+            try {
+                const cache = await caches.open('joker-app-assets-v3');
+                const cachedRequests = await cache.keys();
+                let matchCount = 0;
+                
+                cachedRequests.forEach(req => {
+                    if(assets.some(a => req.url.includes(a))) matchCount++;
+                });
+                
+                percent = Math.floor((matchCount / assets.length) * 100);
+                if (percent > 100) percent = 100;
+            } catch(e) {}
         }
-        
-        setTimeout(() => {
-            document.getElementById('loading-elements').style.opacity = '0';
-            setTimeout(() => {
-                document.getElementById('loading-elements').style.display = 'none'; document.getElementById('tap-to-continue').style.display = 'block';
-                setTimeout(() => { document.getElementById('tap-to-continue').style.opacity = '1'; downloadComplete = true; tapToContinueReady = true; }, 50);
-            }, 500);
-        }, 500);
+        document.getElementById('lbl-loading').innerText = `${percent}% Assets downloaded`;
     }
 
-    function handleTapToContinue() {
-        if(!downloadComplete) return; downloadComplete = false; tapToContinueReady = false;
-        ensureFullscreen(); history.pushState({ trapped: true }, null, location.href);
+    // Fungsi Paksa Download saat Update Ditekan
+    async function forceUpdateAssets() {
+        AudioSys.playSFX('button.mp3');
+        document.getElementById('btn-update-assets').style.pointerEvents = 'none';
+        document.getElementById('btn-begin-app').style.pointerEvents = 'none';
+        
+        const fill = document.getElementById('loading-fill'); 
+        const percentUI = document.getElementById('loading-percent');
+        const lbl = document.getElementById('lbl-loading');
+        
+        document.getElementById('loading-bar-container').style.display = 'block';
+        lbl.innerText = "Memulai download...";
+        
+        let loaded = 0;
+        const total = assets.length;
+        
+        if ('caches' in window) {
+            try {
+                const cache = await caches.open('joker-app-assets-v3');
+                for (let asset of assets) {
+                    lbl.innerText = `Downloading Asset ${asset}`;
+                    let url = BASE_URL + asset;
+                    try {
+                        const fetchRes = await fetch(url, { cache: "no-store" });
+                        if (fetchRes.ok) { await cache.put(url, fetchRes.clone()); }
+                    } catch(e) {}
+                    
+                    loaded++;
+                    let p = Math.floor((loaded/total)*100);
+                    fill.style.width = p+'%'; 
+                    percentUI.innerText = p+'%';
+                }
+            } catch (e) {}
+        }
+        
+        document.getElementById('loading-bar-container').style.display = 'none';
+        lbl.innerText = `100% Assets downloaded`;
+        
+        document.getElementById('btn-update-assets').style.pointerEvents = 'auto';
+        document.getElementById('btn-begin-app').style.pointerEvents = 'auto';
+    }
+
+    // Masuk Menu ketika tombol "Begin" ditekan
+    function handleBeginApp() {
+        AudioSys.playSFX('button.mp3');
+        ensureFullscreen(); 
+        history.pushState({ trapped: true }, null, location.href);
         document.getElementById('loading-page').style.opacity = '0';
         setTimeout(() => { document.getElementById('loading-page').style.display = 'none'; initMainMenu(); }, 500);
     }
@@ -646,9 +692,7 @@
     
     function setLanguage(lang, muteSound = false) {
         if(!muteSound) AudioSys.playSFX('button.mp3'); currentLang = lang;
-        document.getElementById('lbl-loading').innerText = t('loading');
         document.getElementById('preload-text').innerText = t('preload');
-        document.getElementById('tap-to-continue').innerText = t('tap_continue');
         document.getElementById('tutorial-text').innerHTML = t('tutorial_text');
         document.getElementById('lbl-players-count').innerText = menuPlayerCount + " " + t('players_lbl');
         document.getElementById('txt-sound-title').innerText = t('sound_title');
@@ -680,7 +724,14 @@
         document.getElementById('notification-modal').style.display = 'flex';
     }
 
-    function exitApp() { try { window.close(); } catch(e){} document.body.innerHTML = ''; document.body.style.backgroundColor = '#000'; }
+    // FIX PERINTAH EXIT: Menggunakan replace url menjadi kosong untuk memaksa aplikasi tertutup atau blank hitam
+    function exitApp() { 
+        try { window.close(); } catch(e){} 
+        if(navigator.app && navigator.app.exitApp) { navigator.app.exitApp(); }
+        else if(navigator.device && navigator.device.exitApp) { navigator.device.exitApp(); }
+        else { window.location.replace('about:blank'); } 
+    }
+    
     function confirmExit() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display='none'); showNotif(t('exit_msg'), true, exitApp); }
 
     // ================== PRELOAD TRANSITION ==================
@@ -704,7 +755,7 @@
 
     // ================== SAVE / LOAD SYSTEM ==================
     function saveGameState() {
-        const state = {
+        let stateToSave = {
             selectedTheme, menuPlayerCount, activePlayerCount, goalScoreIdx,
             currentMatch, currentRound,
             playerScores, scoreColors, playerStars, playerBadges, playerAvatars, customPlayerNames,
@@ -712,7 +763,22 @@
             logRoundsData, logScreenHistory, logScreenHistoryIndex,
             isWinnerState, savedWinnerIndices
         };
-        localStorage.setItem('joker_save_state', JSON.stringify(state));
+
+        // Jika save terpicu saat statusnya Winner (misal ada yang menang), otomatis manipuasi memori 
+        // save menjadi "Next Match (Match Selanjutnya) - Round 1", semua score kembali bersih 0.
+        if (isWinnerState) {
+            stateToSave.currentMatch = currentMatch + 1;
+            stateToSave.currentRound = 1;
+            stateToSave.isWinnerState = false;
+            stateToSave.savedWinnerIndices = [];
+            stateToSave.playerScores = Array(6).fill(0);
+            stateToSave.scoreColors = Array(6).fill('white');
+            stateToSave.scoreHistory = Array(6).fill([0]);
+            stateToSave.historyIndex = Array(6).fill(0);
+            stateToSave.playerBadges = Array(6).fill(false);
+        }
+
+        localStorage.setItem('joker_save_state', JSON.stringify(stateToSave));
     }
 
     function confirmLoadGame() { showNotif(t('load_msg'), true, executeLoadGame); }
@@ -744,7 +810,6 @@
             document.getElementById('lbl-players-count').innerText = menuPlayerCount + " " + t('players_lbl');
             document.getElementById('lbl-goal-score').innerText = goalScoresOpts[goalScoreIdx];
             
-            // Set video but dont play yet to avoid conflicting with transition
             const cBtn = document.getElementById('btn-classic-theme'); const fBtn = document.getElementById('btn-farm-theme');
             if(selectedTheme === 'classic') { cBtn.src = BASE_URL + 'thumbnail_classic_on.png'; fBtn.src = BASE_URL + 'thumbnail_farm_off.png'; } 
             else { cBtn.src = BASE_URL + 'thumbnail_classic_off.png'; fBtn.src = BASE_URL + 'thumbnail_farm_on.png'; }
@@ -829,7 +894,7 @@
         for(let i=0; i<6; i++) { playerScores[i] = 0; scoreColors[i] = 'white'; playerStars[i] = 0; playerBadges[i] = false; scoreHistory[i] = [0]; historyIndex[i] = 0; }
         logRoundsData = []; logScreenHistory = []; logScreenHistoryIndex = 0;
         
-        localStorage.removeItem('joker_save_state'); // Menghapus Save State saat reset
+        localStorage.removeItem('joker_save_state'); 
         
         document.getElementById('winner-dim-overlay').style.opacity = '0'; setTimeout(()=> document.getElementById('winner-dim-overlay').style.display = 'none', 500);
         const winnerMenu = document.getElementById('btn-winner-menu'); const nextMatchBtn = document.getElementById('btn-next-match');
@@ -1043,7 +1108,7 @@
         for(let i=0; i<activePlayerCount; i++) snap.players.push({ playerName: customPlayerNames[i], avatarIdx: playerAvatars[i], score: playerScores[i], hasBadge: playerBadges[i] }); 
         logRoundsData.push(snap); saveLog();
         
-        saveGameState(); // Menyimpan state setelah data disubmit ke log
+        saveGameState(); 
         
         let rn = currentRound <= 20 ? currentRound+'.mp3' : '1.mp3';
         (function playS(idx, seq){
@@ -1071,12 +1136,12 @@
     function checkWinnersAndProceed() {
         let goal = goalScoresOpts[goalScoreIdx]; let qualifiers = []; for(let i=0; i<activePlayerCount; i++) if(playerScores[i] >= goal) qualifiers.push(i);
         if(qualifiers.length > 0) { let maxS = Math.max(...qualifiers.map(idx => playerScores[idx])); let winners = qualifiers.filter(idx => playerScores[idx] === maxS); triggerWinnerSequence(winners); } 
-        else { currentRound = (currentRound%99)+1; document.getElementById('round-text').innerText = `${t('round')} ${currentRound}`; saveGameState(); } // Update round in save state
+        else { currentRound = (currentRound%99)+1; document.getElementById('round-text').innerText = `${t('round')} ${currentRound}`; saveGameState(); } 
     }
 
     function triggerWinnerSequence(winnerIndices) {
         isWinnerState = true; savedWinnerIndices = winnerIndices;
-        saveGameState(); // Simpan Status Menang
+        saveGameState(); 
         
         document.getElementById('btn-option').classList.replace('slide-in-top', 'slide-out-top'); document.getElementById('btn-submit').classList.replace('slide-in-top', 'slide-out-top');
         document.getElementById('btn-players').classList.replace('slide-in-top', 'slide-out-top'); document.getElementById('round-container').style.opacity = '0';
@@ -1103,7 +1168,7 @@
     
     function saveLogEdit() { 
         AudioSys.playSFX('button.mp3'); logEditable = false; logRoundsData = JSON.parse(JSON.stringify(tempLogRoundsData)); 
-        saveLog(); saveGameState(); // Update Save State jika log diedit manual
+        saveLog(); saveGameState();
         document.getElementById('btn-log-edit').style.display = 'block'; document.getElementById('log-edit-controls').style.display = 'none'; buildLogTable(); 
     }
 
