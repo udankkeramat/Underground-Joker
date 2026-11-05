@@ -1,7 +1,7 @@
-const CACHE_NAME = 'joker-app-assets-v1';
+const CACHE_NAME = 'joker-app-assets-v2'; // Versi cache diperbarui
 const BASE_URL = 'https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/';
 
-// 1. GENERATE DAFTAR SEMUA ASSET (Sama persis dengan urutan di index.html)
+// 1. GENERATE DAFTAR SEMUA ASSET
 let assetsToCache = [
     './',
     './index.html',
@@ -11,7 +11,7 @@ let assetsToCache = [
     'thumbnail_classic_on.png', 'thumbnail_classic_off.png', 'thumbnail_farm_on.png', 'thumbnail_farm_off.png',
     // UI Game
     'players_count.png', 'goal_score.png', 'sound.png', 'tutorial.png', 'exit_app.png', 'start.png', 'main_menu.png', 'next_match.png',
-    'option.png', 'players.png', 'star.png', 'star_2.png', 'use.png', 'back.png', 'border_avatar.png', 'badge.png',
+    'option.png', 'players.png', 'star.png', 'star_2.png', 'use.png', 'back.png', 'border_avatar.png', 'badge.png', 'load.png',
     // Flags
     'flag_1_classic.png', 'flag_2_classic.png', 'flag_3_classic.png', 'flag_4_classic.png', 'flag_5_classic.png',
     'flag_1_farm.png', 'flag_2_farm.png', 'flag_3_farm.png', 'flag_4_farm.png', 'flag_5_farm.png',
@@ -41,78 +41,43 @@ avatarNamesList.forEach(name => {
 });
 
 
-// 2. EVENT INSTALL: Download paksa semua aset ke Cache Storage
 self.addEventListener('install', (event) => {
-    // Agar Service Worker baru langsung aktif tanpa menunggu tab ditutup
     self.skipWaiting();
-    
     event.waitUntil(
         caches.open(CACHE_NAME).then(async (cache) => {
-            console.log('[Service Worker] Memulai download seluruh asset untuk offline mode...');
-            // Download file satu per satu agar jika ada 1 file yang gagal (misal typo nama), 
-            // instalasi keseluruhan tidak langsung berhenti.
             for (let url of assetsToCache) {
                 try {
                     const response = await fetch(url);
-                    if (response.ok) {
-                        await cache.put(url, response);
-                    }
-                } catch (err) {
-                    console.error('[Service Worker] Gagal cache asset:', url, err);
-                }
+                    if (response.ok) { await cache.put(url, response); }
+                } catch (err) {}
             }
-            console.log('[Service Worker] Semua asset berhasil masuk Cache Storage!');
         })
     );
 });
 
-
-// 3. EVENT ACTIVATE: Menghapus cache versi lama jika CACHE_NAME diubah
 self.addEventListener('activate', (event) => {
     event.waitUntil(
         caches.keys().then((cacheNames) => {
             return Promise.all(
                 cacheNames.map((name) => {
-                    if (name !== CACHE_NAME) {
-                        console.log('[Service Worker] Menghapus cache lama:', name);
-                        return caches.delete(name);
-                    }
+                    if (name !== CACHE_NAME) return caches.delete(name);
                 })
             );
         }).then(() => self.clients.claim())
     );
 });
 
-
-// 4. EVENT FETCH: Strategi "Stale-While-Revalidate" (Cek Cache + Update Network)
 self.addEventListener('fetch', (event) => {
-    // Hanya tangkap metode GET
     if (event.request.method !== 'GET') return;
-
     event.respondWith(
         caches.match(event.request).then((cachedResponse) => {
-            
-            // Proses cek ke jaringan (GitHub) di latar belakang
             const fetchPromise = fetch(event.request).then((networkResponse) => {
-                // a. Pengecekan aset berbeda/baru:
-                // Jika jaringan berhasil merespons dengan status 200 OK (berarti ada file baru / belum ada di cache),
-                // maka simpan ke Cache untuk me-replace file lama.
-                // Jika file di GitHub tidak ada perubahan, GitHub otomatis membalas dengan status HTTP 304 (Not Modified),
-                // sehingga file tidak akan di-download ulang dari nol (menghemat kuota).
                 if (networkResponse && networkResponse.status === 200) {
                     const responseToCache = networkResponse.clone();
-                    caches.open(CACHE_NAME).then((cache) => {
-                        cache.put(event.request, responseToCache);
-                    });
+                    caches.open(CACHE_NAME).then((cache) => cache.put(event.request, responseToCache));
                 }
                 return networkResponse;
-            }).catch(() => {
-                // b. Kondisi Offline: Permintaan ke jaringan dibatalkan secara diam-diam.
-                // Logika akan otomatis menggunakan 'cachedResponse' di bawah ini.
-            });
-
-            // Prioritas: Jika file ada di Cache, kembalikan instan ke game.
-            // Jika file belum ada di Cache sama sekali, kembalikan hasil download dari jaringan (fetchPromise).
+            }).catch(() => {});
             return cachedResponse || fetchPromise;
         })
     );

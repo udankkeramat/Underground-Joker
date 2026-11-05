@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
     <title>Joker App Project</title>
     
-    <!-- SUNTIKAN PWA (Manifest & Theme Color) -->
+    <!-- SUNTIKAN PWA -->
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#000000">
     
@@ -56,19 +56,8 @@
         
         .bg-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 1; pointer-events: none; transition: opacity 0.5s ease; }
         
-        .menu-bg-anim {
-            width: 2884px !important; 
-            height: 1080px;
-            object-fit: cover;
-            animation: menuPanBg 14s linear infinite;
-        }
-        @keyframes menuPanBg {
-            0% { transform: translateX(0); }
-            42.857% { transform: translateX(-492px); }
-            50% { transform: translateX(-492px); }
-            92.857% { transform: translateX(0); }
-            100% { transform: translateX(0); }
-        }
+        .menu-bg-anim { width: 2884px !important; height: 1080px; object-fit: cover; animation: menuPanBg 14s linear infinite; }
+        @keyframes menuPanBg { 0% { transform: translateX(0); } 42.857% { transform: translateX(-492px); } 50% { transform: translateX(-492px); } 92.857% { transform: translateX(0); } 100% { transform: translateX(0); } }
 
         .menu-overlay-img { position: absolute; top: 0; left: 0; width: 100%; height: 100%; object-fit: cover; z-index: 2; pointer-events: none; }
 
@@ -138,19 +127,9 @@
         .player-avatar { position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 1; pointer-events: none; }
         .player-flag { position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 2; pointer-events: none; }
         
-        .spritesheet-wrapper {
-            position: absolute; top: 0; left: 50%; transform: translateX(-50%);
-            width: 340px; overflow: hidden; z-index: 2; pointer-events: none;
-        }
-        .spritesheet-img {
-            width: 900%; max-width: 900%; height: auto;
-            animation: spriteAnimImg 1.2s steps(9) infinite;
-            display: block;
-        }
-        @keyframes spriteAnimImg {
-            0% { transform: translateX(0); }
-            100% { transform: translateX(-100%); }
-        }
+        .spritesheet-wrapper { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 340px; overflow: hidden; z-index: 2; pointer-events: none; }
+        .spritesheet-img { width: 900%; max-width: 900%; height: auto; animation: spriteAnimImg 1.2s steps(9) infinite; display: block; }
+        @keyframes spriteAnimImg { 0% { transform: translateX(0); } 100% { transform: translateX(-100%); } }
 
         .stempel-winner { position: absolute; left: 50%; top: 618px; transform-origin: top center; transform: translateX(-50%) scale(0); z-index: 30; opacity: 0; pointer-events: none; transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.5s; filter: drop-shadow(0 0 10px rgba(0,0,0,0.8)); }
         .stempel-winner.show { transform: translateX(-50%) scale(1); opacity: 1; }
@@ -184,6 +163,7 @@
 
         #winner-dim-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.7); z-index: 55; opacity: 0; pointer-events: none; transition: opacity 1s; display: none; }
 
+        /* MODALS CSS */
         .modal-title { color: #ffffff; font-size: 55px; font-weight: bold; margin-bottom: 25px; text-shadow: 2px 2px 4px #000; text-align: center; width: 100%; }
         .modal-img-btn { height: 90px; width: auto; object-fit: contain; cursor: pointer; transition: transform 0.1s; }
         .modal-img-btn:active { transform: scale(0.9); }
@@ -195,36 +175,17 @@
         .toggle-knob { width: 60px; height: 60px; background-color: #3498db; border-radius: 30px; position: absolute; top: 5px; left: 75px; transition: left 0.3s, background-color 0.3s; }
         .toggle-bg.off .toggle-knob { left: 5px; background-color: #7f8c8d; }
 
-        #custom-display { 
-            background: rgba(0,0,0,0.7); color: #ffffff; font-size: 90px; padding: 5px 20px; 
-            text-align: center; border-radius: 25px; font-weight: 900; min-height: 130px; 
-            display: flex; align-items: center; justify-content: center; border: 4px solid #f1c40f; 
-            box-shadow: inset 0px 5px 15px rgba(0,0,0,0.8); margin-bottom: 25px; 
-            text-transform: uppercase; transition: width 0.3s; 
-        }
-        
+        #custom-display { background: rgba(0,0,0,0.7); color: #ffffff; font-size: 90px; padding: 5px 20px; text-align: center; border-radius: 25px; font-weight: 900; min-height: 130px; display: flex; align-items: center; justify-content: center; border: 4px solid #f1c40f; box-shadow: inset 0px 5px 15px rgba(0,0,0,0.8); margin-bottom: 25px; text-transform: uppercase; transition: width 0.3s; }
         .numpad { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; width: 450px; }
-        
-        .num-btn { 
-            border-style: solid; 
-            border-width: 25px; 
-            border-image-source: url('https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/button_edit.png'); 
-            border-image-slice: 30 fill; border-image-repeat: stretch;
-            background: transparent; color: #fff; font-size: 42px; padding: 5px 0; 
-            cursor: pointer; font-weight: 900; transition: transform 0.1s; 
-            text-shadow: 3px 3px 0px #000, -2px -2px 0px #000, 2px -2px 0px #000, -2px 2px 0px #000; 
-            display: flex; align-items: center; justify-content: center;
-        }
+        .num-btn { border-style: solid; border-width: 25px; border-image-source: url('https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/button_edit.png'); border-image-slice: 30 fill; border-image-repeat: stretch; background: transparent; color: #fff; font-size: 42px; padding: 5px 0; cursor: pointer; font-weight: 900; transition: transform 0.1s; text-shadow: 3px 3px 0px #000, -2px -2px 0px #000, 2px -2px 0px #000, -2px 2px 0px #000; display: flex; align-items: center; justify-content: center; }
         .num-btn:active { transform: translateY(6px) scale(0.95); }
 
         .log-table-wrapper { width: 1800px; max-height: 700px; overflow-y: auto; border: 3px solid #f1c40f; border-radius: 15px; background: rgba(0,0,0,0.5); position: relative; padding: 0 20px 20px 20px; }
         .log-table { width: 100%; border-collapse: collapse; color: white; font-size: 28px; text-align: center; margin-bottom: 30px; }
         .log-table th { padding: 20px; border-bottom: 4px solid #f1c40f; border-right: 2px solid #f1c40f; font-weight: bold; position: sticky; top: 0; background: #2c3e50; color: #f1c40f; z-index: 5;}
         .log-table td { padding: 18px; border-bottom: 2px solid #f1c40f; border-right: 2px solid #f1c40f; }
-        
         .trash-btn { background-color: #e74c3c; color: white; border: none; width: 45px; height: 45px; border-radius: 50%; cursor: pointer; font-size: 22px; transition: transform 0.1s; margin-left: 10px; }
         .trash-btn:active { transform: scale(0.85); }
-        
         .editable-cell { cursor: pointer !important; background-color: rgba(255,255,255,0.1); transition: background-color 0.2s; }
         .editable-cell:hover { background-color: rgba(255,255,255,0.2); }
         .col-hide { display: none; }
@@ -234,20 +195,19 @@
 
         .avatar-scroll-container { display: flex; gap: 40px; overflow-x: auto; align-items: center; justify-content: flex-start; scroll-behavior: smooth; background: rgba(0,0,0,0.4); border-radius: 20px; padding: 20px; scrollbar-width: none; }
         .avatar-scroll-container::-webkit-scrollbar { display: none; }
-        
         .avatar-wrapper { position: relative; cursor: pointer; transition: transform 0.1s; flex-shrink: 0; }
         .avatar-wrapper:active { transform: scale(0.93); }
-        
         .avatar-option { display: block; border-radius: 20px; transition: filter 0.3s, opacity 0.3s; filter: grayscale(100%); opacity: 0.6; }
         .avatar-wrapper.selected .avatar-option { filter: grayscale(0%); opacity: 1; }
-        
         .avatar-border-overlay { position: absolute; top: -10px; left: -10px; width: calc(100% + 20px); height: calc(100% + 20px); z-index: 2; pointer-events: none; display: none; }
         .avatar-wrapper.selected .avatar-border-overlay { display: block; }
-
         .scroll-arrow { cursor: pointer; display: flex; align-items: center; justify-content: center; transition: opacity 0.3s, transform 0.1s; padding: 10px; filter: drop-shadow(2px 2px 4px rgba(0,0,0,0.5)); }
         .scroll-arrow:active { transform: scale(0.9); }
 
         .tutorial-content { width: 1400px; max-height: 600px; overflow-y: auto; color: white; font-size: 32px; line-height: 1.6; text-align: left; padding: 20px; background: rgba(0,0,0,0.4); border-radius: 20px; }
+
+        #transition-overlay { position:absolute; top:0; left:0; width:100%; height:100%; background-color:#000; z-index:9000; display:none; opacity:0; transition:opacity 0.3s ease; justify-content:center; align-items:center; flex-direction:column; }
+        @keyframes spinner-spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
         @media screen and (max-width: 1080px) and (orientation: portrait) { #app { transform: rotate(90deg); transform-origin: center center; } }
     </style>
@@ -257,15 +217,21 @@
 <div id="fullscreen-overlay"></div>
 
 <div id="app">
+    <!-- LAYAR PRE-LOAD TRANSISI -->
+    <div id="transition-overlay">
+        <div class="loading-text" style="font-size: 55px;" id="preload-text">MEMUAT ASET...</div>
+        <div style="width:80px; height:80px; border:8px solid #333; border-top:8px solid #f1c40f; border-radius:50%; animation:spinner-spin 1s linear infinite; margin-top:30px;"></div>
+    </div>
+
     <!-- SPLASH -->
     <div id="splash-page" class="page">
         <img id="logo" src="https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/logo.png" alt="Logo">
     </div>
 
-    <!-- LOADING -->
+    <!-- LOADING AWAL (DOWNLOAD) -->
     <div id="loading-page" class="page" onclick="handleTapToContinue()">
         <div id="loading-elements">
-            <div class="loading-text" id="lbl-loading">Downloading & Syncing Assets...</div>
+            <div class="loading-text" id="lbl-loading">Mengunduh & Sinkronisasi Asset...</div>
             <div style="position: relative;">
                 <div class="loading-bar-bg"><div class="loading-bar-fill" id="loading-fill"></div></div>
                 <div class="loading-percent" id="loading-percent">0%</div>
@@ -309,7 +275,9 @@
             </div>
             
             <img src="https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/sound.png" id="btn-sound-menu" class="top-menu-btn" onclick="openModal('sound-modal')" style="position: absolute; left: 1544px; top: 33px; z-index: 10;">
+            
             <img src="https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/tutorial.png" id="btn-tutorial-main" class="top-menu-btn" onclick="openModal('tutorial-modal')" style="position: absolute; left: 46px; bottom: 96px; z-index: 10;">
+            <img src="https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/load.png" id="btn-load-main" class="top-menu-btn" onclick="confirmLoadGame()" style="position: absolute; left: 211px; bottom: 96px; z-index: 10; display: none;">
         </div>
     </div>
 
@@ -322,7 +290,6 @@
         <img id="btn-option" class="top-btn slide-out-top" src="https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/option.png" onclick="openModal('option-modal')">
         <img id="btn-submit" class="top-btn slide-out-top off" src="https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/submit.png" onclick="handleActionSubmit()">
         
-        <!-- Winner Screen Controls -->
         <img id="btn-winner-menu" class="top-btn slide-out-top" src="https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/main_menu.png" onclick="confirmMainMenu()">
         <img id="btn-next-match" class="slide-out-top" src="https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/next_match.png" onclick="confirmNextMatch()">
         <img id="btn-log" class="top-btn slide-out-top" src="https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/log.png" onclick="handleActionLog()">
@@ -386,11 +353,9 @@
         </div>
     </div>
 
-    <!-- LOG MODAL -->
     <div id="log-modal" class="modal-overlay">
         <div class="nine-slice-modal" style="width: 1950px; height: 950px; position: relative;">
             <img src="https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/close.png" class="close-corner-btn" onclick="closeLogModal()">
-            
             <div class="modal-title" id="txt-log-title" style="margin-bottom: 20px;">Log</div>
             <img src="https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/edit.png" id="btn-log-edit" onclick="enableLogEdit()">
             
@@ -412,14 +377,11 @@
                 <div id="avatar-scroll-left" class="scroll-arrow" onclick="scrollAvatar(-1)">
                     <svg width="60" height="60" viewBox="0 0 24 24"><polygon points="17,3 7,12 17,21" fill="white" stroke="white" stroke-width="2" stroke-linejoin="round"/></svg>
                 </div>
-                
                 <div class="avatar-scroll-container" id="avatar-grid-container" onscroll="checkAvatarScroll()"></div>
-                
                 <div id="avatar-scroll-right" class="scroll-arrow" onclick="scrollAvatar(1)">
                     <svg width="60" height="60" viewBox="0 0 24 24"><polygon points="7,3 17,12 7,21" fill="white" stroke="white" stroke-width="2" stroke-linejoin="round"/></svg>
                 </div>
             </div>
-
             <div class="modal-btn-row" style="margin-top: 40px;">
                 <img src="https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/use.png" class="modal-img-btn" id="btn-use-avatar">
             </div>
@@ -454,6 +416,7 @@
     const i18n = {
         id: {
             loading: "Mengunduh & Sinkronisasi Asset...",
+            preload: "MEMUAT ASET...",
             tap_continue: "Tap screen to Continue",
             round: "Round",
             match_lbl: "Match",
@@ -464,6 +427,7 @@
             next_match_msg: "Lanjut ke match berikutnya? Semua point pada main screen akan di-reset.",
             submit_confirm: "Apakah score untuk Round {round} yang ingin di input ke Log sudah benar?",
             already_submitted: "Round {round} sudah di submit. Submit ulang?",
+            load_msg: "Lanjutkan permainan yang tersimpan?",
             empty_log: "Belum ada riwayat pertandingan.",
             edit_score: "MASUKKAN POIN",
             edit_name: "EDIT NAMA PLAYER",
@@ -477,17 +441,19 @@
             sfx: "SFX",
             tutorial_text: `
                 <b>TUTORIAL JOKER APP</b><br><br>
-                - <b>Main Menu:</b> Pilih Tema (Classic/Farm), Set Jumlah Pemain (2-6), dan Target Goal Score (500/1000/2000).<br>
+                - <b>Main Menu:</b> Pilih Tema, Set Jumlah Pemain, dan Target Goal Score.<br>
                 - <b>Main Screen:</b> Ketuk nama player untuk mengubah nama. Ketuk avatar untuk ganti karakter. Ketuk score untuk mengisi poin.<br>
                 - <b>Badge Bintang:</b> Ketuk badge kosong dibawah avatar player yang menang pada round tersebut. Badge otomatis terhitung menjadi bintang saat di Submit.<br>
                 - <b>Tombol Round:</b> Ketuk teks 'Round' di atas layar untuk memunculkan panah penyesuaian (Maks: 99).<br>
-                - <b>Submit:</b> Setelah seluruh score player terisi (warna kuning), tombol Submit akan menyala. Pastikan data benar sebelum disubmit ke Log.<br>
-                - <b>Log Screen:</b> Lihat rekap, edit nilai yang salah, hapus baris, atau gunakan fitur Undo/Redo melalui fitur Edit.<br>
-                - <b>Pemenang:</b> Pemenang otomatis ditentukan saat salah satu (atau lebih) pemain mencapai Goal Score setelah Submit.
+                - <b>Submit:</b> Setelah seluruh score player terisi (warna kuning), tombol Submit akan menyala. Pastikan data benar sebelum disubmit.<br>
+                - <b>Save & Load:</b> Game otomatis tersimpan pada setiap aksi Submit. Lanjutkan permainan melalui tombol Load di Main Menu.<br>
+                - <b>Log Screen:</b> Lihat rekap, edit nilai yang salah, atau gunakan fitur Undo/Redo melalui fitur Edit.<br>
+                - <b>Pemenang:</b> Ditentukan otomatis saat salah satu pemain mencapai Goal Score setelah Submit.
             `
         },
         en: {
             loading: "Downloading & Syncing Assets...",
+            preload: "LOADING ASSETS...",
             tap_continue: "Tap screen to Continue",
             round: "Round",
             match_lbl: "Match",
@@ -498,6 +464,7 @@
             next_match_msg: "Proceed to next match? All points on the main screen will be reset.",
             submit_confirm: "Is the score for Round {round} correct to be submitted to the Log?",
             already_submitted: "Round {round} is already submitted. Submit again?",
+            load_msg: "Resume saved game?",
             empty_log: "No match history yet.",
             edit_score: "INPUT SCORE",
             edit_name: "EDIT PLAYER NAME",
@@ -511,13 +478,14 @@
             sfx: "SFX",
             tutorial_text: `
                 <b>JOKER APP TUTORIAL</b><br><br>
-                - <b>Main Menu:</b> Select Theme (Classic/Farm), Set Player Count (2-6), and Goal Score Target (500/1000/2000).<br>
+                - <b>Main Menu:</b> Select Theme, Set Player Count, and Goal Score Target.<br>
                 - <b>Main Screen:</b> Tap player name to edit name. Tap avatar to change character. Tap score to input points.<br>
-                - <b>Star Badge:</b> Tap the empty badge under the avatar of the winning player for that round. It will be converted into a star on Submit.<br>
+                - <b>Star Badge:</b> Tap the empty badge under the avatar of the winning player for that round. Converted into a star on Submit.<br>
                 - <b>Round Button:</b> Tap the 'Round' text on top to show adjustment arrows (Max: 99).<br>
-                - <b>Submit:</b> Once all player scores are filled (turns yellow), the Submit button will activate. Ensure data is correct before submitting to Log.<br>
-                - <b>Log Screen:</b> View recaps, edit wrong values, delete rows, or use Undo/Redo via Edit feature.<br>
-                - <b>Winners:</b> Winners are automatically determined when one or more players reach the Goal Score after Submitting.
+                - <b>Submit:</b> Once all player scores are filled (yellow), the Submit button will activate.<br>
+                - <b>Save & Load:</b> Game auto-saves on every Submit. Resume via the Load button in Main Menu.<br>
+                - <b>Log Screen:</b> View recaps, edit wrong values, or use Undo/Redo via Edit feature.<br>
+                - <b>Winners:</b> Automatically determined when a player reaches the Goal Score after Submitting.
             `
         }
     };
@@ -579,7 +547,7 @@
     
     let logRoundsData = [], logScreenHistory = [], logScreenHistoryIndex = 0;
     let tempLogRoundsData = []; 
-    let logEditable = false; let isWinnerState = false;
+    let logEditable = false; let isWinnerState = false; let savedWinnerIndices = [];
     let downloadComplete = false; let tapToContinueReady = false;
     
     const avatarNamesList = ["kamaruddin", "rustam", "suardi", "ridwan", "rizal", "rudy", "fajrin", "arya", "juragan", "tolingu"];
@@ -587,47 +555,27 @@
     function resizeApp() {
         const app = document.getElementById('app');
         const isPortrait = window.innerHeight > window.innerWidth;
-        let scale = isPortrait ? Math.min(window.innerWidth / 1080, window.innerHeight / 2392) 
-                               : Math.min(window.innerWidth / 2392, window.innerHeight / 1080);
+        let scale = isPortrait ? Math.min(window.innerWidth / 1080, window.innerHeight / 2392) : Math.min(window.innerWidth / 2392, window.innerHeight / 1080);
         app.style.transform = `translate(-50%, -50%) ${isPortrait ? 'rotate(90deg)' : ''} scale(${scale})`;
         app.style.position = 'absolute'; app.style.top = '50%'; app.style.left = '50%';
     }
     window.addEventListener('resize', resizeApp); window.addEventListener('orientationchange', resizeApp); resizeApp();
 
-    function isRunningAsPWA() {
-        return window.matchMedia('(display-mode: fullscreen)').matches || 
-               window.matchMedia('(display-mode: standalone)').matches || 
-               window.navigator.standalone === true;
-    }
-
-    async function ensureFullscreen() {
-        try {
-            if (!document.fullscreenElement) { await document.documentElement.requestFullscreen(); }
-            if (screen.orientation && screen.orientation.lock) { await screen.orientation.lock('landscape'); }
-        } catch (e) {}
-    }
+    function isRunningAsPWA() { return window.matchMedia('(display-mode: fullscreen)').matches || window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; }
+    async function ensureFullscreen() { try { if (!document.fullscreenElement) await document.documentElement.requestFullscreen(); if (screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape'); } catch (e) {} }
 
     function handleFsInteraction(e) {
         e.stopPropagation(); e.preventDefault();
-        ensureFullscreen().then(() => {
-            if (appState === 'loading' && tapToContinueReady) { handleTapToContinue(); }
-        });
+        ensureFullscreen().then(() => { if (appState === 'loading' && tapToContinueReady) handleTapToContinue(); });
     }
-
     const fsOverlay = document.getElementById('fullscreen-overlay');
-    fsOverlay.addEventListener('click', handleFsInteraction, {capture: true});
-    fsOverlay.addEventListener('pointerdown', handleFsInteraction, {capture: true});
-    fsOverlay.addEventListener('touchstart', handleFsInteraction, {capture: true, passive: false});
-
-    document.addEventListener('fullscreenchange', () => {
-        if (!document.fullscreenElement && !isRunningAsPWA()) fsOverlay.style.display = 'block'; 
-        else fsOverlay.style.display = 'none';
-    });
+    fsOverlay.addEventListener('click', handleFsInteraction, {capture: true}); fsOverlay.addEventListener('pointerdown', handleFsInteraction, {capture: true}); fsOverlay.addEventListener('touchstart', handleFsInteraction, {capture: true, passive: false});
+    document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && !isRunningAsPWA()) fsOverlay.style.display = 'block'; else fsOverlay.style.display = 'none'; });
 
     const assets = [
         'logo.png', 'background.png', 'background_classic.mp4', 'background_farm.mp4', 'menu_screen.png', 'background_screen4.png',
         'thumbnail_classic_on.png', 'thumbnail_classic_off.png', 'thumbnail_farm_on.png', 'thumbnail_farm_off.png',
-        'players_count.png', 'goal_score.png', 'sound.png', 'tutorial.png', 'exit_app.png', 'start.png', 'main_menu.png', 'next_match.png',
+        'players_count.png', 'goal_score.png', 'sound.png', 'tutorial.png', 'exit_app.png', 'start.png', 'main_menu.png', 'next_match.png', 'load.png',
         'option.png', 'players.png', 'star.png', 'star_2.png', 'use.png', 'back.png', 'border_avatar.png', 'badge.png',
         'flag_1_classic.png', 'flag_2_classic.png', 'flag_3_classic.png', 'flag_4_classic.png', 'flag_5_classic.png',
         'flag_1_farm.png', 'flag_2_farm.png', 'flag_3_farm.png', 'flag_4_farm.png', 'flag_5_farm.png',
@@ -642,23 +590,14 @@
     avatarNamesList.forEach(n => assets.push(`avatar_${n}.png`, `${n}.mp3`));
 
     window.onload = () => {
-        if (!document.fullscreenElement && !isRunningAsPWA()) { 
-            fsOverlay.style.display = 'block'; 
-        } else {
-            fsOverlay.style.display = 'none';
-            if (isRunningAsPWA() && screen.orientation && screen.orientation.lock) {
-                screen.orientation.lock('landscape').catch(e => {});
-            }
-        }
+        if (!document.fullscreenElement && !isRunningAsPWA()) fsOverlay.style.display = 'block'; 
+        else { fsOverlay.style.display = 'none'; if (isRunningAsPWA() && screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(e => {}); }
         
-        document.getElementById('splash-page').style.display = 'flex';
-        setTimeout(() => { document.getElementById('splash-page').style.opacity = '1'; }, 50);
+        document.getElementById('splash-page').style.display = 'flex'; setTimeout(() => { document.getElementById('splash-page').style.opacity = '1'; }, 50);
         setTimeout(() => { 
             document.getElementById('splash-page').style.opacity = '0';
             setTimeout(() => { 
-                document.getElementById('splash-page').style.display = 'none'; 
-                document.getElementById('loading-page').style.display = 'flex';
-                appState = 'loading';
+                document.getElementById('splash-page').style.display = 'none'; document.getElementById('loading-page').style.display = 'flex'; appState = 'loading';
                 setTimeout(() => { document.getElementById('loading-page').style.opacity = '1'; loadAssets(); }, 50);
             }, 500);
         }, 2000);
@@ -667,35 +606,28 @@
     async function loadAssets() {
         let loaded = 0; const total = assets.length;
         const fill = document.getElementById('loading-fill'); const percent = document.getElementById('loading-percent');
-        let cache = null;
-        if ('caches' in window && window.location.protocol !== 'file:') { try { cache = await caches.open('joker-assets-v19'); } catch(e){} }
+        let cache = null; if ('caches' in window && window.location.protocol !== 'file:') { try { cache = await caches.open('joker-app-assets-v2'); } catch(e){} }
 
         for (let urlStr of assets) {
             let url = BASE_URL + urlStr;
             if (cache) {
                 try {
-                    const cachedRes = await cache.match(url);
-                    let needsUpdate = true;
+                    const cachedRes = await cache.match(url); let needsUpdate = true;
                     if (cachedRes) {
                         const headRes = await fetch(url, { method: 'HEAD' });
-                        if (headRes.headers.get('etag') === cachedRes.headers.get('etag') || headRes.headers.get('content-length') === cachedRes.headers.get('content-length')) {
-                            needsUpdate = false;
-                        }
+                        if (headRes.headers.get('etag') === cachedRes.headers.get('etag') || headRes.headers.get('content-length') === cachedRes.headers.get('content-length')) needsUpdate = false;
                     }
                     if (needsUpdate) { const fetchRes = await fetch(url); if (fetchRes.ok) await cache.put(url, fetchRes.clone()); }
                 } catch(e){}
             }
-            if (!url.endsWith('.mp3') && !url.endsWith('.mp4') && !url.endsWith('.ttf')) { 
-                await new Promise(r => { let img = new Image(); img.onload=r; img.onerror=r; img.src=url; }); 
-            }
+            if (!url.endsWith('.mp3') && !url.endsWith('.mp4') && !url.endsWith('.ttf')) { await new Promise(r => { let img = new Image(); img.onload=r; img.onerror=r; img.src=url; }); }
             loaded++; let p = Math.floor((loaded/total)*100); fill.style.width = p+'%'; percent.innerText = p+'%';
         }
         
         setTimeout(() => {
             document.getElementById('loading-elements').style.opacity = '0';
             setTimeout(() => {
-                document.getElementById('loading-elements').style.display = 'none';
-                document.getElementById('tap-to-continue').style.display = 'block';
+                document.getElementById('loading-elements').style.display = 'none'; document.getElementById('tap-to-continue').style.display = 'block';
                 setTimeout(() => { document.getElementById('tap-to-continue').style.opacity = '1'; downloadComplete = true; tapToContinueReady = true; }, 50);
             }, 500);
         }, 500);
@@ -703,28 +635,19 @@
 
     function handleTapToContinue() {
         if(!downloadComplete) return; downloadComplete = false; tapToContinueReady = false;
-        
-        ensureFullscreen(); 
-        
-        // Pancingan awal agar tombol "Back" Android bisa dicegat oleh History API
-        history.pushState({ trapped: true }, null, location.href);
-
+        ensureFullscreen(); history.pushState({ trapped: true }, null, location.href);
         document.getElementById('loading-page').style.opacity = '0';
         setTimeout(() => { document.getElementById('loading-page').style.display = 'none'; initMainMenu(); }, 500);
     }
 
     function openModal(id) { if(id !== 'sound-modal') AudioSys.playSFX('button.mp3'); document.getElementById(id).style.display = 'flex'; }
-    function closeModal(id, muteSound = false) { 
-        if(!muteSound) AudioSys.playSFX('close.mp3'); 
-        document.getElementById(id).style.display = 'none'; 
-    }
+    function closeModal(id, muteSound = false) { if(!muteSound) AudioSys.playSFX('close.mp3'); document.getElementById(id).style.display = 'none'; }
     function closeLogModal() { closeModal('log-modal'); if(logEditable) cancelLogEdit(); }
     
     function setLanguage(lang, muteSound = false) {
-        if(!muteSound) AudioSys.playSFX('button.mp3'); 
-        currentLang = lang;
-        
+        if(!muteSound) AudioSys.playSFX('button.mp3'); currentLang = lang;
         document.getElementById('lbl-loading').innerText = t('loading');
+        document.getElementById('preload-text').innerText = t('preload');
         document.getElementById('tap-to-continue').innerText = t('tap_continue');
         document.getElementById('tutorial-text').innerHTML = t('tutorial_text');
         document.getElementById('lbl-players-count').innerText = menuPlayerCount + " " + t('players_lbl');
@@ -735,7 +658,6 @@
         document.getElementById('txt-select-character').innerText = t('select_character');
         document.getElementById('lbl-bgm').innerText = t('bgm');
         document.getElementById('lbl-sfx').innerText = t('sfx');
-        
         closeModal('lang-modal', muteSound); 
         if(appState === 'game') document.getElementById('round-text').innerText = `${t('round')} ${currentRound}`;
     }
@@ -758,55 +680,132 @@
         document.getElementById('notification-modal').style.display = 'flex';
     }
 
-    function exitApp() { 
-        try { window.close(); } catch(e){} 
-        document.body.innerHTML = ''; 
-        document.body.style.backgroundColor = '#000'; 
-    }
+    function exitApp() { try { window.close(); } catch(e){} document.body.innerHTML = ''; document.body.style.backgroundColor = '#000'; }
     function confirmExit() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display='none'); showNotif(t('exit_msg'), true, exitApp); }
+
+    // ================== PRELOAD TRANSITION ==================
+    function transitionWithPreload(videoElem, onReady) {
+        const overlay = document.getElementById('transition-overlay');
+        overlay.style.display = 'flex'; void overlay.offsetWidth; overlay.style.opacity = '1';
+
+        setTimeout(() => {
+            let done = false;
+            function finish() {
+                if (done) return; done = true;
+                videoElem.oncanplaythrough = null; videoElem.oncanplay = null;
+                onReady();
+                setTimeout(() => { overlay.style.opacity = '0'; setTimeout(() => overlay.style.display = 'none', 300); }, 100);
+            }
+            if (videoElem.readyState >= 3) { finish(); } 
+            else { videoElem.oncanplay = finish; videoElem.load(); setTimeout(finish, 2500); }
+        }, 300);
+    }
+    // ========================================================
+
+    // ================== SAVE / LOAD SYSTEM ==================
+    function saveGameState() {
+        const state = {
+            selectedTheme, menuPlayerCount, activePlayerCount, goalScoreIdx,
+            currentMatch, currentRound,
+            playerScores, scoreColors, playerStars, playerBadges, playerAvatars, customPlayerNames,
+            scoreHistory, historyIndex,
+            logRoundsData, logScreenHistory, logScreenHistoryIndex,
+            isWinnerState, savedWinnerIndices
+        };
+        localStorage.setItem('joker_save_state', JSON.stringify(state));
+    }
+
+    function confirmLoadGame() { showNotif(t('load_msg'), true, executeLoadGame); }
+
+    function executeLoadGame() {
+        const saved = localStorage.getItem('joker_save_state');
+        if (saved) {
+            const state = JSON.parse(saved);
+            selectedTheme = state.selectedTheme || 'classic';
+            menuPlayerCount = state.menuPlayerCount || 3;
+            activePlayerCount = state.activePlayerCount || 3;
+            goalScoreIdx = state.goalScoreIdx || 1;
+            currentMatch = state.currentMatch || 1;
+            currentRound = state.currentRound || 1;
+            playerScores = state.playerScores || [];
+            scoreColors = state.scoreColors || Array(6).fill('white');
+            playerStars = state.playerStars || [];
+            playerBadges = state.playerBadges || [];
+            playerAvatars = state.playerAvatars || [];
+            customPlayerNames = state.customPlayerNames || [];
+            scoreHistory = state.scoreHistory || [];
+            historyIndex = state.historyIndex || [];
+            logRoundsData = state.logRoundsData || [];
+            logScreenHistory = state.logScreenHistory || [];
+            logScreenHistoryIndex = state.logScreenHistoryIndex || 0;
+            isWinnerState = state.isWinnerState || false;
+            savedWinnerIndices = state.savedWinnerIndices || [];
+
+            document.getElementById('lbl-players-count').innerText = menuPlayerCount + " " + t('players_lbl');
+            document.getElementById('lbl-goal-score').innerText = goalScoresOpts[goalScoreIdx];
+            
+            // Set video but dont play yet to avoid conflicting with transition
+            const cBtn = document.getElementById('btn-classic-theme'); const fBtn = document.getElementById('btn-farm-theme');
+            if(selectedTheme === 'classic') { cBtn.src = BASE_URL + 'thumbnail_classic_on.png'; fBtn.src = BASE_URL + 'thumbnail_farm_off.png'; } 
+            else { cBtn.src = BASE_URL + 'thumbnail_classic_off.png'; fBtn.src = BASE_URL + 'thumbnail_farm_on.png'; }
+
+            appState = 'transitioning'; AudioSys.playSFX('start.mp3'); 
+
+            const menuPage = document.getElementById('main-menu-page');
+            menuPage.style.opacity = '0';
+            
+            const gameVideo = document.getElementById('game-bg-video');
+            gameVideo.src = BASE_URL + (selectedTheme === 'classic' ? 'background_classic.mp4' : 'background_farm.mp4');
+
+            transitionWithPreload(gameVideo, () => {
+                menuPage.style.display = 'none'; 
+                setupMainGameScreen(true);
+            });
+        }
+    }
+    // ========================================================
 
     function initMainMenu() {
         appState = 'menu'; document.querySelectorAll('.page').forEach(p => { p.style.display='none'; p.style.opacity='0'; });
         const menuPage = document.getElementById('main-menu-page');
-        menuPage.style.display = 'block'; setTimeout(() => menuPage.style.opacity = '1', 50);
         setLanguage(currentLang, true); 
-        updateMenuThemeUI(); AudioSys.playBGM('bgm_main_menu.mp3');
+        
+        const vBg = document.getElementById('menu-bg-video');
+        vBg.src = BASE_URL + (selectedTheme === 'classic' ? 'background_classic.mp4' : 'background_farm.mp4');
+        updateMenuThemeUI();
+
+        transitionWithPreload(vBg, () => {
+            menuPage.style.display = 'block'; setTimeout(() => menuPage.style.opacity = '1', 50);
+            
+            const btnLoad = document.getElementById('btn-load-main');
+            if(localStorage.getItem('joker_save_state')) btnLoad.style.display = 'block';
+            else btnLoad.style.display = 'none';
+
+            AudioSys.playBGM('bgm_main_menu.mp3');
+        });
     }
 
     function selectTheme(theme) { AudioSys.playSFX('button.mp3'); selectedTheme = theme; updateMenuThemeUI(); }
     
     function updateMenuThemeUI() {
         const cBtn = document.getElementById('btn-classic-theme'); const fBtn = document.getElementById('btn-farm-theme');
-        const vBg = document.getElementById('menu-bg-video'); 
-
-        vBg.style.display = 'block';
+        const vBg = document.getElementById('menu-bg-video'); vBg.style.display = 'block';
         if(selectedTheme === 'classic') {
             cBtn.src = BASE_URL + 'thumbnail_classic_on.png'; fBtn.src = BASE_URL + 'thumbnail_farm_off.png';
-            vBg.src = BASE_URL + 'background_classic.mp4';
+            if(!vBg.src.includes('background_classic.mp4')) vBg.src = BASE_URL + 'background_classic.mp4';
         } else {
             cBtn.src = BASE_URL + 'thumbnail_classic_off.png'; fBtn.src = BASE_URL + 'thumbnail_farm_on.png';
-            vBg.src = BASE_URL + 'background_farm.mp4';
+            if(!vBg.src.includes('background_farm.mp4')) vBg.src = BASE_URL + 'background_farm.mp4';
         }
         vBg.play().catch(e=>{});
     }
 
-    function adjustPlayers(dir) {
-        AudioSys.playSFX('button.mp3'); menuPlayerCount += dir;
-        if(menuPlayerCount < 2) menuPlayerCount = 2; if(menuPlayerCount > 6) menuPlayerCount = 6;
-        document.getElementById('lbl-players-count').innerText = menuPlayerCount + " " + t('players_lbl');
-    }
-    
-    function adjustGoal(dir) {
-        AudioSys.playSFX('button.mp3'); goalScoreIdx += dir;
-        if(goalScoreIdx < 0) goalScoreIdx = 0; if(goalScoreIdx >= goalScoresOpts.length) goalScoreIdx = goalScoresOpts.length - 1;
-        document.getElementById('lbl-goal-score').innerText = goalScoresOpts[goalScoreIdx];
-    }
+    function adjustPlayers(dir) { AudioSys.playSFX('button.mp3'); menuPlayerCount += dir; if(menuPlayerCount < 2) menuPlayerCount = 2; if(menuPlayerCount > 6) menuPlayerCount = 6; document.getElementById('lbl-players-count').innerText = menuPlayerCount + " " + t('players_lbl'); }
+    function adjustGoal(dir) { AudioSys.playSFX('button.mp3'); goalScoreIdx += dir; if(goalScoreIdx < 0) goalScoreIdx = 0; if(goalScoreIdx >= goalScoresOpts.length) goalScoreIdx = goalScoresOpts.length - 1; document.getElementById('lbl-goal-score').innerText = goalScoresOpts[goalScoreIdx]; }
 
     function startGame() {
-        if (appState !== 'menu') return;
-        appState = 'transitioning';
-        
-        AudioSys.playSFX('start.mp3'); isWinnerState = false; currentMatch = 1; currentRound = 1;
+        if (appState !== 'menu') return; appState = 'transitioning';
+        AudioSys.playSFX('start.mp3'); isWinnerState = false; savedWinnerIndices = []; currentMatch = 1; currentRound = 1;
         playerScores = []; scoreColors = []; playerStars = []; playerBadges = []; playerAvatars = []; customPlayerNames = [];
         scoreHistory = []; historyIndex = []; logRoundsData = []; logScreenHistory = []; logScreenHistoryIndex = 0;
 
@@ -816,185 +815,123 @@
             playerAvatars.push(defAvatars[i]); customPlayerNames.push(avatarNamesList[defAvatars[i]].toUpperCase());
             scoreHistory.push([0]); historyIndex.push(0);
         }
-
         activePlayerCount = menuPlayerCount; 
         
-        const menuPage = document.getElementById('main-menu-page');
-        menuPage.style.opacity = '0';
-        setTimeout(() => { menuPage.style.display = 'none'; setupMainGameScreen(); }, 500);
+        const menuPage = document.getElementById('main-menu-page'); menuPage.style.opacity = '0';
+        const gameVideo = document.getElementById('game-bg-video');
+        gameVideo.src = BASE_URL + (selectedTheme === 'classic' ? 'background_classic.mp4' : 'background_farm.mp4');
+
+        transitionWithPreload(gameVideo, () => { menuPage.style.display = 'none'; setupMainGameScreen(false); });
     }
 
     function executeReset() {
-        currentMatch = 1; currentRound = 1; isWinnerState = false;
-        for(let i=0; i<6; i++) {
-            playerScores[i] = 0; scoreColors[i] = 'white'; playerStars[i] = 0; playerBadges[i] = false;
-            scoreHistory[i] = [0]; historyIndex[i] = 0;
-        }
+        currentMatch = 1; currentRound = 1; isWinnerState = false; savedWinnerIndices = [];
+        for(let i=0; i<6; i++) { playerScores[i] = 0; scoreColors[i] = 'white'; playerStars[i] = 0; playerBadges[i] = false; scoreHistory[i] = [0]; historyIndex[i] = 0; }
         logRoundsData = []; logScreenHistory = []; logScreenHistoryIndex = 0;
         
-        document.getElementById('winner-dim-overlay').style.opacity = '0';
-        setTimeout(()=> document.getElementById('winner-dim-overlay').style.display = 'none', 500);
+        localStorage.removeItem('joker_save_state'); // Menghapus Save State saat reset
         
-        const winnerMenu = document.getElementById('btn-winner-menu');
-        const nextMatchBtn = document.getElementById('btn-next-match');
+        document.getElementById('winner-dim-overlay').style.opacity = '0'; setTimeout(()=> document.getElementById('winner-dim-overlay').style.display = 'none', 500);
+        const winnerMenu = document.getElementById('btn-winner-menu'); const nextMatchBtn = document.getElementById('btn-next-match');
         if (winnerMenu) { winnerMenu.classList.replace('slide-in-top', 'slide-out-top'); setTimeout(()=> winnerMenu.style.display = 'none', 800); }
         if (nextMatchBtn) { nextMatchBtn.classList.replace('slide-in-top', 'slide-out-top'); setTimeout(()=> nextMatchBtn.style.display = 'none', 800); }
 
-        document.getElementById('btn-submit').classList.replace('slide-out-top', 'slide-in-top');
-        document.getElementById('btn-option').classList.replace('slide-out-top', 'slide-in-top');
-        document.getElementById('btn-players').classList.replace('slide-out-top', 'slide-in-top');
-        document.getElementById('btn-log').classList.replace('slide-out-top', 'slide-in-top');
-        document.getElementById('btn-log').style.zIndex = '100';
+        document.getElementById('btn-submit').classList.replace('slide-out-top', 'slide-in-top'); document.getElementById('btn-option').classList.replace('slide-out-top', 'slide-in-top');
+        document.getElementById('btn-players').classList.replace('slide-out-top', 'slide-in-top'); document.getElementById('btn-log').classList.replace('slide-out-top', 'slide-in-top'); document.getElementById('btn-log').style.zIndex = '100';
 
-        document.getElementById('round-container').style.opacity = '1';
-        document.getElementById('round-text').innerText = `${t('round')} ${currentRound}`;
+        document.getElementById('round-container').style.opacity = '1'; document.getElementById('round-text').innerText = `${t('round')} ${currentRound}`;
         renderPlayers(); closeModal('option-modal');
     }
 
     function confirmReset() { showNotif(t('reset_msg'), true, executeReset); }
     function confirmMainMenu() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display='none'); showNotif(t('main_menu_msg'), true, leaveMainScreenToMenu); }
 
-    function setupMainGameScreen() {
-        appState = 'game';
-        const gamePage = document.getElementById('main-page'); gamePage.style.display = 'block';
+    function setupMainGameScreen(fromLoad = false) {
+        appState = 'game'; const gamePage = document.getElementById('main-page'); gamePage.style.display = 'block';
         
         document.getElementById('btn-option').className = 'top-btn slide-out-top'; document.getElementById('btn-submit').className = 'top-btn slide-out-top off';
         document.getElementById('btn-log').className = 'top-btn slide-out-top'; document.getElementById('btn-log').style.zIndex = '100';
-        document.getElementById('btn-players').className = 'top-btn slide-out-top';
-        document.getElementById('players-container').className = 'slide-out-bottom'; document.getElementById('round-container').style.opacity = '0';
+        document.getElementById('btn-players').className = 'top-btn slide-out-top'; document.getElementById('players-container').className = 'slide-out-bottom'; document.getElementById('round-container').style.opacity = '0';
         
         const vBg = document.getElementById('game-bg-video');
-        vBg.style.display = 'block'; 
-        vBg.src = BASE_URL + (selectedTheme === 'classic' ? 'background_classic.mp4' : 'background_farm.mp4'); 
-        vBg.style.opacity = '0'; 
-        vBg.play().catch(e=>{});
+        vBg.style.display = 'block'; vBg.style.opacity = '0'; vBg.play().catch(e=>{});
         AudioSys.playBGM(selectedTheme === 'classic' ? 'bgm_classic.mp3' : 'bgm_farm.mp3');
 
         document.getElementById('round-text').innerText = `${t('round')} ${currentRound}`;
-        renderPlayers();
         
-        setTimeout(() => {
-            gamePage.style.opacity = '1';
-            vBg.style.opacity = '1';
-            AudioSys.playSFX('welcome.mp3');
-            
+        if (isWinnerState && fromLoad) {
+            renderPlayers(); gamePage.style.opacity = '1'; vBg.style.opacity = '1';
+            setTimeout(() => { triggerWinnerSequence(savedWinnerIndices); }, 100);
+        } else {
+            renderPlayers();
             setTimeout(() => {
-                document.getElementById('btn-option').classList.replace('slide-out-top', 'slide-in-top');
-                document.getElementById('btn-submit').classList.replace('slide-out-top', 'slide-in-top');
-                document.getElementById('btn-log').classList.replace('slide-out-top', 'slide-in-top');
-                document.getElementById('btn-players').classList.replace('slide-out-top', 'slide-in-top');
-                document.getElementById('players-container').classList.replace('slide-out-bottom', 'slide-in-bottom');
-                document.getElementById('round-container').style.opacity = '1';
-            }, 500); 
-        }, 50);
+                gamePage.style.opacity = '1'; vBg.style.opacity = '1';
+                if(!fromLoad) AudioSys.playSFX('welcome.mp3'); 
+                setTimeout(() => {
+                    document.getElementById('btn-option').classList.replace('slide-out-top', 'slide-in-top'); document.getElementById('btn-submit').classList.replace('slide-out-top', 'slide-in-top');
+                    document.getElementById('btn-log').classList.replace('slide-out-top', 'slide-in-top'); document.getElementById('btn-players').classList.replace('slide-out-top', 'slide-in-top');
+                    document.getElementById('players-container').classList.replace('slide-out-bottom', 'slide-in-bottom'); document.getElementById('round-container').style.opacity = '1';
+                }, 500); 
+            }, 50);
+        }
     }
 
     function leaveMainScreenToMenu() {
         AudioSys.fadeOutBGM(800); 
-        document.getElementById('btn-option').classList.replace('slide-in-top', 'slide-out-top');
-        document.getElementById('btn-submit').classList.replace('slide-in-top', 'slide-out-top');
-        document.getElementById('btn-log').classList.replace('slide-in-top', 'slide-out-top');
-        document.getElementById('btn-players').classList.replace('slide-in-top', 'slide-out-top');
+        document.getElementById('btn-option').classList.replace('slide-in-top', 'slide-out-top'); document.getElementById('btn-submit').classList.replace('slide-in-top', 'slide-out-top');
+        document.getElementById('btn-log').classList.replace('slide-in-top', 'slide-out-top'); document.getElementById('btn-players').classList.replace('slide-in-top', 'slide-out-top');
         
-        const winnerMenu = document.getElementById('btn-winner-menu');
-        if (winnerMenu) { winnerMenu.classList.replace('slide-in-top', 'slide-out-top'); setTimeout(()=> winnerMenu.style.display = 'none', 800); }
-        
-        const nextMatchBtn = document.getElementById('btn-next-match');
-        if(nextMatchBtn) { nextMatchBtn.classList.replace('slide-in-top', 'slide-out-top'); setTimeout(()=> nextMatchBtn.style.display = 'none', 800); }
+        const winnerMenu = document.getElementById('btn-winner-menu'); if (winnerMenu) { winnerMenu.classList.replace('slide-in-top', 'slide-out-top'); setTimeout(()=> winnerMenu.style.display = 'none', 800); }
+        const nextMatchBtn = document.getElementById('btn-next-match'); if(nextMatchBtn) { nextMatchBtn.classList.replace('slide-in-top', 'slide-out-top'); setTimeout(()=> nextMatchBtn.style.display = 'none', 800); }
 
-        document.getElementById('players-container').classList.replace('slide-in-bottom', 'slide-out-bottom');
-        document.getElementById('round-container').style.opacity = '0';
-        
-        document.getElementById('winner-dim-overlay').style.opacity = '0';
-        setTimeout(()=> document.getElementById('winner-dim-overlay').style.display = 'none', 500);
+        document.getElementById('players-container').classList.replace('slide-in-bottom', 'slide-out-bottom'); document.getElementById('round-container').style.opacity = '0';
+        document.getElementById('winner-dim-overlay').style.opacity = '0'; setTimeout(()=> document.getElementById('winner-dim-overlay').style.display = 'none', 500);
 
-        setTimeout(() => {
-            document.getElementById('game-bg-video').style.opacity = '0';
-            setTimeout(() => { document.getElementById('main-page').style.display = 'none'; initMainMenu(); }, 500);
-        }, 800);
+        setTimeout(() => { document.getElementById('game-bg-video').style.opacity = '0'; setTimeout(() => { document.getElementById('main-page').style.display = 'none'; initMainMenu(); }, 500); }, 800);
     }
 
     function confirmNextMatch() { showNotif(t('next_match_msg'), true, executeNextMatch); }
 
     function executeNextMatch() {
-        currentMatch++;
-        currentRound = 1; 
-        isWinnerState = false;
+        currentMatch++; currentRound = 1; isWinnerState = false; savedWinnerIndices = [];
+        for(let i=0; i<6; i++) { playerScores[i] = 0; scoreColors[i] = 'white'; playerStars[i] = 0; playerBadges[i] = false; scoreHistory[i] = [0]; historyIndex[i] = 0; }
         
-        for(let i=0; i<6; i++) {
-            playerScores[i] = 0; scoreColors[i] = 'white'; playerStars[i] = 0; playerBadges[i] = false;
-            scoreHistory[i] = [0]; historyIndex[i] = 0;
-        }
+        saveGameState(); // Menyimpan state baru Next Match
         
-        document.getElementById('winner-dim-overlay').style.opacity = '0';
-        setTimeout(()=> document.getElementById('winner-dim-overlay').style.display = 'none', 500);
-        
-        const winnerMenu = document.getElementById('btn-winner-menu');
-        if (winnerMenu) { winnerMenu.classList.replace('slide-in-top', 'slide-out-top'); setTimeout(()=> winnerMenu.style.display = 'none', 800); }
-        
-        const btnNext = document.getElementById('btn-next-match');
-        if (btnNext) { btnNext.classList.replace('slide-in-top', 'slide-out-top'); setTimeout(()=> btnNext.style.display = 'none', 800); }
+        document.getElementById('winner-dim-overlay').style.opacity = '0'; setTimeout(()=> document.getElementById('winner-dim-overlay').style.display = 'none', 500);
+        const winnerMenu = document.getElementById('btn-winner-menu'); if (winnerMenu) { winnerMenu.classList.replace('slide-in-top', 'slide-out-top'); setTimeout(()=> winnerMenu.style.display = 'none', 800); }
+        const btnNext = document.getElementById('btn-next-match'); if (btnNext) { btnNext.classList.replace('slide-in-top', 'slide-out-top'); setTimeout(()=> btnNext.style.display = 'none', 800); }
 
-        document.getElementById('btn-option').classList.replace('slide-out-top', 'slide-in-top');
-        document.getElementById('btn-submit').classList.replace('slide-out-top', 'slide-in-top');
-        document.getElementById('btn-players').classList.replace('slide-out-top', 'slide-in-top');
-        document.getElementById('btn-log').style.zIndex = '100'; 
+        document.getElementById('btn-option').classList.replace('slide-out-top', 'slide-in-top'); document.getElementById('btn-submit').classList.replace('slide-out-top', 'slide-in-top');
+        document.getElementById('btn-players').classList.replace('slide-out-top', 'slide-in-top'); document.getElementById('btn-log').style.zIndex = '100'; 
         
-        document.getElementById('round-container').style.opacity = '1';
-        document.getElementById('round-text').innerText = `${t('round')} ${currentRound}`;
+        document.getElementById('round-container').style.opacity = '1'; document.getElementById('round-text').innerText = `${t('round')} ${currentRound}`;
         
-        for (let i = 0; i < activePlayerCount; i++) {
-            const pc = document.getElementById(`player-cont-${i}`);
-            if (pc) { pc.classList.remove('loser-dim'); pc.classList.remove('winner-anim'); }
-            const stempel = document.getElementById(`stempel-${i}`);
-            if (stempel) stempel.classList.remove('show');
-        }
+        for (let i = 0; i < activePlayerCount; i++) { const pc = document.getElementById(`player-cont-${i}`); if (pc) { pc.classList.remove('loser-dim'); pc.classList.remove('winner-anim'); } const stempel = document.getElementById(`stempel-${i}`); if (stempel) stempel.classList.remove('show'); }
         
-        renderPlayers();
-        AudioSys.playBGM(selectedTheme === 'classic' ? 'bgm_classic.mp3' : 'bgm_farm.mp3');
+        renderPlayers(); AudioSys.playBGM(selectedTheme === 'classic' ? 'bgm_classic.mp3' : 'bgm_farm.mp3');
     }
 
-    function getFlagAsset(score) {
-        let level = 5; if(score > 200) level = 4; if(score > 400) level = 3; if(score > 600) level = 2; if(score > 800) level = 1;
-        return `flag_${level}_${selectedTheme}.png`;
-    }
-
+    function getFlagAsset(score) { let level = 5; if(score > 200) level = 4; if(score > 400) level = 3; if(score > 600) level = 2; if(score > 800) level = 1; return `flag_${level}_${selectedTheme}.png`; }
     function generateStarsHTML(starCount, pIdx) {
-        let html = '';
-        if (starCount <= 5) { for (let s = 0; s < starCount; s++) html += `<img src="${BASE_URL}star.png" class="star-icon" alt="Star">`; }
-        else {
-            for (let s = 0; s < (10 - starCount); s++) html += `<img src="${BASE_URL}star.png" class="star-icon" alt="Star">`;
-            for (let s = 0; s < (starCount - 5); s++) html += `<img src="${BASE_URL}star_2.png" class="star-icon" alt="Star 2">`;
-        }
-        return html;
+        let html = ''; if (starCount <= 5) { for (let s = 0; s < starCount; s++) html += `<img src="${BASE_URL}star.png" class="star-icon" alt="Star">`; }
+        else { for (let s = 0; s < (10 - starCount); s++) html += `<img src="${BASE_URL}star.png" class="star-icon" alt="Star">`; for (let s = 0; s < (starCount - 5); s++) html += `<img src="${BASE_URL}star_2.png" class="star-icon" alt="Star 2">`; } return html;
     }
-
     function checkSubmitState() {
-        if(isWinnerState) return;
-        const btn = document.getElementById('btn-submit'); let allFilled = true;
+        if(isWinnerState) return; const btn = document.getElementById('btn-submit'); let allFilled = true;
         for(let i=0; i<activePlayerCount; i++) { if(scoreColors[i] !== 'yellow') allFilled = false; }
         if(allFilled) btn.classList.remove('off'); else btn.classList.add('off');
     }
-
-    function cyclePlayerCount() {
-        if(isWinnerState) return;
-        AudioSys.playSFX('button.mp3'); activePlayerCount++; if (activePlayerCount > 6) activePlayerCount = 2; renderPlayers();
-    }
+    function cyclePlayerCount() { if(isWinnerState) return; AudioSys.playSFX('button.mp3'); activePlayerCount++; if (activePlayerCount > 6) activePlayerCount = 2; renderPlayers(); }
 
     function renderPlayers() {
         const container = document.getElementById('players-container'); container.innerHTML = '';
         for (let i = 0; i < activePlayerCount; i++) {
             const playerDiv = document.createElement('div'); playerDiv.className = 'player'; playerDiv.id = `player-cont-${i}`;
-            
-            let flagAsset = getFlagAsset(playerScores[i]);
-            let isSprite = flagAsset.startsWith('flag_1_');
-            let flagHTML = isSprite 
-                ? `<div class="spritesheet-wrapper"><img src="${BASE_URL}${flagAsset}" class="spritesheet-img"></div>`
-                : `<img src="${BASE_URL}${flagAsset}" class="player-flag">`;
-            
+            let flagAsset = getFlagAsset(playerScores[i]); let isSprite = flagAsset.startsWith('flag_1_');
+            let flagHTML = isSprite ? `<div class="spritesheet-wrapper"><img src="${BASE_URL}${flagAsset}" class="spritesheet-img"></div>` : `<img src="${BASE_URL}${flagAsset}" class="player-flag">`;
             playerDiv.innerHTML = `
-                <img src="${BASE_URL}avatar_${avatarNamesList[playerAvatars[i]]}.png" class="player-avatar">
-                ${flagHTML}
+                <img src="${BASE_URL}avatar_${avatarNamesList[playerAvatars[i]]}.png" class="player-avatar"> ${flagHTML}
                 <img src="${BASE_URL}winner.png" class="stempel-winner" id="stempel-${i}">
                 <div class="player-name-display" onclick="if(!isWinnerState) openKeypad('name', null, ${i})">${customPlayerNames[i]}</div>
                 <div class="player-stars-container" id="stars-cont-${i}">${generateStarsHTML(playerStars[i], i)}</div>
@@ -1011,82 +948,52 @@
                 <div style="position:absolute; top:0; left:0; right:0; height:330px; z-index:10; cursor:pointer;" onclick="if(!isWinnerState) openAvatarSelect(${i})"></div>
             `;
             container.appendChild(playerDiv);
-        }
-        checkSubmitState();
+        } checkSubmitState();
     }
 
     function playerUndo(i) { AudioSys.playSFX('button.mp3'); if(historyIndex[i] > 0) { historyIndex[i]--; playerScores[i] = scoreHistory[i][historyIndex[i]]; renderPlayers(); } }
     function playerRedo(i) { AudioSys.playSFX('button.mp3'); if(historyIndex[i] < scoreHistory[i].length-1) { historyIndex[i]++; playerScores[i] = scoreHistory[i][historyIndex[i]]; renderPlayers(); } }
-    
     function toggleBadge(i) {
         AudioSys.playSFX('button.mp3');
-        if (playerBadges[i]) { 
-            playerStars[i] = (playerStars[i]+1)%11; renderPlayers();
-            const stars = document.querySelectorAll(`#stars-cont-${i} .star-icon`);
-            if(stars.length > 0) stars[stars.length-1].classList.add('pop');
-        } else { playerBadges.fill(false); playerBadges[i] = true; renderPlayers(); }
+        if (playerBadges[i]) { playerStars[i] = (playerStars[i]+1)%11; renderPlayers(); const stars = document.querySelectorAll(`#stars-cont-${i} .star-icon`); if(stars.length > 0) stars[stars.length-1].classList.add('pop'); } 
+        else { playerBadges.fill(false); playerBadges[i] = true; renderPlayers(); }
     }
 
     let roundTimeout;
     function toggleRoundArrows() {
-        if(isWinnerState) return;
-        AudioSys.playSFX('button.mp3'); let dec = document.getElementById('round-dec'); let inc = document.getElementById('round-inc');
-        if(dec.classList.contains('show')) { hideRoundArrows(); return; }
-        dec.classList.add('show'); inc.classList.add('show'); resetRoundTimeout();
+        if(isWinnerState) return; AudioSys.playSFX('button.mp3'); let dec = document.getElementById('round-dec'); let inc = document.getElementById('round-inc');
+        if(dec.classList.contains('show')) { hideRoundArrows(); return; } dec.classList.add('show'); inc.classList.add('show'); resetRoundTimeout();
     }
     function hideRoundArrows() { document.getElementById('round-dec').classList.remove('show'); document.getElementById('round-inc').classList.remove('show'); }
     function resetRoundTimeout() { clearTimeout(roundTimeout); roundTimeout = setTimeout(hideRoundArrows, 10000); }
     function adjustRound(dir) { AudioSys.playSFX('button.mp3'); currentRound += dir; if(currentRound < 1) currentRound = 99; if(currentRound > 99) currentRound = 1; document.getElementById('round-text').innerText = `${t('round')} ${currentRound}`; resetRoundTimeout(); }
 
     let currentKeypadType = ''; let currentKeypadTarget = { rIdx: null, pIdx: null }; let keypadValue = "";
-
     function openKeypad(type, rIdx, pIdx) {
-        AudioSys.playSFX('button.mp3'); currentKeypadType = type; currentKeypadTarget = { rIdx, pIdx };
-        const isMain = rIdx === null;
-        document.getElementById('score-name-title').innerText = type === 'score' ? t('edit_score') : t('edit_name');
-        const display = document.getElementById('custom-display');
-        
-        if (type === 'score') {
-            display.style.width = '450px'; keypadValue = ""; display.innerText = "0"; renderNumPad();
-        } else {
-            display.style.width = '950px'; keypadValue = isMain ? customPlayerNames[pIdx] : tempLogRoundsData[rIdx].players[pIdx].playerName; 
-            display.innerText = keypadValue; renderAlphaPad();
-        }
+        AudioSys.playSFX('button.mp3'); currentKeypadType = type; currentKeypadTarget = { rIdx, pIdx }; const isMain = rIdx === null;
+        document.getElementById('score-name-title').innerText = type === 'score' ? t('edit_score') : t('edit_name'); const display = document.getElementById('custom-display');
+        if (type === 'score') { display.style.width = '450px'; keypadValue = ""; display.innerText = "0"; renderNumPad(); } 
+        else { display.style.width = '950px'; keypadValue = isMain ? customPlayerNames[pIdx] : tempLogRoundsData[rIdx].players[pIdx].playerName; display.innerText = keypadValue; renderAlphaPad(); }
         document.getElementById('btn-keypad-ok').onclick = () => { submitKeypad(); }; openModal('score-name-modal');
     }
-    
     function kInp(c) {
         AudioSys.playSFX('keypad.mp3'); const display = document.getElementById('custom-display');
-        if(currentKeypadType === 'score') {
-            if(c === '-') keypadValue = keypadValue.startsWith('-') ? keypadValue.substring(1) : '-' + keypadValue;
-            else if(keypadValue.replace('-','').length < 5) keypadValue += c;
-            display.innerText = keypadValue || "0";
-        } else { if(keypadValue.length < 10) keypadValue += c; display.innerText = keypadValue; }
+        if(currentKeypadType === 'score') { if(c === '-') keypadValue = keypadValue.startsWith('-') ? keypadValue.substring(1) : '-' + keypadValue; else if(keypadValue.replace('-','').length < 5) keypadValue += c; display.innerText = keypadValue || "0"; } 
+        else { if(keypadValue.length < 10) keypadValue += c; display.innerText = keypadValue; }
     }
     function kDel() { AudioSys.playSFX('keypad.mp3'); keypadValue = keypadValue.slice(0, -1); document.getElementById('custom-display').innerText = currentKeypadType === 'score' ? (keypadValue||"0") : keypadValue; }
 
     function renderNumPad() {
-        const grid = document.getElementById('numpad-grid'); grid.style.gridTemplateColumns = "repeat(3, 1fr)"; grid.style.width = "450px";
-        let html = ''; 
+        const grid = document.getElementById('numpad-grid'); grid.style.gridTemplateColumns = "repeat(3, 1fr)"; grid.style.width = "450px"; let html = ''; 
         for(let i=1; i<=9; i++) html += `<button class="num-btn" onclick="kInp('${i}')">${i}</button>`;
-        html += `<button class="num-btn" onclick="kInp('-')">-</button>
-                 <button class="num-btn" onclick="kInp('0')">0</button>
-                 <button class="num-btn" onclick="kDel()">DEL</button>`;
-        grid.innerHTML = html;
+        html += `<button class="num-btn" onclick="kInp('-')">-</button> <button class="num-btn" onclick="kInp('0')">0</button> <button class="num-btn" onclick="kDel()">DEL</button>`; grid.innerHTML = html;
     }
     function renderAlphaPad() {
-        const grid = document.getElementById('numpad-grid'); grid.style.gridTemplateColumns = "repeat(10, 1fr)"; grid.style.width = "950px";
-        let html = ''; 
-        for(let i=1; i<=9; i++) html += `<button class="num-btn" onclick="kInp('${i}')">${i}</button>`;
-        html += `<button class="num-btn" onclick="kInp('0')">0</button>`;
-        
+        const grid = document.getElementById('numpad-grid'); grid.style.gridTemplateColumns = "repeat(10, 1fr)"; grid.style.width = "950px"; let html = ''; 
+        for(let i=1; i<=9; i++) html += `<button class="num-btn" onclick="kInp('${i}')">${i}</button>`; html += `<button class="num-btn" onclick="kInp('0')">0</button>`;
         const r2 = "QWERTYUIOP", r3 = "ASDFGHJKL", r4 = "ZXCVBNM";
-        for(let c of r2) html += `<button class="num-btn" onclick="kInp('${c}')">${c}</button>`;
-        for(let c of r3) html += `<button class="num-btn" onclick="kInp('${c}')">${c}</button>`; 
-        html += `<button class="num-btn" onclick="kDel()">DEL</button>`;
-        for(let c of r4) html += `<button class="num-btn" onclick="kInp('${c}')">${c}</button>`; 
-        html += `<button class="num-btn" onclick="kInp(' ')" style="grid-column: span 3;">SPACE</button>`;
-        grid.innerHTML = html;
+        for(let c of r2) html += `<button class="num-btn" onclick="kInp('${c}')">${c}</button>`; for(let c of r3) html += `<button class="num-btn" onclick="kInp('${c}')">${c}</button>`; html += `<button class="num-btn" onclick="kDel()">DEL</button>`;
+        for(let c of r4) html += `<button class="num-btn" onclick="kInp('${c}')">${c}</button>`; html += `<button class="num-btn" onclick="kInp(' ')" style="grid-column: span 3;">SPACE</button>`; grid.innerHTML = html;
     }
 
     function submitKeypad() {
@@ -1094,102 +1001,49 @@
         if (currentKeypadType === 'score') {
             let val = parseInt(keypadValue);
             if(!isNaN(val)) {
-                if(isMain) {
-                    playerScores[pIdx] += val; scoreColors[pIdx] = 'yellow';
-                    scoreHistory[pIdx] = scoreHistory[pIdx].slice(0, historyIndex[pIdx]+1); scoreHistory[pIdx].push(playerScores[pIdx]); historyIndex[pIdx]++;
-                    renderPlayers();
-                } else { tempLogRoundsData[rIdx].players[pIdx].score = val; buildLogTable(); }
+                if(isMain) { playerScores[pIdx] += val; scoreColors[pIdx] = 'yellow'; scoreHistory[pIdx] = scoreHistory[pIdx].slice(0, historyIndex[pIdx]+1); scoreHistory[pIdx].push(playerScores[pIdx]); historyIndex[pIdx]++; renderPlayers(); } 
+                else { tempLogRoundsData[rIdx].players[pIdx].score = val; buildLogTable(); }
             }
         } else {
             let v = keypadValue.trim().toUpperCase();
-            if(v) {
-                if(isMain) { customPlayerNames[pIdx] = v; renderPlayers(); if(logRoundsData.length>0) buildLogTable(); }
-                else { tempLogRoundsData[rIdx].players[pIdx].playerName = v; buildLogTable(); }
-            }
-        }
-        closeModal('score-name-modal');
+            if(v) { if(isMain) { customPlayerNames[pIdx] = v; renderPlayers(); if(logRoundsData.length>0) buildLogTable(); } else { tempLogRoundsData[rIdx].players[pIdx].playerName = v; buildLogTable(); } }
+        } closeModal('score-name-modal');
     }
 
     let currentAvatarTarget = null;
-    
-    function onAvatarImgLoad() {
-        const container = document.getElementById('avatar-grid-container');
-        const firstAvatar = container.querySelector('.avatar-option');
-        if (firstAvatar && firstAvatar.naturalWidth > 0) {
-            const targetWidth = (firstAvatar.naturalWidth * 3) + (40 * 2);
-            container.style.width = targetWidth + 'px';
-            checkAvatarScroll();
-        }
-    }
-
-    function scrollAvatar(dir) {
-        const container = document.getElementById('avatar-grid-container');
-        const firstAvatar = container.querySelector('.avatar-option');
-        let scrollAmt = firstAvatar ? (firstAvatar.naturalWidth + 40) : 200; 
-        container.scrollBy({ left: dir * scrollAmt, behavior: 'smooth' });
-    }
-
+    function onAvatarImgLoad() { const container = document.getElementById('avatar-grid-container'); const firstAvatar = container.querySelector('.avatar-option'); if (firstAvatar && firstAvatar.naturalWidth > 0) { const targetWidth = (firstAvatar.naturalWidth * 3) + (40 * 2); container.style.width = targetWidth + 'px'; checkAvatarScroll(); } }
+    function scrollAvatar(dir) { const container = document.getElementById('avatar-grid-container'); const firstAvatar = container.querySelector('.avatar-option'); let scrollAmt = firstAvatar ? (firstAvatar.naturalWidth + 40) : 200; container.scrollBy({ left: dir * scrollAmt, behavior: 'smooth' }); }
     function checkAvatarScroll() {
-        const cont = document.getElementById('avatar-grid-container');
-        const leftArr = document.getElementById('avatar-scroll-left');
-        const rightArr = document.getElementById('avatar-scroll-right');
-        if (!cont) return;
-
-        if (cont.scrollLeft > 5) {
-            leftArr.style.opacity = '1'; leftArr.style.pointerEvents = 'auto';
-        } else {
-            leftArr.style.opacity = '0'; leftArr.style.pointerEvents = 'none';
-        }
-        
-        if (Math.ceil(cont.scrollLeft + cont.clientWidth) < cont.scrollWidth - 5) {
-            rightArr.style.opacity = '1'; rightArr.style.pointerEvents = 'auto';
-        } else {
-            rightArr.style.opacity = '0'; rightArr.style.pointerEvents = 'none';
-        }
+        const cont = document.getElementById('avatar-grid-container'); const leftArr = document.getElementById('avatar-scroll-left'); const rightArr = document.getElementById('avatar-scroll-right'); if (!cont) return;
+        if (cont.scrollLeft > 5) { leftArr.style.opacity = '1'; leftArr.style.pointerEvents = 'auto'; } else { leftArr.style.opacity = '0'; leftArr.style.pointerEvents = 'none'; }
+        if (Math.ceil(cont.scrollLeft + cont.clientWidth) < cont.scrollWidth - 5) { rightArr.style.opacity = '1'; rightArr.style.pointerEvents = 'auto'; } else { rightArr.style.opacity = '0'; rightArr.style.pointerEvents = 'none'; }
     }
-
     function openAvatarSelect(pIdx) {
-        currentAvatarTarget = pIdx; 
-        const container = document.getElementById('avatar-grid-container'); 
-        container.innerHTML = '';
-        
+        currentAvatarTarget = pIdx; const container = document.getElementById('avatar-grid-container'); container.innerHTML = '';
         avatarNamesList.forEach((name, a) => {
-            const w = document.createElement('div'); w.className = 'avatar-wrapper';
-            if (a === playerAvatars[pIdx]) w.classList.add('selected');
+            const w = document.createElement('div'); w.className = 'avatar-wrapper'; if (a === playerAvatars[pIdx]) w.classList.add('selected');
             w.innerHTML = `<img src="${BASE_URL}avatar_${name}.png" class="avatar-option" onload="onAvatarImgLoad()"><img src="${BASE_URL}border_avatar.png" class="avatar-border-overlay">`;
-            w.onclick = () => { AudioSys.playSFX('button.mp3'); container.querySelectorAll('.avatar-wrapper').forEach(el => el.classList.remove('selected')); w.classList.add('selected'); currentAvatarTarget = {pIdx, a}; };
-            container.appendChild(w);
+            w.onclick = () => { AudioSys.playSFX('button.mp3'); container.querySelectorAll('.avatar-wrapper').forEach(el => el.classList.remove('selected')); w.classList.add('selected'); currentAvatarTarget = {pIdx, a}; }; container.appendChild(w);
         });
-        
         document.getElementById('btn-use-avatar').onclick = () => {
             if(currentAvatarTarget && currentAvatarTarget.a !== undefined) {
                 let aIdx = currentAvatarTarget.a; playerAvatars[pIdx] = aIdx; customPlayerNames[pIdx] = avatarNamesList[aIdx].toUpperCase();
                 let seq = [avatarNamesList[aIdx]+'.mp3', 'on_the_stage.mp3'];
-                (function playS(idx){
-                    if(idx>=seq.length) return; let a = new Audio(BASE_URL+seq[idx]); a.onended = () => playS(idx+1);
-                    if(AudioSys.sfxOn) a.play().catch(e=>{}); else playS(idx+1);
-                })(0);
+                (function playS(idx){ if(idx>=seq.length) return; let a = new Audio(BASE_URL+seq[idx]); a.onended = () => playS(idx+1); if(AudioSys.sfxOn) a.play().catch(e=>{}); else playS(idx+1); })(0);
                 renderPlayers();
-            }
-            closeModal('avatar-modal');
+            } closeModal('avatar-modal');
         };
-        
-        openModal('avatar-modal');
-        setTimeout(checkAvatarScroll, 100);
+        openModal('avatar-modal'); setTimeout(checkAvatarScroll, 100);
     }
 
-    function handleActionSubmit() {
-        if(logRoundsData.some(r => r.matchNum === currentMatch && r.roundNum === currentRound)) {
-            showNotif(t('already_submitted').replace('{round}', currentRound), true, execSubmit);
-        } else {
-            showNotif(t('submit_confirm').replace('{round}', currentRound), true, execSubmit);
-        }
-    }
+    function handleActionSubmit() { if(logRoundsData.some(r => r.matchNum === currentMatch && r.roundNum === currentRound)) showNotif(t('already_submitted').replace('{round}', currentRound), true, execSubmit); else showNotif(t('submit_confirm').replace('{round}', currentRound), true, execSubmit); }
 
     function execSubmit() {
         let snap = { matchNum: currentMatch, roundNum: currentRound, players: [] };
-        for(let i=0; i<activePlayerCount; i++) { snap.players.push({ playerName: customPlayerNames[i], avatarIdx: playerAvatars[i], score: playerScores[i], hasBadge: playerBadges[i] }); }
+        for(let i=0; i<activePlayerCount; i++) snap.players.push({ playerName: customPlayerNames[i], avatarIdx: playerAvatars[i], score: playerScores[i], hasBadge: playerBadges[i] }); 
         logRoundsData.push(snap); saveLog();
+        
+        saveGameState(); // Menyimpan state setelah data disubmit ke log
         
         let rn = currentRound <= 20 ? currentRound+'.mp3' : '1.mp3';
         (function playS(idx, seq){
@@ -1198,8 +1052,7 @@
             if(AudioSys.sfxOn) a.play().catch(e=>postSubmitCheck()); else playS(idx+1, seq);
         })(0, ['score_for_round.mp3', rn]);
         
-        for(let i=0; i<activePlayerCount; i++) scoreColors[i] = 'white';
-        renderPlayers();
+        for(let i=0; i<activePlayerCount; i++) scoreColors[i] = 'white'; renderPlayers();
     }
     
     function postSubmitCheck() {
@@ -1207,299 +1060,120 @@
         for(let i=0; i<activePlayerCount; i++) {
             if(playerBadges[i]) {
                 playerStars[i] = (playerStars[i]+1)%11;
-                let sF = "1_star.mp3";
-                if(playerStars[i]==2) sF="wildcard.mp3"; else if(playerStars[i]==3) sF="illusionist.mp3";
-                else if(playerStars[i]==4) sF="mastermind.mp3"; else if(playerStars[i]==5) sF="godlike.mp3";
-                else if(playerStars[i]==6) sF="legendary.mp3"; else if(playerStars[i]>=7) sF="god_of_joker.mp3";
-                
-                let seq = [avatarNamesList[playerAvatars[i]]+'.mp3', sF];
-                hasStarSound = true;
-                
-                (function playS(idx){
-                    if(idx>=seq.length) { checkWinnersAndProceed(); return; }
-                    let a = new Audio(BASE_URL+seq[idx]); a.onended=()=>playS(idx+1);
-                    if(AudioSys.sfxOn) a.play().catch(e=>playS(idx+1)); else playS(idx+1);
-                })(0);
-                
-                renderPlayers();
-                const stars = document.querySelectorAll(`#stars-cont-${i} .star-icon`);
-                if(stars.length > 0) stars[stars.length-1].classList.add('pop');
-                break;
+                let sF = "1_star.mp3"; if(playerStars[i]==2) sF="wildcard.mp3"; else if(playerStars[i]==3) sF="illusionist.mp3"; else if(playerStars[i]==4) sF="mastermind.mp3"; else if(playerStars[i]==5) sF="godlike.mp3"; else if(playerStars[i]==6) sF="legendary.mp3"; else if(playerStars[i]>=7) sF="god_of_joker.mp3";
+                let seq = [avatarNamesList[playerAvatars[i]]+'.mp3', sF]; hasStarSound = true;
+                (function playS(idx){ if(idx>=seq.length) { checkWinnersAndProceed(); return; } let a = new Audio(BASE_URL+seq[idx]); a.onended=()=>playS(idx+1); if(AudioSys.sfxOn) a.play().catch(e=>playS(idx+1)); else playS(idx+1); })(0);
+                renderPlayers(); const stars = document.querySelectorAll(`#stars-cont-${i} .star-icon`); if(stars.length > 0) stars[stars.length-1].classList.add('pop'); break;
             }
-        }
-        
-        if (!hasStarSound) { checkWinnersAndProceed(); }
+        } if (!hasStarSound) checkWinnersAndProceed();
     }
 
     function checkWinnersAndProceed() {
-        let goal = goalScoresOpts[goalScoreIdx]; let qualifiers = [];
-        for(let i=0; i<activePlayerCount; i++) if(playerScores[i] >= goal) qualifiers.push(i);
-        
-        if(qualifiers.length > 0) {
-            let maxS = Math.max(...qualifiers.map(idx => playerScores[idx]));
-            let winners = qualifiers.filter(idx => playerScores[idx] === maxS);
-            triggerWinnerSequence(winners);
-        } else {
-            currentRound = (currentRound%99)+1; document.getElementById('round-text').innerText = `${t('round')} ${currentRound}`;
-        }
+        let goal = goalScoresOpts[goalScoreIdx]; let qualifiers = []; for(let i=0; i<activePlayerCount; i++) if(playerScores[i] >= goal) qualifiers.push(i);
+        if(qualifiers.length > 0) { let maxS = Math.max(...qualifiers.map(idx => playerScores[idx])); let winners = qualifiers.filter(idx => playerScores[idx] === maxS); triggerWinnerSequence(winners); } 
+        else { currentRound = (currentRound%99)+1; document.getElementById('round-text').innerText = `${t('round')} ${currentRound}`; saveGameState(); } // Update round in save state
     }
 
     function triggerWinnerSequence(winnerIndices) {
-        isWinnerState = true;
+        isWinnerState = true; savedWinnerIndices = winnerIndices;
+        saveGameState(); // Simpan Status Menang
         
-        document.getElementById('btn-option').classList.replace('slide-in-top', 'slide-out-top');
-        document.getElementById('btn-submit').classList.replace('slide-in-top', 'slide-out-top');
-        document.getElementById('btn-players').classList.replace('slide-in-top', 'slide-out-top');
-        document.getElementById('round-container').style.opacity = '0';
-        
-        const btnLog = document.getElementById('btn-log');
-        btnLog.classList.replace('slide-in-top', 'slide-out-top');
+        document.getElementById('btn-option').classList.replace('slide-in-top', 'slide-out-top'); document.getElementById('btn-submit').classList.replace('slide-in-top', 'slide-out-top');
+        document.getElementById('btn-players').classList.replace('slide-in-top', 'slide-out-top'); document.getElementById('round-container').style.opacity = '0';
+        const btnLog = document.getElementById('btn-log'); btnLog.classList.replace('slide-in-top', 'slide-out-top');
+        const btnMenu = document.getElementById('btn-winner-menu'); btnMenu.classList.remove('slide-in-top'); btnMenu.classList.add('slide-out-top'); btnMenu.style.display = 'block';
+        const btnNext = document.getElementById('btn-next-match'); btnNext.classList.remove('slide-in-top'); btnNext.classList.add('slide-out-top'); btnNext.style.display = 'block';
 
-        const btnMenu = document.getElementById('btn-winner-menu');
-        btnMenu.classList.remove('slide-in-top');
-        btnMenu.classList.add('slide-out-top');
-        btnMenu.style.display = 'block';
+        const dimOverlay = document.getElementById('winner-dim-overlay'); dimOverlay.style.display = 'block'; setTimeout(() => { dimOverlay.style.opacity = '1'; }, 50);
 
-        const btnNext = document.getElementById('btn-next-match');
-        btnNext.classList.remove('slide-in-top');
-        btnNext.classList.add('slide-out-top');
-        btnNext.style.display = 'block';
-
-        const dimOverlay = document.getElementById('winner-dim-overlay');
-        dimOverlay.style.display = 'block'; setTimeout(() => { dimOverlay.style.opacity = '1'; }, 50);
-
-        for (let i = 0; i < activePlayerCount; i++) {
-            const pc = document.getElementById(`player-cont-${i}`);
-            if(!winnerIndices.includes(i)) pc.classList.add('loser-dim');
-        }
-        
+        for (let i = 0; i < activePlayerCount; i++) { const pc = document.getElementById(`player-cont-${i}`); if(!winnerIndices.includes(i)) pc.classList.add('loser-dim'); }
         AudioSys.playBGM('bgm_fanfare.mp3');
-        
         setTimeout(() => {
             winnerIndices.forEach(idx => { document.getElementById(`stempel-${idx}`).classList.add('show'); });
             setTimeout(() => {
-                winnerIndices.forEach(idx => { document.getElementById(`player-cont-${idx}`).classList.add('winner-anim'); });
-                
-                btnLog.style.zIndex = '105'; 
-                
-                setTimeout(() => {
-                    btnLog.classList.replace('slide-out-top', 'slide-in-top');
-                    btnMenu.classList.replace('slide-out-top', 'slide-in-top');
-                    btnNext.classList.replace('slide-out-top', 'slide-in-top');
-                }, 50);
-
+                winnerIndices.forEach(idx => { document.getElementById(`player-cont-${idx}`).classList.add('winner-anim'); }); btnLog.style.zIndex = '105'; 
+                setTimeout(() => { btnLog.classList.replace('slide-out-top', 'slide-in-top'); btnMenu.classList.replace('slide-out-top', 'slide-in-top'); btnNext.classList.replace('slide-out-top', 'slide-in-top'); }, 50);
             }, 1000);
         }, 1000);
     }
     
-    function handleActionLog() { 
-        logEditable = false; tempLogRoundsData = JSON.parse(JSON.stringify(logRoundsData)); 
-        buildLogTable(); 
-        document.getElementById('btn-log-edit').style.display = isWinnerState ? 'none' : 'block';
-        document.getElementById('log-edit-controls').style.display = 'none';
-        openModal('log-modal'); 
-    }
+    function handleActionLog() { logEditable = false; tempLogRoundsData = JSON.parse(JSON.stringify(logRoundsData)); buildLogTable(); document.getElementById('btn-log-edit').style.display = isWinnerState ? 'none' : 'block'; document.getElementById('log-edit-controls').style.display = 'none'; openModal('log-modal'); }
+    function enableLogEdit() { AudioSys.playSFX('button.mp3'); logEditable = true; document.getElementById('btn-log-edit').style.display = 'none'; document.getElementById('log-edit-controls').style.display = 'flex'; buildLogTable(); }
+    function cancelLogEdit() { AudioSys.playSFX('button.mp3'); logEditable = false; tempLogRoundsData = JSON.parse(JSON.stringify(logRoundsData)); document.getElementById('btn-log-edit').style.display = 'block'; document.getElementById('log-edit-controls').style.display = 'none'; buildLogTable(); }
     
-    function enableLogEdit() {
-        AudioSys.playSFX('button.mp3'); logEditable = true;
-        document.getElementById('btn-log-edit').style.display = 'none';
-        document.getElementById('log-edit-controls').style.display = 'flex';
-        buildLogTable();
-    }
-    
-    function cancelLogEdit() {
-        AudioSys.playSFX('button.mp3'); logEditable = false; tempLogRoundsData = JSON.parse(JSON.stringify(logRoundsData)); 
-        document.getElementById('btn-log-edit').style.display = 'block';
-        document.getElementById('log-edit-controls').style.display = 'none';
-        buildLogTable();
-    }
-    
-    function saveLogEdit() {
+    function saveLogEdit() { 
         AudioSys.playSFX('button.mp3'); logEditable = false; logRoundsData = JSON.parse(JSON.stringify(tempLogRoundsData)); 
-        saveLog();
-        document.getElementById('btn-log-edit').style.display = 'block';
-        document.getElementById('log-edit-controls').style.display = 'none';
-        buildLogTable();
+        saveLog(); saveGameState(); // Update Save State jika log diedit manual
+        document.getElementById('btn-log-edit').style.display = 'block'; document.getElementById('log-edit-controls').style.display = 'none'; buildLogTable(); 
     }
 
-    function toggleLogBadge(rIdx, pIdx) {
-        if(!logEditable) return; AudioSys.playSFX('button.mp3');
-        const rd = tempLogRoundsData[rIdx]; rd.players.forEach((p, i) => { if(i !== pIdx) p.hasBadge = false; });
-        rd.players[pIdx].hasBadge = !rd.players[pIdx].hasBadge; buildLogTable();
-    }
-
+    function toggleLogBadge(rIdx, pIdx) { if(!logEditable) return; AudioSys.playSFX('button.mp3'); const rd = tempLogRoundsData[rIdx]; rd.players.forEach((p, i) => { if(i !== pIdx) p.hasBadge = false; }); rd.players[pIdx].hasBadge = !rd.players[pIdx].hasBadge; buildLogTable(); }
     function saveLog() { logScreenHistory = logScreenHistory.slice(0, logScreenHistoryIndex+1); logScreenHistory.push(JSON.stringify(logRoundsData)); logScreenHistoryIndex++; }
     function logUndo() { if(!logEditable) return; AudioSys.playSFX('button.mp3'); if(logScreenHistoryIndex>0) { logScreenHistoryIndex--; tempLogRoundsData = JSON.parse(logScreenHistory[logScreenHistoryIndex]); buildLogTable(); } }
     function logRedo() { if(!logEditable) return; AudioSys.playSFX('button.mp3'); if(logScreenHistoryIndex<logScreenHistory.length-1) { logScreenHistoryIndex++; tempLogRoundsData = JSON.parse(logScreenHistory[logScreenHistoryIndex]); buildLogTable(); } }
 
     function buildLogTable() {
-        const wrapper = document.getElementById('log-table-container');
-        wrapper.innerHTML = '';
-        
-        let targetData = logEditable ? tempLogRoundsData : logRoundsData;
-        if(targetData.length === 0) { 
-            wrapper.innerHTML = `<div style="color:white; font-size:32px; text-align:center; padding:60px; font-weight:bold;">${t('empty_log')}</div>`; 
-            return; 
-        }
+        const wrapper = document.getElementById('log-table-container'); wrapper.innerHTML = ''; let targetData = logEditable ? tempLogRoundsData : logRoundsData;
+        if(targetData.length === 0) { wrapper.innerHTML = `<div style="color:white; font-size:32px; text-align:center; padding:60px; font-weight:bold;">${t('empty_log')}</div>`; return; }
         
         for (let m = 1; m <= currentMatch; m++) {
-            let matchRounds = targetData.filter(rd => rd.matchNum === m);
-            if (matchRounds.length === 0 && m !== currentMatch) continue;
-            
+            let matchRounds = targetData.filter(rd => rd.matchNum === m); if (matchRounds.length === 0 && m !== currentMatch) continue;
             let isCurrentMatch = (m === currentMatch);
-            
-            let matchTitle = document.createElement('div');
-            matchTitle.style.color = '#f1c40f';
-            matchTitle.style.fontSize = '35px';
-            matchTitle.style.fontWeight = 'bold';
-            matchTitle.style.textAlign = 'center';
-            matchTitle.style.margin = '20px 0 10px 0';
-            matchTitle.style.textShadow = '2px 2px 0px #000';
-            matchTitle.innerText = `${t('match_lbl').toUpperCase()} ${m}`;
-            wrapper.appendChild(matchTitle);
+            let matchTitle = document.createElement('div'); matchTitle.style.color = '#f1c40f'; matchTitle.style.fontSize = '35px'; matchTitle.style.fontWeight = 'bold'; matchTitle.style.textAlign = 'center'; matchTitle.style.margin = '20px 0 10px 0'; matchTitle.style.textShadow = '2px 2px 0px #000'; matchTitle.innerText = `${t('match_lbl').toUpperCase()} ${m}`; wrapper.appendChild(matchTitle);
 
-            let table = document.createElement('table');
-            table.className = 'log-table';
-            
-            let thead = document.createElement('thead');
-            let htr = document.createElement('tr');
-            htr.innerHTML = `<th>${t('round')}</th>`;
-            
+            let table = document.createElement('table'); table.className = 'log-table'; let thead = document.createElement('thead'); let htr = document.createElement('tr'); htr.innerHTML = `<th>${t('round')}</th>`;
             let numCols = isCurrentMatch ? activePlayerCount : (matchRounds.length > 0 ? matchRounds[0].players.length : activePlayerCount);
             
-            for(let p = 0; p < numCols; p++) { 
-                let pName = customPlayerNames[p] || `P${p+1}`;
-                if (!isCurrentMatch && matchRounds.length > 0 && matchRounds[0].players[p]) { pName = matchRounds[0].players[p].playerName; }
-                htr.innerHTML += `<th>${pName}</th>`; 
-            }
-            
-            if (isCurrentMatch) {
-                htr.innerHTML += `<th class="${logEditable ? '' : 'col-hide'}">
-                    <div style="display:flex; justify-content:center; gap:10px;">
-                        <div class="ur-btn ${logScreenHistoryIndex>0 ? '' : 'disabled'}" style="transform:scale(0.8);" onclick="logUndo()">&#8634;</div>
-                        <div class="ur-btn ${logScreenHistoryIndex<logScreenHistory.length-1 ? '' : 'disabled'}" style="transform:scale(0.8);" onclick="logRedo()">&#8635;</div>
-                    </div>
-                </th>`; 
-            }
-            thead.appendChild(htr);
-            table.appendChild(thead);
+            for(let p = 0; p < numCols; p++) { let pName = customPlayerNames[p] || `P${p+1}`; if (!isCurrentMatch && matchRounds.length > 0 && matchRounds[0].players[p]) { pName = matchRounds[0].players[p].playerName; } htr.innerHTML += `<th>${pName}</th>`; }
+            if (isCurrentMatch) { htr.innerHTML += `<th class="${logEditable ? '' : 'col-hide'}"><div style="display:flex; justify-content:center; gap:10px;"><div class="ur-btn ${logScreenHistoryIndex>0 ? '' : 'disabled'}" style="transform:scale(0.8);" onclick="logUndo()">&#8634;</div><div class="ur-btn ${logScreenHistoryIndex<logScreenHistory.length-1 ? '' : 'disabled'}" style="transform:scale(0.8);" onclick="logRedo()">&#8635;</div></div></th>`; }
+            thead.appendChild(htr); table.appendChild(thead);
             
             let tbody = document.createElement('tbody');
-            if (matchRounds.length === 0) {
-                let emptyColspan = 1 + numCols + (isCurrentMatch ? 1 : 0);
-                tbody.innerHTML = `<tr><td colspan="${emptyColspan}" style="padding:25px; color:#95a5a6; font-style:italic;">-</td></tr>`;
-            } else {
+            if (matchRounds.length === 0) { let emptyColspan = 1 + numCols + (isCurrentMatch ? 1 : 0); tbody.innerHTML = `<tr><td colspan="${emptyColspan}" style="padding:25px; color:#95a5a6; font-style:italic;">-</td></tr>`; } 
+            else {
                 matchRounds.forEach((rd) => {
-                    let rIdx = targetData.findIndex(x => x === rd);
-                    let tr = document.createElement('tr');
-                    tr.innerHTML = `<td style="color:#f1c40f;font-weight:bold">${t('round')} ${rd.roundNum}</td>`;
-                    
+                    let rIdx = targetData.findIndex(x => x === rd); let tr = document.createElement('tr'); tr.innerHTML = `<td style="color:#f1c40f;font-weight:bold">${t('round')} ${rd.roundNum}</td>`;
                     for(let pIdx=0; pIdx < numCols; pIdx++) {
                         let pd = rd.players[pIdx];
                         if(pd) {
-                            let td = document.createElement('td'); 
-                            if(logEditable && isCurrentMatch) td.className = 'editable-cell';
-                            
-                            let badgeHTML = pd.hasBadge ? `<img src="${BASE_URL}badge.png" style="height:40px; cursor:${(logEditable && isCurrentMatch)?'pointer':'default'};" onclick="event.stopPropagation(); if(${isCurrentMatch}) toggleLogBadge(${rIdx}, ${pIdx})">` : 
-                                                          `<div style="width:40px; height:40px; cursor:${(logEditable && isCurrentMatch)?'pointer':'default'};" onclick="event.stopPropagation(); if(${isCurrentMatch}) toggleLogBadge(${rIdx}, ${pIdx})"></div>`;
-                            
-                            td.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;gap:10px;">${badgeHTML} <span>${pd.score}</span></div>`;
-                            if(logEditable && isCurrentMatch) td.onclick = () => openKeypad('score', rIdx, pIdx);
-                            tr.appendChild(td);
-                        } else {
-                            tr.innerHTML += `<td>-</td>`;
-                        }
+                            let td = document.createElement('td'); if(logEditable && isCurrentMatch) td.className = 'editable-cell';
+                            let badgeHTML = pd.hasBadge ? `<img src="${BASE_URL}badge.png" style="height:40px; cursor:${(logEditable && isCurrentMatch)?'pointer':'default'};" onclick="event.stopPropagation(); if(${isCurrentMatch}) toggleLogBadge(${rIdx}, ${pIdx})">` : `<div style="width:40px; height:40px; cursor:${(logEditable && isCurrentMatch)?'pointer':'default'};" onclick="event.stopPropagation(); if(${isCurrentMatch}) toggleLogBadge(${rIdx}, ${pIdx})"></div>`;
+                            td.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;gap:10px;">${badgeHTML} <span>${pd.score}</span></div>`; if(logEditable && isCurrentMatch) td.onclick = () => openKeypad('score', rIdx, pIdx); tr.appendChild(td);
+                        } else { tr.innerHTML += `<td>-</td>`; }
                     }
-                    
-                    if (isCurrentMatch) {
-                        let dtd = document.createElement('td'); dtd.className = logEditable ? '' : 'col-hide';
-                        let db = document.createElement('button'); db.className='trash-btn'; db.innerHTML='&#128465;';
-                        db.onclick = () => { AudioSys.playSFX('button.mp3'); tempLogRoundsData.splice(rIdx, 1); buildLogTable(); };
-                        dtd.appendChild(db); tr.appendChild(dtd);
-                    }
+                    if (isCurrentMatch) { let dtd = document.createElement('td'); dtd.className = logEditable ? '' : 'col-hide'; let db = document.createElement('button'); db.className='trash-btn'; db.innerHTML='&#128465;'; db.onclick = () => { AudioSys.playSFX('button.mp3'); tempLogRoundsData.splice(rIdx, 1); buildLogTable(); }; dtd.appendChild(db); tr.appendChild(dtd); }
                     tbody.appendChild(tr);
                 });
-            }
-            table.appendChild(tbody);
-            wrapper.appendChild(table);
+            } table.appendChild(tbody); wrapper.appendChild(table);
         }
     }
 
-    // =======================================================================
-    // -- PENCEGAHAN BACK BUTTON & AUTO FULLSCREEN SAAT RESUME/MINIMIZE --
-    // =======================================================================
-
-    // 1. Menjebak Tombol Back (History API)
+    // PENCEGAHAN BACK BUTTON & FULLSCREEN
     window.addEventListener('popstate', (e) => {
-        // Pancingan dihidupkan lagi agar tombol "Back" Android selanjutnya tetap terperangkap
         history.pushState({ trapped: true }, null, location.href);
-        
-        // Cek apakah notifikasi Exit App (atau notifikasi lainnya) sedang terbuka
         const notifModal = document.getElementById('notification-modal');
-        if (notifModal.style.display === 'flex') {
-            notifModal.style.display = 'none'; // Tutup notifikasi exit
-            AudioSys.playSFX('close.mp3');
-            return; // Selesai sampai di sini
-        }
-
-        // Cek apakah ada Modal Overlay lainnya yang sedang terbuka (Log, Tutorial, Option, dll)
+        if (notifModal.style.display === 'flex') { notifModal.style.display = 'none'; AudioSys.playSFX('close.mp3'); return; }
         let modalClosed = false;
-        document.querySelectorAll('.modal-overlay').forEach(m => {
-            if (m.style.display === 'flex') {
-                m.style.display = 'none';
-                modalClosed = true;
-            }
-        });
-
-        if (modalClosed) {
-            AudioSys.playSFX('close.mp3');
-            if (logEditable) cancelLogEdit(); // Batalkan edit log jika sedang aktif
-            return; // Selesai, karena tombol back berfungsi menutup modal
-        }
-
-        // Jika tidak ada modal yang terbuka sama sekali, anggap user menekan tombol "Exit App"
+        document.querySelectorAll('.modal-overlay').forEach(m => { if (m.style.display === 'flex') { m.style.display = 'none'; modalClosed = true; } });
+        if (modalClosed) { AudioSys.playSFX('close.mp3'); if (logEditable) cancelLogEdit(); return; }
         confirmExit();
     });
 
-    // 2. Agresif Enforce Fullscreen saat aplikasi dibuka kembali (Maximize dari Minimize WhatsApp/Home)
-    document.addEventListener('visibilitychange', () => {
-        if (document.visibilityState === 'visible') {
-            ensureFullscreen();
-            // Tembak ulang dalam jeda singkat untuk memastikan layar bersih dari indikator OS
-            setTimeout(ensureFullscreen, 500);
-            setTimeout(ensureFullscreen, 1000);
-        }
-    });
-
-    // 3. Memaksa fullscreen kembali setiap kali layar disentuh.
-    // Jika karena suatu sistem OS (notifikasi luar, alarm, dsb) bar atas muncul, 
-    // interaksi sentuhan pertama pemain ke dalam game akan seketika menyembunyikannya.
-    window.addEventListener('touchstart', ensureFullscreen, { passive: true });
-    window.addEventListener('click', ensureFullscreen, { passive: true });
+    document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') { ensureFullscreen(); setTimeout(ensureFullscreen, 500); setTimeout(ensureFullscreen, 1000); } });
+    window.addEventListener('touchstart', ensureFullscreen, { passive: true }); window.addEventListener('click', ensureFullscreen, { passive: true });
 
 </script>
 
-<!-- SUNTIKAN PWA SERVICE WORKER -->
 <script>
     if ('serviceWorker' in navigator) {
         window.addEventListener('load', () => {
             navigator.serviceWorker.register('sw.js')
                 .then((registration) => {
-                    console.log('PWA ServiceWorker berhasil didaftarkan dengan scope:', registration.scope);
-                    
                     registration.onupdatefound = () => {
                         const installingWorker = registration.installing;
-                        installingWorker.onstatechange = () => {
-                            if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
-                                console.log('Update aset baru tersedia, melakukan refresh otomatis...');
-                                window.location.reload();
-                            }
-                        };
+                        installingWorker.onstatechange = () => { if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) { window.location.reload(); } };
                     };
-                })
-                .catch((err) => {
-                    console.log('PWA ServiceWorker gagal didaftarkan:', err);
-                });
+                }).catch((err) => {});
         });
     }
 </script>
