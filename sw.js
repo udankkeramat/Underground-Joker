@@ -18,8 +18,6 @@ self.addEventListener('activate', (event) => {
     );
 });
 
-// Intercept fetch untuk memprioritaskan cache, 
-// serta memperbaiki bug range request (mp3/mp4 sering gagal di beberapa browser)
 self.addEventListener('fetch', (event) => {
     if (event.request.method !== 'GET') return;
     

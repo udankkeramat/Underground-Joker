@@ -28,7 +28,7 @@
         
         .page { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: none; opacity: 0; transition: opacity 0.5s ease-in-out; }
         
-        .modal-overlay { position: absolute top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); display: none; align-items: center; justify-content: center; z-index: 500; }
+        .modal-overlay { position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.85); display: none; align-items: center; justify-content: center; z-index: 500; }
         .nine-slice-modal { 
             position: relative; background-color: transparent; border-style: solid; border-width: 80px;
             border-image-source: url('https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/modal_default.png');
@@ -237,7 +237,7 @@
         <img id="logo" src="https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/logo.png" alt="Logo">
     </div>
 
-    <!-- LOADING SCREEN BARU (MANUAL DOWNLOAD & CACHE VALIDATION) -->
+    <!-- LOADING SCREEN -->
     <div id="loading-page" class="page">
         
         <div id="btn-update-assets" class="corner-btn" onclick="runUpdate()">
@@ -589,7 +589,10 @@
     function isRunningAsPWA() { return window.matchMedia('(display-mode: fullscreen)').matches || window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; }
     async function ensureFullscreen() { try { if (!document.fullscreenElement) await document.documentElement.requestFullscreen(); if (screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape'); } catch (e) {} }
 
-    function handleFsInteraction(e) { e.stopPropagation(); e.preventDefault(); ensureFullscreen(); }
+    function handleFsInteraction(e) { 
+        ensureFullscreen(); 
+        fsOverlay.style.display = 'none';
+    }
     const fsOverlay = document.getElementById('fullscreen-overlay');
     fsOverlay.addEventListener('click', handleFsInteraction, {capture: true}); fsOverlay.addEventListener('pointerdown', handleFsInteraction, {capture: true}); fsOverlay.addEventListener('touchstart', handleFsInteraction, {capture: true, passive: false});
     document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && !isRunningAsPWA()) fsOverlay.style.display = 'block'; else fsOverlay.style.display = 'none'; });
@@ -630,7 +633,6 @@
         }, 2000);
     };
 
-    // LOGIKA DOWNLOAD CACHE TERBARU 
     async function checkAssetsPercentage() {
         let percent = 0;
         if ('caches' in window) {
@@ -654,14 +656,27 @@
     }
 
     function toggleDownloadButtons(state) {
-        document.getElementById('btn-update-assets').style.pointerEvents = state ? 'auto' : 'none';
-        document.getElementById('btn-redownload').style.pointerEvents = state ? 'auto' : 'none';
-        document.getElementById('btn-begin-app').style.pointerEvents = state ? 'auto' : 'none';
-        document.getElementById('btn-save-assets').classList.add('off');
+        const btnUpdate = document.getElementById('btn-update-assets');
+        const btnRedownload = document.getElementById('btn-redownload');
+        const btnBegin = document.getElementById('btn-begin-app');
+        const btnSave = document.getElementById('btn-save-assets');
+        
+        if (state) {
+            btnUpdate.style.pointerEvents = 'auto';
+            btnRedownload.style.pointerEvents = 'auto';
+            btnBegin.style.pointerEvents = 'auto';
+            btnBegin.classList.remove('off');
+        } else {
+            btnUpdate.style.pointerEvents = 'none';
+            btnRedownload.style.pointerEvents = 'none';
+            btnBegin.style.pointerEvents = 'none';
+            btnSave.style.pointerEvents = 'none';
+        }
     }
 
     async function runUpdate() {
-        AudioSys.playSFX('button.mp3'); toggleDownloadButtons(false);
+        AudioSys.playSFX('button.mp3'); 
+        toggleDownloadButtons(false);
         const fill = document.getElementById('loading-fill'); const percentUI = document.getElementById('loading-percent'); const lbl = document.getElementById('lbl-loading');
         document.getElementById('loading-bar-container').style.display = 'block';
 
@@ -691,14 +706,19 @@
                     }
                     loaded++; let p = Math.floor((loaded/total)*100); fill.style.width = p+'%'; percentUI.innerText = p+'%';
                 }
-                lbl.innerText = `100% Asset siap disimpan.`; document.getElementById('btn-save-assets').classList.remove('off');
+                lbl.innerText = `100% Asset siap disimpan.`; 
+                const btnSave = document.getElementById('btn-save-assets');
+                btnSave.classList.remove('off');
+                btnSave.style.pointerEvents = 'auto';
             } catch (e) { lbl.innerText = "Error saat Update."; }
         }
-        document.getElementById('btn-update-assets').style.pointerEvents = 'auto'; document.getElementById('btn-redownload').style.pointerEvents = 'auto';
+        toggleDownloadButtons(true);
+        checkAssetsPercentage();
     }
 
     async function runRedownload() {
-        AudioSys.playSFX('button.mp3'); toggleDownloadButtons(false);
+        AudioSys.playSFX('button.mp3'); 
+        toggleDownloadButtons(false);
         const fill = document.getElementById('loading-fill'); const percentUI = document.getElementById('loading-percent'); const lbl = document.getElementById('lbl-loading');
         document.getElementById('loading-bar-container').style.display = 'block';
         
@@ -711,10 +731,14 @@
                     try { const fetchRes = await fetch(url, { cache: "no-store" }); if (fetchRes.ok) await tempCache.put(url, fetchRes); } catch(e){}
                     loaded++; let p = Math.floor((loaded/total)*100); fill.style.width = p+'%'; percentUI.innerText = p+'%';
                 }
-                lbl.innerText = `100% Asset siap disimpan.`; document.getElementById('btn-save-assets').classList.remove('off');
+                lbl.innerText = `100% Asset siap disimpan.`; 
+                const btnSave = document.getElementById('btn-save-assets');
+                btnSave.classList.remove('off');
+                btnSave.style.pointerEvents = 'auto';
             } catch(e) { lbl.innerText = "Error saat Redownload."; }
         }
-        document.getElementById('btn-update-assets').style.pointerEvents = 'auto'; document.getElementById('btn-redownload').style.pointerEvents = 'auto';
+        toggleDownloadButtons(true);
+        checkAssetsPercentage();
     }
 
     async function runSaveAssets() {
@@ -722,7 +746,7 @@
         const lbl = document.getElementById('lbl-loading');
         lbl.innerText = "Menyimpan asset... (Mohon tunggu)";
         document.getElementById('loading-bar-container').style.display = 'none';
-        document.getElementById('btn-save-assets').style.pointerEvents = 'none';
+        toggleDownloadButtons(false);
         
         if ('caches' in window) {
             try {
@@ -733,15 +757,27 @@
                 await caches.delete('joker-temp');
                 
                 lbl.innerText = "Save Asset Selesai!";
-                setTimeout(() => { document.getElementById('btn-save-assets').style.pointerEvents = 'auto'; checkAssetsPercentage(); }, 1500);
-            } catch(e) { lbl.innerText = "Gagal menyimpan asset."; document.getElementById('btn-save-assets').style.pointerEvents = 'auto'; }
+                setTimeout(() => { 
+                    toggleDownloadButtons(true);
+                    checkAssetsPercentage(); 
+                }, 1500);
+            } catch(e) { 
+                lbl.innerText = "Gagal menyimpan asset."; 
+                toggleDownloadButtons(true);
+            }
         }
     }
 
     function handleBeginApp() {
-        AudioSys.playSFX('button.mp3'); ensureFullscreen(); history.pushState({ trapped: true }, null, location.href);
-        document.getElementById('loading-page').style.opacity = '0';
-        setTimeout(() => { document.getElementById('loading-page').style.display = 'none'; initMainMenu(); }, 500);
+        AudioSys.playSFX('button.mp3'); 
+        ensureFullscreen(); 
+        history.pushState({ trapped: true }, null, location.href);
+        const loadingPage = document.getElementById('loading-page');
+        loadingPage.style.opacity = '0';
+        setTimeout(() => { 
+            loadingPage.style.display = 'none'; 
+            initMainMenu(); 
+        }, 500);
     }
 
     function openModal(id) { if(id !== 'sound-modal') AudioSys.playSFX('button.mp3'); document.getElementById(id).style.display = 'flex'; }
@@ -782,7 +818,6 @@
         document.getElementById('notification-modal').style.display = 'flex';
     }
 
-    // FIX EXIT APP MENYELURUH (PWA/WEB)
     function exitApp() { 
         try { window.open('', '_self', ''); window.close(); } catch(e){} 
         if(navigator.app && navigator.app.exitApp) { navigator.app.exitApp(); }
@@ -792,7 +827,6 @@
     
     function confirmExit() { document.querySelectorAll('.modal-overlay').forEach(m => m.style.display='none'); showNotif(t('exit_msg'), true, exitApp); }
 
-    // ================== PRELOAD TRANSITION (Diperkuat untuk mencegah video tidak tampil) ==================
     function transitionWithPreload(videoElem, onReady) {
         const overlay = document.getElementById('transition-overlay');
         overlay.style.display = 'flex'; void overlay.offsetWidth; overlay.style.opacity = '1';
@@ -802,10 +836,7 @@
             function finish() {
                 if (done) return; done = true;
                 videoElem.oncanplaythrough = null; videoElem.oncanplay = null;
-                
-                // Mencegah video berhenti akibat policy browser
-                videoElem.play().catch(e => console.log('Video play policy caught:', e));
-                
+                videoElem.play().catch(e => {});
                 onReady();
                 setTimeout(() => { overlay.style.opacity = '0'; setTimeout(() => overlay.style.display = 'none', 300); }, 100);
             }
@@ -816,9 +847,7 @@
             }
         }, 300);
     }
-    // ========================================================
 
-    // ================== SAVE / LOAD SYSTEM ==================
     function saveGameState() {
         let stateToSave = {
             selectedTheme, menuPlayerCount, activePlayerCount, goalScoreIdx,
@@ -839,8 +868,6 @@
             stateToSave.scoreHistory = Array(6).fill([0]);
             stateToSave.historyIndex = Array(6).fill(0);
             stateToSave.playerBadges = Array(6).fill(false);
-            
-            // RESET STARS TO 0 UNTUK NEXT MATCH KETIKA DISAVE SAAT PEMENANG
             stateToSave.playerStars = Array(6).fill(0);
         }
 
@@ -894,7 +921,6 @@
             });
         }
     }
-    // ========================================================
 
     function initMainMenu() {
         appState = 'menu'; document.querySelectorAll('.page').forEach(p => { p.style.display='none'; p.style.opacity='0'; });
@@ -1279,7 +1305,6 @@
         }
     }
 
-    // PENCEGAHAN BACK BUTTON & FULLSCREEN
     window.addEventListener('popstate', (e) => {
         history.pushState({ trapped: true }, null, location.href);
         const notifModal = document.getElementById('notification-modal');
