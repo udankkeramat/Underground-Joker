@@ -12,14 +12,15 @@
     <link rel="preload" as="image" href="https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/logo.png">
     
     <style>
+        /* FONT DINAMIS: Cukup ubah nama file font di GitHub menjadi font.ttf */
         @font-face {
-            font-family: 'Velthoven';
-            src: url('https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/velthoven_black.ttf') format('truetype');
+            font-family: 'CustomFont';
+            src: url('https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/font.ttf') format('truetype');
             font-weight: normal;
             font-style: normal;
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; font-family: 'Velthoven', 'Segoe UI', Tahoma, sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; user-select: none; -webkit-tap-highlight-color: transparent; touch-action: manipulation; font-family: 'CustomFont', 'Segoe UI', Tahoma, sans-serif; }
         body { background-color: #000; display: flex; justify-content: center; align-items: center; height: 100vh; overflow: hidden; width: 100vw; }
         
         #fullscreen-overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; width: 100vw; height: 100vh; z-index: 999999; background: transparent; display: none; pointer-events: auto; }
@@ -135,6 +136,7 @@
 
         .player-avatar { position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 1; pointer-events: none; }
         .player-flag { position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 2; pointer-events: none; }
+        .champion-badge { position: absolute; top: 0; left: 50%; transform: translateX(-50%); z-index: 3; pointer-events: none; }
         
         .spritesheet-wrapper { position: absolute; top: 0; left: 50%; transform: translateX(-50%); width: 340px; overflow: hidden; z-index: 2; pointer-events: none; }
         .spritesheet-img { width: 900%; max-width: 900%; height: auto; animation: spriteAnimImg 1.2s steps(9) infinite; display: block; }
@@ -574,6 +576,7 @@
     let logRoundsData = [], logScreenHistory = [], logScreenHistoryIndex = 0;
     let tempLogRoundsData = []; 
     let logEditable = false; let isWinnerState = false; let savedWinnerIndices = [];
+    let championIndices = []; // Untuk menandai juara dari match sebelumnya
     
     const avatarNamesList = ["kamaruddin", "rustam", "suardi", "ridwan", "rizal", "rudy", "fajrin", "arya", "juragan", "tolingu"];
     
@@ -597,8 +600,9 @@
     fsOverlay.addEventListener('click', handleFsInteraction, {capture: true}); fsOverlay.addEventListener('pointerdown', handleFsInteraction, {capture: true}); fsOverlay.addEventListener('touchstart', handleFsInteraction, {capture: true, passive: false});
     document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && !isRunningAsPWA()) fsOverlay.style.display = 'block'; else fsOverlay.style.display = 'none'; });
 
+    // ASET DIPERBARUI: font.ttf, background jadi .webm, champion.png ditambahkan
     const assets = [
-        'logo.png', 'background.png', 'background_classic.mp4', 'background_farm.mp4', 'menu_screen.png', 'background_screen4.png',
+        'logo.png', 'background.png', 'background_classic.webm', 'background_farm.webm', 'menu_screen.png', 'background_screen4.png',
         'thumbnail_classic_on.png', 'thumbnail_classic_off.png', 'thumbnail_farm_on.png', 'thumbnail_farm_off.png',
         'players_count.png', 'goal_score.png', 'sound.png', 'tutorial.png', 'exit_app.png', 'start.png', 'main_menu.png', 'next_match.png', 'load.png', 'button.png',
         'option.png', 'players.png', 'star.png', 'star_2.png', 'use.png', 'back.png', 'border_avatar.png', 'badge.png',
@@ -606,7 +610,7 @@
         'flag_1_farm.png', 'flag_2_farm.png', 'flag_3_farm.png', 'flag_4_farm.png', 'flag_5_farm.png',
         'submit.png', 'log.png', 'modal_default.png', 'close.png', 'cancel.png', 'yes.png', 'no.png', 'ok.png', 
         'english.png', 'indonesia.png', 'reset.png', 'language.png', 'edit.png', 'winner.png', 'button_edit.png',
-        'velthoven_black.ttf',
+        'champion.png', 'font.ttf',
         'close.mp3', 'keypad.mp3', 'start.mp3', 'notification.mp3', 'button.mp3', 'welcome.mp3', 'score_for_round.mp3',
         'bgm_main_menu.mp3', 'bgm_classic.mp3', 'bgm_farm.mp3', 'bgm_fanfare.mp3',
         '1_star.mp3', 'wildcard.mp3', 'illusionist.mp3', 'mastermind.mp3', 'godlike.mp3', 'legendary.mp3', 'god_of_joker.mp3', 'on_the_stage.mp3'
@@ -637,7 +641,7 @@
         let percent = 0;
         if ('caches' in window) {
             try {
-                const cache = await caches.open('joker-app-assets-v4');
+                const cache = await caches.open('joker-app-assets-v5');
                 let matchCount = 0;
                 for (let asset of assets) {
                     const res = await cache.match(BASE_URL + asset, { ignoreSearch: true });
@@ -683,7 +687,7 @@
         let loaded = 0; const total = assets.length;
         if ('caches' in window) {
             try {
-                const mainCache = await caches.open('joker-app-assets-v4');
+                const mainCache = await caches.open('joker-app-assets-v5');
                 const tempCache = await caches.open('joker-temp');
                 for (let asset of assets) {
                     let url = BASE_URL + asset; lbl.innerText = `Memeriksa Asset: ${asset}`;
@@ -751,7 +755,7 @@
         if ('caches' in window) {
             try {
                 const tempCache = await caches.open('joker-temp');
-                const mainCache = await caches.open('joker-app-assets-v4');
+                const mainCache = await caches.open('joker-app-assets-v5');
                 const tempKeys = await tempCache.keys();
                 for (let req of tempKeys) { const res = await tempCache.match(req); await mainCache.put(req, res); }
                 await caches.delete('joker-temp');
@@ -855,7 +859,7 @@
             playerScores, scoreColors, playerStars, playerBadges, playerAvatars, customPlayerNames,
             scoreHistory, historyIndex,
             logRoundsData, logScreenHistory, logScreenHistoryIndex,
-            isWinnerState, savedWinnerIndices
+            isWinnerState, savedWinnerIndices, championIndices
         };
 
         if (isWinnerState) {
@@ -869,6 +873,7 @@
             stateToSave.historyIndex = Array(6).fill(0);
             stateToSave.playerBadges = Array(6).fill(false);
             stateToSave.playerStars = Array(6).fill(0);
+            stateToSave.championIndices = [...savedWinnerIndices]; // Menandai juara untuk ditampilkan di match berikutnya
         }
 
         localStorage.setItem('joker_save_state', JSON.stringify(stateToSave));
@@ -899,6 +904,7 @@
             logScreenHistoryIndex = state.logScreenHistoryIndex || 0;
             isWinnerState = state.isWinnerState || false;
             savedWinnerIndices = state.savedWinnerIndices || [];
+            championIndices = state.championIndices || [];
 
             document.getElementById('lbl-players-count').innerText = menuPlayerCount + " " + t('players_lbl');
             document.getElementById('lbl-goal-score').innerText = goalScoresOpts[goalScoreIdx];
@@ -913,7 +919,7 @@
             menuPage.style.opacity = '0';
             
             const gameVideo = document.getElementById('game-bg-video');
-            gameVideo.src = BASE_URL + (selectedTheme === 'classic' ? 'background_classic.mp4' : 'background_farm.mp4');
+            gameVideo.src = BASE_URL + (selectedTheme === 'classic' ? 'background_classic.webm' : 'background_farm.webm');
 
             transitionWithPreload(gameVideo, () => {
                 menuPage.style.display = 'none'; 
@@ -928,7 +934,7 @@
         setLanguage(currentLang, true); 
         
         const vBg = document.getElementById('menu-bg-video');
-        vBg.src = BASE_URL + (selectedTheme === 'classic' ? 'background_classic.mp4' : 'background_farm.mp4');
+        vBg.src = BASE_URL + (selectedTheme === 'classic' ? 'background_classic.webm' : 'background_farm.webm');
         updateMenuThemeUI();
 
         transitionWithPreload(vBg, () => {
@@ -949,10 +955,10 @@
         const vBg = document.getElementById('menu-bg-video'); vBg.style.display = 'block';
         if(selectedTheme === 'classic') {
             cBtn.src = BASE_URL + 'thumbnail_classic_on.png'; fBtn.src = BASE_URL + 'thumbnail_farm_off.png';
-            if(!vBg.src.includes('background_classic.mp4')) vBg.src = BASE_URL + 'background_classic.mp4';
+            if(!vBg.src.includes('background_classic.webm')) vBg.src = BASE_URL + 'background_classic.webm';
         } else {
             cBtn.src = BASE_URL + 'thumbnail_classic_off.png'; fBtn.src = BASE_URL + 'thumbnail_farm_on.png';
-            if(!vBg.src.includes('background_farm.mp4')) vBg.src = BASE_URL + 'background_farm.mp4';
+            if(!vBg.src.includes('background_farm.webm')) vBg.src = BASE_URL + 'background_farm.webm';
         }
         vBg.play().catch(e=>{});
     }
@@ -962,7 +968,7 @@
 
     function startGame() {
         if (appState !== 'menu') return; appState = 'transitioning';
-        AudioSys.playSFX('start.mp3'); isWinnerState = false; savedWinnerIndices = []; currentMatch = 1; currentRound = 1;
+        AudioSys.playSFX('start.mp3'); isWinnerState = false; savedWinnerIndices = []; championIndices = []; currentMatch = 1; currentRound = 1;
         playerScores = []; scoreColors = []; playerStars = []; playerBadges = []; playerAvatars = []; customPlayerNames = [];
         scoreHistory = []; historyIndex = []; logRoundsData = []; logScreenHistory = []; logScreenHistoryIndex = 0;
 
@@ -976,13 +982,13 @@
         
         const menuPage = document.getElementById('main-menu-page'); menuPage.style.opacity = '0';
         const gameVideo = document.getElementById('game-bg-video');
-        gameVideo.src = BASE_URL + (selectedTheme === 'classic' ? 'background_classic.mp4' : 'background_farm.mp4');
+        gameVideo.src = BASE_URL + (selectedTheme === 'classic' ? 'background_classic.webm' : 'background_farm.webm');
 
         transitionWithPreload(gameVideo, () => { menuPage.style.display = 'none'; setupMainGameScreen(false); });
     }
 
     function executeReset() {
-        currentMatch = 1; currentRound = 1; isWinnerState = false; savedWinnerIndices = [];
+        currentMatch = 1; currentRound = 1; isWinnerState = false; savedWinnerIndices = []; championIndices = [];
         for(let i=0; i<6; i++) { playerScores[i] = 0; scoreColors[i] = 'white'; playerStars[i] = 0; playerBadges[i] = false; scoreHistory[i] = [0]; historyIndex[i] = 0; }
         logRoundsData = []; logScreenHistory = []; logScreenHistoryIndex = 0;
         
@@ -1050,6 +1056,7 @@
     function confirmNextMatch() { showNotif(t('next_match_msg'), true, executeNextMatch); }
 
     function executeNextMatch() {
+        championIndices = [...savedWinnerIndices]; // Menandai siapa yang juara untuk match baru
         currentMatch++; currentRound = 1; isWinnerState = false; savedWinnerIndices = [];
         for(let i=0; i<6; i++) { playerScores[i] = 0; scoreColors[i] = 'white'; playerStars[i] = 0; playerBadges[i] = false; scoreHistory[i] = [0]; historyIndex[i] = 0; }
         
@@ -1087,8 +1094,13 @@
             const playerDiv = document.createElement('div'); playerDiv.className = 'player'; playerDiv.id = `player-cont-${i}`;
             let flagAsset = getFlagAsset(playerScores[i]); let isSprite = flagAsset.startsWith('flag_1_');
             let flagHTML = isSprite ? `<div class="spritesheet-wrapper"><img src="${BASE_URL}${flagAsset}" class="spritesheet-img"></div>` : `<img src="${BASE_URL}${flagAsset}" class="player-flag">`;
+            
+            // Tampilkan logo Champion jika dia adalah juara dari match sebelumnya
+            let championHTML = championIndices.includes(i) ? `<img src="${BASE_URL}champion.png" class="champion-badge">` : '';
+
             playerDiv.innerHTML = `
                 <img src="${BASE_URL}avatar_${avatarNamesList[playerAvatars[i]]}.png" class="player-avatar"> ${flagHTML}
+                ${championHTML}
                 <img src="${BASE_URL}winner.png" class="stempel-winner" id="stempel-${i}">
                 <div class="player-name-display" onclick="if(!isWinnerState) openKeypad('name', null, ${i})">${customPlayerNames[i]}</div>
                 <div class="player-stars-container" id="stars-cont-${i}">${generateStarsHTML(playerStars[i], i)}</div>

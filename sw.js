@@ -1,4 +1,4 @@
-const CACHE_NAME = 'joker-app-assets-v4';
+const CACHE_NAME = 'joker-app-assets-v5';
 const TEMP_CACHE = 'joker-temp';
 const BASE_URL = 'https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/';
 
