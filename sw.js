@@ -1,4 +1,4 @@
-const CACHE_NAME = 'joker-app-assets-v5';
+const CACHE_NAME = 'joker-app-assets-v6';
 const TEMP_CACHE = 'joker-temp';
 const BASE_URL = 'https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/';
 
@@ -20,15 +20,33 @@ self.addEventListener('activate', (event) => {
 
 self.addEventListener('fetch', (event) => {
     if (event.request.method !== 'GET') return;
-    
+
+    const rangeHeader = event.request.headers.get('range');
+
     event.respondWith(
-        caches.match(event.request, { ignoreSearch: true }).then((cachedResponse) => {
+        caches.match(event.request, { ignoreSearch: true }).then(async (cachedResponse) => {
             if (cachedResponse) {
+                if (rangeHeader) {
+                    const arrayBuffer = await cachedResponse.arrayBuffer();
+                    const bytes = /^bytes\=(\d+)\-(\d+)?$/g.exec(rangeHeader);
+                    if (bytes) {
+                        const start = Number(bytes[1]);
+                        const end = bytes[2] ? Number(bytes[2]) : arrayBuffer.byteLength - 1;
+                        const sliced = arrayBuffer.slice(start, end + 1);
+                        return new Response(sliced, {
+                            status: 206,
+                            statusText: 'Partial Content',
+                            headers: [
+                                ['Content-Type', cachedResponse.headers.get('Content-Type') || 'application/octet-stream'],
+                                ['Content-Range', `bytes ${start}-${end}/${arrayBuffer.byteLength}`],
+                                ['Content-Length', String(sliced.byteLength)]
+                            ]
+                        });
+                    }
+                }
                 return cachedResponse;
             }
-            return fetch(event.request).then((networkResponse) => {
-                return networkResponse;
-            }).catch(() => {});
+            return fetch(event.request).catch(() => {});
         })
     );
 });

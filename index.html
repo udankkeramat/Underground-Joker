@@ -51,11 +51,13 @@
         .corner-btn { position: absolute; cursor: pointer; transition: transform 0.1s; display: flex; align-items: center; justify-content: center; z-index: 950; }
         .corner-btn:active { transform: scale(0.9); }
         .corner-btn img { width: 250px; height: auto; object-fit: contain; }
-        .corner-btn span { position: absolute; color: white; font-size: 32px; font-weight: bold; text-transform: uppercase; text-shadow: 2px 2px 4px #000; pointer-events: none; text-align: center; }
+        .corner-btn span { position: absolute; color: white; font-size: 32px; font-weight: bold; text-transform: uppercase; text-shadow: 2px 2px 4px #000; pointer-events: none; text-align: center; line-height: 1.1; }
         .corner-btn.off { filter: grayscale(100%) opacity(0.5); pointer-events: none; }
         
         #btn-update-assets { left: 40px; top: 40px; }
         #btn-redownload { left: 40px; top: 160px; }
+        #btn-update-plugins { left: 40px; top: 280px; }
+        #btn-update-plugins span { font-size: 25px; }
         #btn-begin-app { right: 40px; top: 40px; }
         #btn-save-assets { right: 40px; top: 160px; }
 
@@ -129,7 +131,7 @@
         .slide-in-bottom { transform: translateY(0) !important; opacity: 1 !important; pointer-events: auto !important; }
         .slide-out-bottom { transform: translateY(1200px); opacity: 0; pointer-events: none !important; }
 
-        #players-container { position: absolute; top: 125px; bottom: 76px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 40px; z-index: 60; transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.8s ease; pointer-events: none; }
+        #players-container { position: absolute; top: 125px; bottom: 76px; left: 0; right: 0; display: flex; justify-content: center; align-items: center; gap: 40px; z-index: 60; transition: transform 0.55s cubic-bezier(0.25, 0.8, 0.25, 1), opacity 0.8s ease; pointer-events: none; }
         .player { position: relative; width: 340px; height: 879px; transition: transform 0.3s ease; pointer-events: auto; } 
         
         .loser-dim { filter: brightness(0.3); pointer-events: none; transition: filter 1s; }
@@ -251,6 +253,11 @@
             <img src="https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/button.png">
             <span>Redownload</span>
         </div>
+
+        <div id="btn-update-plugins" class="corner-btn" onclick="runUpdatePlugins()">
+            <img src="https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/button.png">
+            <span>Update Plugins</span>
+        </div>
         
         <div id="btn-begin-app" class="corner-btn" onclick="handleBeginApp()">
             <img src="https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/button.png">
@@ -335,6 +342,9 @@
         <img id="btn-players" class="top-btn slide-out-top" src="https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/players.png" onclick="cyclePlayerCount()">
         
         <div id="players-container" class="slide-out-bottom"></div>
+
+        <!-- LAYER PLUGIN DI MAIN SCREEN -->
+        <div id="plugin-main-layer"></div>
     </div>
 
     <!-- MODALS -->
@@ -444,6 +454,8 @@
 
 <script>
     const BASE_URL = 'https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/';
+    const CACHE_NAME = 'joker-app-assets-v6';
+    const TEMP_CACHE = 'joker-temp';
 
     const i18n = {
         id: {
@@ -521,7 +533,7 @@
     function t(key) { return i18n[currentLang][key] || key; }
 
     const AudioSys = {
-        bgmOn: true, sfxOn: true, currentBGMName: null, currentBGMObj: null, currentFadeInterval: null,
+        bgmOn: true, sfxOn: true, currentBGMName: null, currentBGMObj: null, currentFadeInterval: null, externalMusicPlaying: false,
         playBGM(name) {
             if (this.currentBGMName === name) {
                 if(this.currentBGMObj && this.currentBGMObj.volume === 0) this.currentBGMObj.volume = 1; 
@@ -534,8 +546,16 @@
                 this.currentBGMObj = new Audio(BASE_URL + name);
                 this.currentBGMObj.volume = 1;
                 this.currentBGMObj.loop = (name !== 'bgm_fanfare.mp3'); 
-                if (this.bgmOn) this.currentBGMObj.play().catch(e=>{});
+                if (this.bgmOn && !this.externalMusicPlaying) this.currentBGMObj.play().catch(e=>{});
             }
+        },
+        pauseBGMForPlugin() {
+            this.externalMusicPlaying = true;
+            if (this.currentBGMObj) this.currentBGMObj.pause();
+        },
+        resumeBGMFromPlugin() {
+            this.externalMusicPlaying = false;
+            if (this.bgmOn && this.currentBGMObj) this.currentBGMObj.play().catch(e=>{});
         },
         fadeOutBGM(duration = 1000) {
             if(!this.currentBGMObj) return;
@@ -550,7 +570,7 @@
         playSFX(name) { if (!this.sfxOn) return; let a = new Audio(BASE_URL + name); a.play().catch(e=>{}); },
         toggleBGM() {
             this.bgmOn = !this.bgmOn;
-            if(this.bgmOn && this.currentBGMObj) this.currentBGMObj.play().catch(e=>{});
+            if(this.bgmOn && this.currentBGMObj && !this.externalMusicPlaying) this.currentBGMObj.play().catch(e=>{});
             else if(!this.bgmOn && this.currentBGMObj) this.currentBGMObj.pause();
             document.getElementById('toggle-bgm').className = this.bgmOn ? 'toggle-bg' : 'toggle-bg off';
             this.playSFX('button.mp3');
@@ -576,9 +596,67 @@
     let logRoundsData = [], logScreenHistory = [], logScreenHistoryIndex = 0;
     let tempLogRoundsData = []; 
     let logEditable = false; let isWinnerState = false; let savedWinnerIndices = [];
-    let championIndices = []; // Untuk menandai juara dari match sebelumnya
+    let championIndices = [];
     
     const avatarNamesList = ["kamaruddin", "rustam", "suardi", "ridwan", "rizal", "rudy", "fajrin", "arya", "juragan", "tolingu"];
+
+    // ================== PLUGIN BRIDGE API ==================
+    window.JokerPlugins = {
+        registry: [],
+        hooks: {
+            onMainScreenEnter: [],
+            onMainScreenLeave: [],
+            onPlayersRender: []
+        },
+        register(pluginObj) {
+            this.registry.push(pluginObj);
+            if (typeof pluginObj.init === 'function') {
+                try { pluginObj.init(this.getContext()); } catch (e) { console.error('Plugin init error:', e); }
+            }
+        },
+        on(eventName, fn) {
+            if (this.hooks[eventName]) this.hooks[eventName].push(fn);
+        },
+        emit(eventName, payload) {
+            if (this.hooks[eventName]) {
+                this.hooks[eventName].forEach(fn => {
+                    try { fn(payload); } catch (e) {}
+                });
+            }
+        },
+        getContext() {
+            return {
+                BASE_URL,
+                AudioSys,
+                getActivePlayerCount: () => activePlayerCount,
+                getAppElement: () => document.getElementById('app'),
+                getMainPage: () => document.getElementById('main-page'),
+                getPluginLayer: () => document.getElementById('plugin-main-layer'),
+                getPlayersContainer: () => document.getElementById('players-container'),
+                getAppTransformState: () => {
+                    const isPortrait = window.innerHeight > window.innerWidth;
+                    const scale = isPortrait ? Math.min(window.innerWidth / 1080, window.innerHeight / 2392) : Math.min(window.innerWidth / 2392, window.innerHeight / 1080);
+                    return { isPortrait, scale };
+                }
+            };
+        }
+    };
+
+    function loadInstalledPlugins() {
+        const defaultPlugins = ['plugins/music_player/plugin.js'];
+        fetch(BASE_URL + 'plugins/plugins.json')
+            .then(res => res.ok ? res.json() : defaultPlugins)
+            .catch(() => defaultPlugins)
+            .then(list => {
+                const pluginsToLoad = Array.isArray(list) && list.length > 0 ? list : defaultPlugins;
+                pluginsToLoad.forEach(relPath => {
+                    const s = document.createElement('script');
+                    s.src = BASE_URL + relPath;
+                    document.body.appendChild(s);
+                });
+            });
+    }
+    // =======================================================
     
     function resizeApp() {
         const app = document.getElementById('app');
@@ -600,7 +678,6 @@
     fsOverlay.addEventListener('click', handleFsInteraction, {capture: true}); fsOverlay.addEventListener('pointerdown', handleFsInteraction, {capture: true}); fsOverlay.addEventListener('touchstart', handleFsInteraction, {capture: true, passive: false});
     document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && !isRunningAsPWA()) fsOverlay.style.display = 'block'; else fsOverlay.style.display = 'none'; });
 
-    // ASET DIPERBARUI: font.ttf, background jadi .webm, champion.png ditambahkan
     const assets = [
         'logo.png', 'background.png', 'background_classic.webm', 'background_farm.webm', 'menu_screen.png', 'background_screen4.png',
         'thumbnail_classic_on.png', 'thumbnail_classic_off.png', 'thumbnail_farm_on.png', 'thumbnail_farm_off.png',
@@ -619,6 +696,8 @@
     avatarNamesList.forEach(n => assets.push(`avatar_${n}.png`, `${n}.mp3`));
 
     window.onload = () => {
+        loadInstalledPlugins();
+
         if (!document.fullscreenElement && !isRunningAsPWA()) fsOverlay.style.display = 'block'; 
         else { fsOverlay.style.display = 'none'; if (isRunningAsPWA() && screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(e => {}); }
         
@@ -641,7 +720,7 @@
         let percent = 0;
         if ('caches' in window) {
             try {
-                const cache = await caches.open('joker-app-assets-v5');
+                const cache = await caches.open(CACHE_NAME);
                 let matchCount = 0;
                 for (let asset of assets) {
                     const res = await cache.match(BASE_URL + asset, { ignoreSearch: true });
@@ -662,17 +741,20 @@
     function toggleDownloadButtons(state) {
         const btnUpdate = document.getElementById('btn-update-assets');
         const btnRedownload = document.getElementById('btn-redownload');
+        const btnUpdatePlugins = document.getElementById('btn-update-plugins');
         const btnBegin = document.getElementById('btn-begin-app');
         const btnSave = document.getElementById('btn-save-assets');
         
         if (state) {
             btnUpdate.style.pointerEvents = 'auto';
             btnRedownload.style.pointerEvents = 'auto';
+            btnUpdatePlugins.style.pointerEvents = 'auto';
             btnBegin.style.pointerEvents = 'auto';
             btnBegin.classList.remove('off');
         } else {
             btnUpdate.style.pointerEvents = 'none';
             btnRedownload.style.pointerEvents = 'none';
+            btnUpdatePlugins.style.pointerEvents = 'none';
             btnBegin.style.pointerEvents = 'none';
             btnSave.style.pointerEvents = 'none';
         }
@@ -687,8 +769,8 @@
         let loaded = 0; const total = assets.length;
         if ('caches' in window) {
             try {
-                const mainCache = await caches.open('joker-app-assets-v5');
-                const tempCache = await caches.open('joker-temp');
+                const mainCache = await caches.open(CACHE_NAME);
+                const tempCache = await caches.open(TEMP_CACHE);
                 for (let asset of assets) {
                     let url = BASE_URL + asset; lbl.innerText = `Memeriksa Asset: ${asset}`;
                     let needsDownload = true;
@@ -729,7 +811,7 @@
         let loaded = 0; const total = assets.length;
         if ('caches' in window) {
             try {
-                const tempCache = await caches.open('joker-temp');
+                const tempCache = await caches.open(TEMP_CACHE);
                 for (let asset of assets) {
                     let url = BASE_URL + asset; lbl.innerText = `Downloading Asset: ${asset}`;
                     try { const fetchRes = await fetch(url, { cache: "no-store" }); if (fetchRes.ok) await tempCache.put(url, fetchRes); } catch(e){}
@@ -745,6 +827,107 @@
         checkAssetsPercentage();
     }
 
+    // UPDATE KHUSUS ASSET PLUGINS
+    async function runUpdatePlugins() {
+        AudioSys.playSFX('button.mp3');
+        toggleDownloadButtons(false);
+        const fill = document.getElementById('loading-fill');
+        const percentUI = document.getElementById('loading-percent');
+        const lbl = document.getElementById('lbl-loading');
+        document.getElementById('loading-bar-container').style.display = 'block';
+        fill.style.width = '0%';
+        percentUI.innerText = '0%';
+
+        lbl.innerText = "Memeriksa daftar file plugin...";
+
+        const pluginStaticAssets = [
+            'plugins/plugins.json',
+            'plugins/music_player/plugin.js',
+            'plugins/music_player/images/music_disc.png',
+            'plugins/music_player/images/tools_background.png',
+            'plugins/music_player/images/button_play.png',
+            'plugins/music_player/images/button_next.png',
+            'plugins/music_player/images/button_previous.png',
+            'plugins/music_player/images/button_playlist.png',
+            'plugins/music_player/images/playlist_background.png'
+        ];
+
+        let songFiles = [];
+        try {
+            const apiRes = await fetch('https://api.github.com/repos/udankkeramat/Underground-Joker/contents/plugins/music_player/song', { cache: 'no-store' });
+            if (apiRes.ok) {
+                const items = await apiRes.json();
+                if (Array.isArray(items)) {
+                    songFiles = items
+                        .filter(item => item.type === 'file' && /\.(mp3|ogg|wav|m4a|webm)$/i.test(item.name))
+                        .map(item => item.name);
+                    localStorage.setItem('joker_plugin_songs', JSON.stringify(songFiles));
+                }
+            }
+        } catch (e) {
+            const cachedSongs = localStorage.getItem('joker_plugin_songs');
+            if (cachedSongs) songFiles = JSON.parse(cachedSongs);
+        }
+
+        const allPluginPaths = [
+            ...pluginStaticAssets,
+            ...songFiles.map(name => `plugins/music_player/song/${encodeURIComponent(name)}`)
+        ];
+
+        let loaded = 0;
+        const total = allPluginPaths.length;
+
+        if ('caches' in window && total > 0) {
+            try {
+                const mainCache = await caches.open(CACHE_NAME);
+                const tempCache = await caches.open(TEMP_CACHE);
+
+                for (let relPath of allPluginPaths) {
+                    const url = BASE_URL + relPath;
+                    const displayName = decodeURIComponent(relPath.split('/').pop());
+                    lbl.innerText = `Memeriksa Plugin Asset: ${displayName}`;
+                    let needsDownload = true;
+
+                    const cachedRes = await mainCache.match(url, { ignoreSearch: true });
+                    if (cachedRes) {
+                        try {
+                            const headRes = await fetch(url, { method: 'HEAD' });
+                            const netETag = headRes.headers.get('ETag');
+                            const cacheETag = cachedRes.headers.get('ETag');
+                            const netSize = headRes.headers.get('Content-Length');
+                            const cacheSize = cachedRes.headers.get('Content-Length');
+                            if ((netETag && cacheETag && netETag === cacheETag) || (netSize && cacheSize && netSize === cacheSize)) {
+                                needsDownload = false;
+                                await tempCache.put(url, cachedRes.clone());
+                            }
+                        } catch (e) {}
+                    }
+
+                    if (needsDownload) {
+                        lbl.innerText = `Downloading Plugin: ${displayName}`;
+                        try {
+                            const fetchRes = await fetch(url, { cache: 'no-store' });
+                            if (fetchRes.ok) await tempCache.put(url, fetchRes);
+                        } catch (e) {}
+                    }
+
+                    loaded++;
+                    const p = Math.floor((loaded / total) * 100);
+                    fill.style.width = p + '%';
+                    percentUI.innerText = p + '%';
+                }
+
+                lbl.innerText = `100% Plugin Asset siap disimpan.`;
+                const btnSave = document.getElementById('btn-save-assets');
+                btnSave.classList.remove('off');
+                btnSave.style.pointerEvents = 'auto';
+            } catch (e) {
+                lbl.innerText = "Error saat Update Plugins.";
+            }
+        }
+        toggleDownloadButtons(true);
+    }
+
     async function runSaveAssets() {
         AudioSys.playSFX('button.mp3');
         const lbl = document.getElementById('lbl-loading');
@@ -754,11 +937,11 @@
         
         if ('caches' in window) {
             try {
-                const tempCache = await caches.open('joker-temp');
-                const mainCache = await caches.open('joker-app-assets-v5');
+                const tempCache = await caches.open(TEMP_CACHE);
+                const mainCache = await caches.open(CACHE_NAME);
                 const tempKeys = await tempCache.keys();
                 for (let req of tempKeys) { const res = await tempCache.match(req); await mainCache.put(req, res); }
-                await caches.delete('joker-temp');
+                await caches.delete(TEMP_CACHE);
                 
                 lbl.innerText = "Save Asset Selesai!";
                 setTimeout(() => { 
@@ -873,7 +1056,7 @@
             stateToSave.historyIndex = Array(6).fill(0);
             stateToSave.playerBadges = Array(6).fill(false);
             stateToSave.playerStars = Array(6).fill(0);
-            stateToSave.championIndices = [...savedWinnerIndices]; // Menandai juara untuk ditampilkan di match berikutnya
+            stateToSave.championIndices = [...savedWinnerIndices];
         }
 
         localStorage.setItem('joker_save_state', JSON.stringify(stateToSave));
@@ -1025,6 +1208,7 @@
         if (isWinnerState && fromLoad) {
             renderPlayers(); gamePage.style.opacity = '1'; vBg.style.opacity = '1';
             setTimeout(() => { triggerWinnerSequence(savedWinnerIndices); }, 100);
+            window.JokerPlugins.emit('onMainScreenEnter');
         } else {
             renderPlayers();
             setTimeout(() => {
@@ -1034,12 +1218,14 @@
                     document.getElementById('btn-option').classList.replace('slide-out-top', 'slide-in-top'); document.getElementById('btn-submit').classList.replace('slide-out-top', 'slide-in-top');
                     document.getElementById('btn-log').classList.replace('slide-out-top', 'slide-in-top'); document.getElementById('btn-players').classList.replace('slide-out-top', 'slide-in-top');
                     document.getElementById('players-container').classList.replace('slide-out-bottom', 'slide-in-bottom'); document.getElementById('round-container').style.opacity = '1';
+                    window.JokerPlugins.emit('onMainScreenEnter');
                 }, 500); 
             }, 50);
         }
     }
 
     function leaveMainScreenToMenu() {
+        window.JokerPlugins.emit('onMainScreenLeave');
         AudioSys.fadeOutBGM(800); 
         document.getElementById('btn-option').classList.replace('slide-in-top', 'slide-out-top'); document.getElementById('btn-submit').classList.replace('slide-in-top', 'slide-out-top');
         document.getElementById('btn-log').classList.replace('slide-in-top', 'slide-out-top'); document.getElementById('btn-players').classList.replace('slide-in-top', 'slide-out-top');
@@ -1056,7 +1242,7 @@
     function confirmNextMatch() { showNotif(t('next_match_msg'), true, executeNextMatch); }
 
     function executeNextMatch() {
-        championIndices = [...savedWinnerIndices]; // Menandai siapa yang juara untuk match baru
+        championIndices = [...savedWinnerIndices];
         currentMatch++; currentRound = 1; isWinnerState = false; savedWinnerIndices = [];
         for(let i=0; i<6; i++) { playerScores[i] = 0; scoreColors[i] = 'white'; playerStars[i] = 0; playerBadges[i] = false; scoreHistory[i] = [0]; historyIndex[i] = 0; }
         
@@ -1094,8 +1280,6 @@
             const playerDiv = document.createElement('div'); playerDiv.className = 'player'; playerDiv.id = `player-cont-${i}`;
             let flagAsset = getFlagAsset(playerScores[i]); let isSprite = flagAsset.startsWith('flag_1_');
             let flagHTML = isSprite ? `<div class="spritesheet-wrapper"><img src="${BASE_URL}${flagAsset}" class="spritesheet-img"></div>` : `<img src="${BASE_URL}${flagAsset}" class="player-flag">`;
-            
-            // Tampilkan logo Champion jika dia adalah juara dari match sebelumnya
             let championHTML = championIndices.includes(i) ? `<img src="${BASE_URL}champion.png" class="champion-badge">` : '';
 
             playerDiv.innerHTML = `
@@ -1117,7 +1301,9 @@
                 <div style="position:absolute; top:0; left:0; right:0; height:330px; z-index:10; cursor:pointer;" onclick="if(!isWinnerState) openAvatarSelect(${i})"></div>
             `;
             container.appendChild(playerDiv);
-        } checkSubmitState();
+        } 
+        checkSubmitState();
+        window.JokerPlugins.emit('onPlayersRender', activePlayerCount);
     }
 
     function playerUndo(i) { AudioSys.playSFX('button.mp3'); if(historyIndex[i] > 0) { historyIndex[i]--; playerScores[i] = scoreHistory[i][historyIndex[i]]; renderPlayers(); } }
