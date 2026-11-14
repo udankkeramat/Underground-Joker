@@ -1,4 +1,4 @@
-const CACHE_NAME = 'joker-app-assets-v6';
+const CACHE_NAME = 'joker-app-assets-v7';
 const TEMP_CACHE = 'joker-temp';
 const BASE_URL = 'https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/';
 
@@ -38,7 +38,7 @@ self.addEventListener('fetch', (event) => {
                             statusText: 'Partial Content',
                             headers: [
                                 ['Content-Type', cachedResponse.headers.get('Content-Type') || 'application/octet-stream'],
-                                ['Content-Range', `bytes ${start}-${end}/${arrayBuffer.byteLength}`],
+                                ['Content-Range', `bytes \${start}-${end}/${arrayBuffer.byteLength}`],
                                 ['Content-Length', String(sliced.byteLength)]
                             ]
                         });
@@ -46,7 +46,7 @@ self.addEventListener('fetch', (event) => {
                 }
                 return cachedResponse;
             }
-            return fetch(event.request).catch(() => {});
+            return fetch(event.request).catch(() => new Response('', { status: 503, statusText: 'Offline' }));
         })
     );
 });

@@ -454,7 +454,7 @@
 
 <script>
     const BASE_URL = 'https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/';
-    const CACHE_NAME = 'joker-app-assets-v6';
+    const CACHE_NAME = 'joker-app-assets-v7';
     const TEMP_CACHE = 'joker-temp';
 
     const i18n = {
@@ -609,6 +609,7 @@
             onPlayersRender: []
         },
         register(pluginObj) {
+            if (this.registry.some(p => p.id === pluginObj.id)) return;
             this.registry.push(pluginObj);
             if (typeof pluginObj.init === 'function') {
                 try { pluginObj.init(this.getContext()); } catch (e) { console.error('Plugin init error:', e); }
@@ -628,6 +629,7 @@
             return {
                 BASE_URL,
                 AudioSys,
+                getAppState: () => appState,
                 getActivePlayerCount: () => activePlayerCount,
                 getAppElement: () => document.getElementById('app'),
                 getMainPage: () => document.getElementById('main-page'),
@@ -642,19 +644,28 @@
         }
     };
 
-    function loadInstalledPlugins() {
+    async function loadInstalledPlugins() {
         const defaultPlugins = ['plugins/music_player/plugin.js'];
-        fetch(BASE_URL + 'plugins/plugins.json')
-            .then(res => res.ok ? res.json() : defaultPlugins)
-            .catch(() => defaultPlugins)
-            .then(list => {
-                const pluginsToLoad = Array.isArray(list) && list.length > 0 ? list : defaultPlugins;
-                pluginsToLoad.forEach(relPath => {
-                    const s = document.createElement('script');
-                    s.src = BASE_URL + relPath;
-                    document.body.appendChild(s);
-                });
-            });
+        let pluginsToLoad = defaultPlugins;
+        try {
+            const res = await fetch(BASE_URL + 'plugins/plugins.json');
+            if (res.ok) {
+                const list = await res.json();
+                if (Array.isArray(list) && list.length > 0) pluginsToLoad = list;
+            }
+        } catch (e) {}
+
+        for (const relPath of pluginsToLoad) {
+            try {
+                const jsRes = await fetch(BASE_URL + relPath);
+                if (jsRes.ok) {
+                    const code = await jsRes.text();
+                    (new Function(code))();
+                }
+            } catch (e) {
+                console.error('Gagal memuat plugin:', relPath, e);
+            }
+        }
     }
     // =======================================================
     
@@ -662,76 +673,7 @@
         const app = document.getElementById('app');
         const isPortrait = window.innerHeight > window.innerWidth;
         let scale = isPortrait ? Math.min(window.innerWidth / 1080, window.innerHeight / 2392) : Math.min(window.innerWidth / 2392, window.innerHeight / 1080);
-        app.style.transform = `translate(-50%, -50%) ${isPortrait ? 'rotate(90deg)' : ''} scale(${scale})`;
-        app.style.position = 'absolute'; app.style.top = '50%'; app.style.left = '50%';
-    }
-    window.addEventListener('resize', resizeApp); window.addEventListener('orientationchange', resizeApp); resizeApp();
-
-    function isRunningAsPWA() { return window.matchMedia('(display-mode: fullscreen)').matches || window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true; }
-    async function ensureFullscreen() { try { if (!document.fullscreenElement) await document.documentElement.requestFullscreen(); if (screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape'); } catch (e) {} }
-
-    function handleFsInteraction(e) { 
-        ensureFullscreen(); 
-        fsOverlay.style.display = 'none';
-    }
-    const fsOverlay = document.getElementById('fullscreen-overlay');
-    fsOverlay.addEventListener('click', handleFsInteraction, {capture: true}); fsOverlay.addEventListener('pointerdown', handleFsInteraction, {capture: true}); fsOverlay.addEventListener('touchstart', handleFsInteraction, {capture: true, passive: false});
-    document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && !isRunningAsPWA()) fsOverlay.style.display = 'block'; else fsOverlay.style.display = 'none'; });
-
-    const assets = [
-        'logo.png', 'background.png', 'background_classic.webm', 'background_farm.webm', 'menu_screen.png', 'background_screen4.png',
-        'thumbnail_classic_on.png', 'thumbnail_classic_off.png', 'thumbnail_farm_on.png', 'thumbnail_farm_off.png',
-        'players_count.png', 'goal_score.png', 'sound.png', 'tutorial.png', 'exit_app.png', 'start.png', 'main_menu.png', 'next_match.png', 'load.png', 'button.png',
-        'option.png', 'players.png', 'star.png', 'star_2.png', 'use.png', 'back.png', 'border_avatar.png', 'badge.png',
-        'flag_1_classic.png', 'flag_2_classic.png', 'flag_3_classic.png', 'flag_4_classic.png', 'flag_5_classic.png',
-        'flag_1_farm.png', 'flag_2_farm.png', 'flag_3_farm.png', 'flag_4_farm.png', 'flag_5_farm.png',
-        'submit.png', 'log.png', 'modal_default.png', 'close.png', 'cancel.png', 'yes.png', 'no.png', 'ok.png', 
-        'english.png', 'indonesia.png', 'reset.png', 'language.png', 'edit.png', 'winner.png', 'button_edit.png',
-        'champion.png', 'font.ttf',
-        'close.mp3', 'keypad.mp3', 'start.mp3', 'notification.mp3', 'button.mp3', 'welcome.mp3', 'score_for_round.mp3',
-        'bgm_main_menu.mp3', 'bgm_classic.mp3', 'bgm_farm.mp3', 'bgm_fanfare.mp3',
-        '1_star.mp3', 'wildcard.mp3', 'illusionist.mp3', 'mastermind.mp3', 'godlike.mp3', 'legendary.mp3', 'god_of_joker.mp3', 'on_the_stage.mp3'
-    ];
-    for(let i=1; i<=20; i++) assets.push(i + '.mp3');
-    avatarNamesList.forEach(n => assets.push(`avatar_${n}.png`, `${n}.mp3`));
-
-    window.onload = () => {
-        loadInstalledPlugins();
-
-        if (!document.fullscreenElement && !isRunningAsPWA()) fsOverlay.style.display = 'block'; 
-        else { fsOverlay.style.display = 'none'; if (isRunningAsPWA() && screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(e => {}); }
-        
-        document.getElementById('splash-page').style.display = 'flex'; setTimeout(() => { document.getElementById('splash-page').style.opacity = '1'; }, 50);
-        setTimeout(() => { 
-            document.getElementById('splash-page').style.opacity = '0';
-            setTimeout(() => { 
-                document.getElementById('splash-page').style.display = 'none'; 
-                document.getElementById('loading-page').style.display = 'flex'; 
-                appState = 'loading';
-                setTimeout(() => { 
-                    document.getElementById('loading-page').style.opacity = '1'; 
-                    checkAssetsPercentage(); 
-                }, 50);
-            }, 500);
-        }, 2000);
-    };
-
-    async function checkAssetsPercentage() {
-        let percent = 0;
-        if ('caches' in window) {
-            try {
-                const cache = await caches.open(CACHE_NAME);
-                let matchCount = 0;
-                for (let asset of assets) {
-                    const res = await cache.match(BASE_URL + asset, { ignoreSearch: true });
-                    if (res) matchCount++;
-                }
-                percent = Math.floor((matchCount / assets.length) * 100);
-                if (percent > 100) percent = 100;
-            } catch(e) {}
-        }
-        
-        document.getElementById('lbl-loading').innerText = `${percent}% Assets downloaded`;
+        app.style.transform = `translate(-50%, -50%) \${isPortrait ? 'rotate(90deg)' : ''} scale(${scale})`; app.style.position = 'absolute'; app.style.top = '50\%'; app.style.left = '50\%'; } window.addEventListener('resize', resizeApp); window.addEventListener('orientationchange', resizeApp); resizeApp();  function isRunningAsPWA() { return window.matchMedia('(display-mode: fullscreen)').matches \vert{}\vert{} window.matchMedia('(display-mode: standalone)').matches \vert{}\vert{} window.navigator.standalone === true; } async function ensureFullscreen() { try { if (!document.fullscreenElement) await document.documentElement.requestFullscreen(); if (screen.orientation && screen.orientation.lock) await screen.orientation.lock('landscape'); } catch (e) {} }  function handleFsInteraction(e) { ensureFullscreen(); fsOverlay.style.display = 'none'; } const fsOverlay = document.getElementById('fullscreen-overlay'); fsOverlay.addEventListener('click', handleFsInteraction, {capture: true}); fsOverlay.addEventListener('pointerdown', handleFsInteraction, {capture: true}); fsOverlay.addEventListener('touchstart', handleFsInteraction, {capture: true, passive: false}); document.addEventListener('fullscreenchange', () => { if (!document.fullscreenElement && !isRunningAsPWA()) fsOverlay.style.display = 'block'; else fsOverlay.style.display = 'none'; });  const assets = [ 'logo.png', 'background.png', 'background_classic.webm', 'background_farm.webm', 'menu_screen.png', 'background_screen4.png', 'thumbnail_classic_on.png', 'thumbnail_classic_off.png', 'thumbnail_farm_on.png', 'thumbnail_farm_off.png', 'players_count.png', 'goal_score.png', 'sound.png', 'tutorial.png', 'exit_app.png', 'start.png', 'main_menu.png', 'next_match.png', 'load.png', 'button.png', 'option.png', 'players.png', 'star.png', 'star_2.png', 'use.png', 'back.png', 'border_avatar.png', 'badge.png', 'flag_1_classic.png', 'flag_2_classic.png', 'flag_3_classic.png', 'flag_4_classic.png', 'flag_5_classic.png', 'flag_1_farm.png', 'flag_2_farm.png', 'flag_3_farm.png', 'flag_4_farm.png', 'flag_5_farm.png', 'submit.png', 'log.png', 'modal_default.png', 'close.png', 'cancel.png', 'yes.png', 'no.png', 'ok.png', 'english.png', 'indonesia.png', 'reset.png', 'language.png', 'edit.png', 'winner.png', 'button_edit.png', 'champion.png', 'font.ttf', 'close.mp3', 'keypad.mp3', 'start.mp3', 'notification.mp3', 'button.mp3', 'welcome.mp3', 'score_for_round.mp3', 'bgm_main_menu.mp3', 'bgm_classic.mp3', 'bgm_farm.mp3', 'bgm_fanfare.mp3', '1_star.mp3', 'wildcard.mp3', 'illusionist.mp3', 'mastermind.mp3', 'godlike.mp3', 'legendary.mp3', 'god_of_joker.mp3', 'on_the_stage.mp3' ]; for(let i=1; i<=20; i++) assets.push(i + '.mp3'); avatarNamesList.forEach(n => assets.push(`avatar_${n}.png`, `${n}.mp3`));  window.onload = () => { loadInstalledPlugins();  if (!document.fullscreenElement && !isRunningAsPWA()) fsOverlay.style.display = 'block'; else { fsOverlay.style.display = 'none'; if (isRunningAsPWA() && screen.orientation && screen.orientation.lock) screen.orientation.lock('landscape').catch(e => {}); }  document.getElementById('splash-page').style.display = 'flex'; setTimeout(() => { document.getElementById('splash-page').style.opacity = '1'; }, 50); setTimeout(() => { document.getElementById('splash-page').style.opacity = '0'; setTimeout(() => { document.getElementById('splash-page').style.display = 'none'; document.getElementById('loading-page').style.display = 'flex'; appState = 'loading'; setTimeout(() => { document.getElementById('loading-page').style.opacity = '1'; checkAssetsPercentage(); }, 50); }, 500); }, 2000); };  async function checkAssetsPercentage() { let percent = 0; if ('caches' in window) { try { const cache = await caches.open(CACHE_NAME); let matchCount = 0; for (let asset of assets) { const res = await cache.match(BASE_URL + asset, { ignoreSearch: true }); if (res) matchCount++; } percent = Math.floor((matchCount / assets.length) * 100); if (percent > 100) percent = 100; } catch(e) {} }  document.getElementById('lbl-loading').innerText = `${percent}% Assets downloaded`;
         const btnUpdate = document.getElementById('btn-update-assets');
         
         if (percent === 100) { btnUpdate.classList.add('off'); } 
@@ -772,7 +714,7 @@
                 const mainCache = await caches.open(CACHE_NAME);
                 const tempCache = await caches.open(TEMP_CACHE);
                 for (let asset of assets) {
-                    let url = BASE_URL + asset; lbl.innerText = `Memeriksa Asset: ${asset}`;
+                    let url = BASE_URL + asset; lbl.innerText = `Memeriksa Asset: \${asset}`;
                     let needsDownload = true;
                     
                     const cachedRes = await mainCache.match(url, { ignoreSearch: true });
@@ -787,7 +729,7 @@
                         } catch(e){}
                     }
                     if (needsDownload) {
-                        lbl.innerText = `Downloading Asset: ${asset}`;
+                        lbl.innerText = `Downloading Asset: \${asset}`;
                         try { const fetchRes = await fetch(url, { cache: "no-store" }); if (fetchRes.ok) await tempCache.put(url, fetchRes); } catch(e){}
                     }
                     loaded++; let p = Math.floor((loaded/total)*100); fill.style.width = p+'%'; percentUI.innerText = p+'%';
@@ -813,7 +755,7 @@
             try {
                 const tempCache = await caches.open(TEMP_CACHE);
                 for (let asset of assets) {
-                    let url = BASE_URL + asset; lbl.innerText = `Downloading Asset: ${asset}`;
+                    let url = BASE_URL + asset; lbl.innerText = `Downloading Asset: \${asset}`;
                     try { const fetchRes = await fetch(url, { cache: "no-store" }); if (fetchRes.ok) await tempCache.put(url, fetchRes); } catch(e){}
                     loaded++; let p = Math.floor((loaded/total)*100); fill.style.width = p+'%'; percentUI.innerText = p+'%';
                 }
@@ -871,7 +813,7 @@
 
         const allPluginPaths = [
             ...pluginStaticAssets,
-            ...songFiles.map(name => `plugins/music_player/song/${encodeURIComponent(name)}`)
+            ...songFiles.map(name => `plugins/music_player/song/\${encodeURIComponent(name)}`)
         ];
 
         let loaded = 0;
@@ -885,7 +827,7 @@
                 for (let relPath of allPluginPaths) {
                     const url = BASE_URL + relPath;
                     const displayName = decodeURIComponent(relPath.split('/').pop());
-                    lbl.innerText = `Memeriksa Plugin Asset: ${displayName}`;
+                    lbl.innerText = `Memeriksa Plugin Asset: \${displayName}`;
                     let needsDownload = true;
 
                     const cachedRes = await mainCache.match(url, { ignoreSearch: true });
@@ -904,7 +846,7 @@
                     }
 
                     if (needsDownload) {
-                        lbl.innerText = `Downloading Plugin: ${displayName}`;
+                        lbl.innerText = `Downloading Plugin: \${displayName}`;
                         try {
                             const fetchRes = await fetch(url, { cache: 'no-store' });
                             if (fetchRes.ok) await tempCache.put(url, fetchRes);
@@ -943,6 +885,11 @@
                 for (let req of tempKeys) { const res = await tempCache.match(req); await mainCache.put(req, res); }
                 await caches.delete(TEMP_CACHE);
                 
+                // Muat ulang plugin jika sebelumnya belum terpasang
+                if (window.JokerPlugins.registry.length === 0) {
+                    await loadInstalledPlugins();
+                }
+
                 lbl.innerText = "Save Asset Selesai!";
                 setTimeout(() => { 
                     toggleDownloadButtons(true);
@@ -984,7 +931,7 @@
         document.getElementById('lbl-bgm').innerText = t('bgm');
         document.getElementById('lbl-sfx').innerText = t('sfx');
         closeModal('lang-modal', muteSound); 
-        if(appState === 'game') document.getElementById('round-text').innerText = `${t('round')} ${currentRound}`;
+        if(appState === 'game') document.getElementById('round-text').innerText = `${t('round')}${currentRound}`;
     }
 
     function showNotif(msg, withConfirm, onYes, onNo) {
@@ -1185,7 +1132,7 @@
         document.getElementById('btn-submit').classList.replace('slide-out-top', 'slide-in-top'); document.getElementById('btn-option').classList.replace('slide-out-top', 'slide-in-top');
         document.getElementById('btn-players').classList.replace('slide-out-top', 'slide-in-top'); document.getElementById('btn-log').classList.replace('slide-out-top', 'slide-in-top'); document.getElementById('btn-log').style.zIndex = '100';
 
-        document.getElementById('round-container').style.opacity = '1'; document.getElementById('round-text').innerText = `${t('round')} ${currentRound}`;
+        document.getElementById('round-container').style.opacity = '1'; document.getElementById('round-text').innerText = `${t('round')}${currentRound}`;
         renderPlayers(); closeModal('option-modal');
     }
 
@@ -1203,7 +1150,7 @@
         vBg.style.display = 'block'; vBg.style.opacity = '0'; vBg.play().catch(e=>{});
         AudioSys.playBGM(selectedTheme === 'classic' ? 'bgm_classic.mp3' : 'bgm_farm.mp3');
 
-        document.getElementById('round-text').innerText = `${t('round')} ${currentRound}`;
+        document.getElementById('round-text').innerText = `${t('round')}${currentRound}`;
         
         if (isWinnerState && fromLoad) {
             renderPlayers(); gamePage.style.opacity = '1'; vBg.style.opacity = '1';
@@ -1255,7 +1202,7 @@
         document.getElementById('btn-option').classList.replace('slide-out-top', 'slide-in-top'); document.getElementById('btn-submit').classList.replace('slide-out-top', 'slide-in-top');
         document.getElementById('btn-players').classList.replace('slide-out-top', 'slide-in-top'); document.getElementById('btn-log').style.zIndex = '100'; 
         
-        document.getElementById('round-container').style.opacity = '1'; document.getElementById('round-text').innerText = `${t('round')} ${currentRound}`;
+        document.getElementById('round-container').style.opacity = '1'; document.getElementById('round-text').innerText = `${t('round')}${currentRound}`;
         
         for (let i = 0; i < activePlayerCount; i++) { const pc = document.getElementById(`player-cont-${i}`); if (pc) { pc.classList.remove('loser-dim'); pc.classList.remove('winner-anim'); } const stempel = document.getElementById(`stempel-${i}`); if (stempel) stempel.classList.remove('show'); }
         
@@ -1264,41 +1211,28 @@
 
     function getFlagAsset(score) { let level = 5; if(score > 200) level = 4; if(score > 400) level = 3; if(score > 600) level = 2; if(score > 800) level = 1; return `flag_${level}_${selectedTheme}.png`; }
     function generateStarsHTML(starCount, pIdx) {
-        let html = ''; if (starCount <= 5) { for (let s = 0; s < starCount; s++) html += `<img src="${BASE_URL}star.png" class="star-icon" alt="Star">`; }
-        else { for (let s = 0; s < (10 - starCount); s++) html += `<img src="${BASE_URL}star.png" class="star-icon" alt="Star">`; for (let s = 0; s < (starCount - 5); s++) html += `<img src="${BASE_URL}star_2.png" class="star-icon" alt="Star 2">`; } return html;
-    }
-    function checkSubmitState() {
-        if(isWinnerState) return; const btn = document.getElementById('btn-submit'); let allFilled = true;
-        for(let i=0; i<activePlayerCount; i++) { if(scoreColors[i] !== 'yellow') allFilled = false; }
-        if(allFilled) btn.classList.remove('off'); else btn.classList.add('off');
-    }
-    function cyclePlayerCount() { if(isWinnerState) return; AudioSys.playSFX('button.mp3'); activePlayerCount++; if (activePlayerCount > 6) activePlayerCount = 2; renderPlayers(); }
-
-    function renderPlayers() {
-        const container = document.getElementById('players-container'); container.innerHTML = '';
-        for (let i = 0; i < activePlayerCount; i++) {
-            const playerDiv = document.createElement('div'); playerDiv.className = 'player'; playerDiv.id = `player-cont-${i}`;
+        let html = ''; if (starCount <= 5) { for (let s = 0; s < starCount; s++) html += `<img src="\${BASE_URL}star.png" class="star-icon" alt="Star">`; }
+        else { for (let s = 0; s < (10 - starCount); s++) html += `<img src="\${BASE_URL}star.png" class="star-icon" alt="Star">`; for (let s = 0; s < (starCount - 5); s++) html += `<img src="${BASE_URL}star_2.png" class="star-icon" alt="Star 2">`; } return html; } function checkSubmitState() { if(isWinnerState) return; const btn = document.getElementById('btn-submit'); let allFilled = true; for(let i=0; i<activePlayerCount; i++) { if(scoreColors[i] !== 'yellow') allFilled = false; } if(allFilled) btn.classList.remove('off'); else btn.classList.add('off'); } function cyclePlayerCount() { if(isWinnerState) return; AudioSys.playSFX('button.mp3'); activePlayerCount++; if (activePlayerCount > 6) activePlayerCount = 2; renderPlayers(); }  function renderPlayers() { const container = document.getElementById('players-container'); container.innerHTML = ''; for (let i = 0; i < activePlayerCount; i++) { const playerDiv = document.createElement('div'); playerDiv.className = 'player'; playerDiv.id = `player-cont-${i}`;
             let flagAsset = getFlagAsset(playerScores[i]); let isSprite = flagAsset.startsWith('flag_1_');
             let flagHTML = isSprite ? `<div class="spritesheet-wrapper"><img src="${BASE_URL}${flagAsset}" class="spritesheet-img"></div>` : `<img src="${BASE_URL}${flagAsset}" class="player-flag">`;
-            let championHTML = championIndices.includes(i) ? `<img src="${BASE_URL}champion.png" class="champion-badge">` : '';
+            let championHTML = championIndices.includes(i) ? `<img src="\${BASE_URL}champion.png" class="champion-badge">` : '';
 
             playerDiv.innerHTML = `
-                <img src="${BASE_URL}avatar_${avatarNamesList[playerAvatars[i]]}.png" class="player-avatar"> ${flagHTML}
-                ${championHTML}
+                <img src="${BASE_URL}avatar_${avatarNamesList[playerAvatars[i]]}.png" class="player-avatar"> ${flagHTML}${championHTML}
                 <img src="${BASE_URL}winner.png" class="stempel-winner" id="stempel-${i}">
                 <div class="player-name-display" onclick="if(!isWinnerState) openKeypad('name', null, ${i})">${customPlayerNames[i]}</div>
                 <div class="player-stars-container" id="stars-cont-${i}">${generateStarsHTML(playerStars[i], i)}</div>
-                <div class="player-badge-container" onclick="if(!isWinnerState) toggleBadge(${i})">
+                <div class="player-badge-container" onclick="if(!isWinnerState) toggleBadge(\${i})">
                     <img src="${BASE_URL}badge.png" class="badge-icon ${playerBadges[i] ? 'on' : 'off'}">
                 </div>
                 <div class="ur-container">
                     <div class="ur-btn ${historyIndex[i] > 0 ? '' : 'disabled'}" onclick="if(!isWinnerState) playerUndo(${i})">&#8634;</div>
                     <div class="ur-btn ${historyIndex[i] < scoreHistory[i].length - 1 ? '' : 'disabled'}" onclick="if(!isWinnerState) playerRedo(${i})">&#8635;</div>
                 </div>
-                <div class="player-score-container" onclick="if(!isWinnerState) openKeypad('score', null, ${i})">
+                <div class="player-score-container" onclick="if(!isWinnerState) openKeypad('score', null, \${i})">
                     <span class="player-score ${scoreColors[i]}">${playerScores[i]}</span>
                 </div>
-                <div style="position:absolute; top:0; left:0; right:0; height:330px; z-index:10; cursor:pointer;" onclick="if(!isWinnerState) openAvatarSelect(${i})"></div>
+                <div style="position:absolute; top:0; left:0; right:0; height:330px; z-index:10; cursor:pointer;" onclick="if(!isWinnerState) openAvatarSelect(\${i})"></div>
             `;
             container.appendChild(playerDiv);
         } 
@@ -1310,7 +1244,7 @@
     function playerRedo(i) { AudioSys.playSFX('button.mp3'); if(historyIndex[i] < scoreHistory[i].length-1) { historyIndex[i]++; playerScores[i] = scoreHistory[i][historyIndex[i]]; renderPlayers(); } }
     function toggleBadge(i) {
         AudioSys.playSFX('button.mp3');
-        if (playerBadges[i]) { playerStars[i] = (playerStars[i]+1)%11; renderPlayers(); const stars = document.querySelectorAll(`#stars-cont-${i} .star-icon`); if(stars.length > 0) stars[stars.length-1].classList.add('pop'); } 
+        if (playerBadges[i]) { playerStars[i] = (playerStars[i]+1)%11; renderPlayers(); const stars = document.querySelectorAll(`#stars-cont-\${i} .star-icon`); if(stars.length > 0) stars[stars.length-1].classList.add('pop'); } 
         else { playerBadges.fill(false); playerBadges[i] = true; renderPlayers(); }
     }
 
@@ -1321,7 +1255,7 @@
     }
     function hideRoundArrows() { document.getElementById('round-dec').classList.remove('show'); document.getElementById('round-inc').classList.remove('show'); }
     function resetRoundTimeout() { clearTimeout(roundTimeout); roundTimeout = setTimeout(hideRoundArrows, 10000); }
-    function adjustRound(dir) { AudioSys.playSFX('button.mp3'); currentRound += dir; if(currentRound < 1) currentRound = 99; if(currentRound > 99) currentRound = 1; document.getElementById('round-text').innerText = `${t('round')} ${currentRound}`; resetRoundTimeout(); }
+    function adjustRound(dir) { AudioSys.playSFX('button.mp3'); currentRound += dir; if(currentRound < 1) currentRound = 99; if(currentRound > 99) currentRound = 1; document.getElementById('round-text').innerText = `${t('round')}${currentRound}`; resetRoundTimeout(); }
 
     let currentKeypadType = ''; let currentKeypadTarget = { rIdx: null, pIdx: null }; let keypadValue = "";
     function openKeypad(type, rIdx, pIdx) {
@@ -1377,7 +1311,7 @@
         currentAvatarTarget = pIdx; const container = document.getElementById('avatar-grid-container'); container.innerHTML = '';
         avatarNamesList.forEach((name, a) => {
             const w = document.createElement('div'); w.className = 'avatar-wrapper'; if (a === playerAvatars[pIdx]) w.classList.add('selected');
-            w.innerHTML = `<img src="${BASE_URL}avatar_${name}.png" class="avatar-option" onload="onAvatarImgLoad()"><img src="${BASE_URL}border_avatar.png" class="avatar-border-overlay">`;
+            w.innerHTML = `<img src="${BASE_URL}avatar_${name}.png" class="avatar-option" onload="onAvatarImgLoad()"><img src="\${BASE_URL}border_avatar.png" class="avatar-border-overlay">`;
             w.onclick = () => { AudioSys.playSFX('button.mp3'); container.querySelectorAll('.avatar-wrapper').forEach(el => el.classList.remove('selected')); w.classList.add('selected'); currentAvatarTarget = {pIdx, a}; }; container.appendChild(w);
         });
         document.getElementById('btn-use-avatar').onclick = () => {
@@ -1418,35 +1352,10 @@
                 let sF = "1_star.mp3"; if(playerStars[i]==2) sF="wildcard.mp3"; else if(playerStars[i]==3) sF="illusionist.mp3"; else if(playerStars[i]==4) sF="mastermind.mp3"; else if(playerStars[i]==5) sF="godlike.mp3"; else if(playerStars[i]==6) sF="legendary.mp3"; else if(playerStars[i]>=7) sF="god_of_joker.mp3";
                 let seq = [avatarNamesList[playerAvatars[i]]+'.mp3', sF]; hasStarSound = true;
                 (function playS(idx){ if(idx>=seq.length) { checkWinnersAndProceed(); return; } let a = new Audio(BASE_URL+seq[idx]); a.onended=()=>playS(idx+1); if(AudioSys.sfxOn) a.play().catch(e=>playS(idx+1)); else playS(idx+1); })(0);
-                renderPlayers(); const stars = document.querySelectorAll(`#stars-cont-${i} .star-icon`); if(stars.length > 0) stars[stars.length-1].classList.add('pop'); break;
-            }
-        } if (!hasStarSound) checkWinnersAndProceed();
-    }
-
-    function checkWinnersAndProceed() {
-        let goal = goalScoresOpts[goalScoreIdx]; let qualifiers = []; for(let i=0; i<activePlayerCount; i++) if(playerScores[i] >= goal) qualifiers.push(i);
-        if(qualifiers.length > 0) { let maxS = Math.max(...qualifiers.map(idx => playerScores[idx])); let winners = qualifiers.filter(idx => playerScores[idx] === maxS); triggerWinnerSequence(winners); } 
-        else { currentRound = (currentRound%99)+1; document.getElementById('round-text').innerText = `${t('round')} ${currentRound}`; saveGameState(); } 
-    }
-
-    function triggerWinnerSequence(winnerIndices) {
-        isWinnerState = true; savedWinnerIndices = winnerIndices;
-        saveGameState(); 
-        
-        document.getElementById('btn-option').classList.replace('slide-in-top', 'slide-out-top'); document.getElementById('btn-submit').classList.replace('slide-in-top', 'slide-out-top');
-        document.getElementById('btn-players').classList.replace('slide-in-top', 'slide-out-top'); document.getElementById('round-container').style.opacity = '0';
-        const btnLog = document.getElementById('btn-log'); btnLog.classList.replace('slide-in-top', 'slide-out-top');
-        const btnMenu = document.getElementById('btn-winner-menu'); btnMenu.classList.remove('slide-in-top'); btnMenu.classList.add('slide-out-top'); btnMenu.style.display = 'block';
-        const btnNext = document.getElementById('btn-next-match'); btnNext.classList.remove('slide-in-top'); btnNext.classList.add('slide-out-top'); btnNext.style.display = 'block';
-
-        const dimOverlay = document.getElementById('winner-dim-overlay'); dimOverlay.style.display = 'block'; setTimeout(() => { dimOverlay.style.opacity = '1'; }, 50);
-
-        for (let i = 0; i < activePlayerCount; i++) { const pc = document.getElementById(`player-cont-${i}`); if(!winnerIndices.includes(i)) pc.classList.add('loser-dim'); }
+                renderPlayers(); const stars = document.querySelectorAll(`#stars-cont-${i} .star-icon`); if(stars.length > 0) stars[stars.length-1].classList.add('pop'); break; } } if (!hasStarSound) checkWinnersAndProceed(); }  function checkWinnersAndProceed() { let goal = goalScoresOpts[goalScoreIdx]; let qualifiers = []; for(let i=0; i<activePlayerCount; i++) if(playerScores[i] >= goal) qualifiers.push(i); if(qualifiers.length > 0) { let maxS = Math.max(...qualifiers.map(idx => playerScores[idx])); let winners = qualifiers.filter(idx => playerScores[idx] === maxS); triggerWinnerSequence(winners); } else { currentRound = (currentRound\%99)+1; document.getElementById('round-text').innerText = `${t('round')} ${currentRound}`; saveGameState(); } }  function triggerWinnerSequence(winnerIndices) { isWinnerState = true; savedWinnerIndices = winnerIndices; saveGameState();  document.getElementById('btn-option').classList.replace('slide-in-top', 'slide-out-top'); document.getElementById('btn-submit').classList.replace('slide-in-top', 'slide-out-top'); document.getElementById('btn-players').classList.replace('slide-in-top', 'slide-out-top'); document.getElementById('round-container').style.opacity = '0'; const btnLog = document.getElementById('btn-log'); btnLog.classList.replace('slide-in-top', 'slide-out-top'); const btnMenu = document.getElementById('btn-winner-menu'); btnMenu.classList.remove('slide-in-top'); btnMenu.classList.add('slide-out-top'); btnMenu.style.display = 'block'; const btnNext = document.getElementById('btn-next-match'); btnNext.classList.remove('slide-in-top'); btnNext.classList.add('slide-out-top'); btnNext.style.display = 'block';  const dimOverlay = document.getElementById('winner-dim-overlay'); dimOverlay.style.display = 'block'; setTimeout(() => { dimOverlay.style.opacity = '1'; }, 50);  for (let i = 0; i < activePlayerCount; i++) { const pc = document.getElementById(`player-cont-${i}`); if(!winnerIndices.includes(i)) pc.classList.add('loser-dim'); }
         AudioSys.playBGM('bgm_fanfare.mp3');
         setTimeout(() => {
-            winnerIndices.forEach(idx => { document.getElementById(`stempel-${idx}`).classList.add('show'); });
-            setTimeout(() => {
-                winnerIndices.forEach(idx => { document.getElementById(`player-cont-${idx}`).classList.add('winner-anim'); }); btnLog.style.zIndex = '105'; 
+            winnerIndices.forEach(idx => { document.getElementById(`stempel-${idx}`).classList.add('show'); }); setTimeout(() => { winnerIndices.forEach(idx => { document.getElementById(`player-cont-${idx}`).classList.add('winner-anim'); }); btnLog.style.zIndex = '105'; 
                 setTimeout(() => { btnLog.classList.replace('slide-out-top', 'slide-in-top'); btnMenu.classList.replace('slide-out-top', 'slide-in-top'); btnNext.classList.replace('slide-out-top', 'slide-in-top'); }, 50);
             }, 1000);
         }, 1000);
@@ -1469,30 +1378,23 @@
 
     function buildLogTable() {
         const wrapper = document.getElementById('log-table-container'); wrapper.innerHTML = ''; let targetData = logEditable ? tempLogRoundsData : logRoundsData;
-        if(targetData.length === 0) { wrapper.innerHTML = `<div style="color:white; font-size:32px; text-align:center; padding:60px; font-weight:bold;">${t('empty_log')}</div>`; return; }
-        
-        for (let m = 1; m <= currentMatch; m++) {
-            let matchRounds = targetData.filter(rd => rd.matchNum === m); if (matchRounds.length === 0 && m !== currentMatch) continue;
-            let isCurrentMatch = (m === currentMatch);
-            let matchTitle = document.createElement('div'); matchTitle.style.color = '#f1c40f'; matchTitle.style.fontSize = '35px'; matchTitle.style.fontWeight = 'bold'; matchTitle.style.textAlign = 'center'; matchTitle.style.margin = '20px 0 10px 0'; matchTitle.style.textShadow = '2px 2px 0px #000'; matchTitle.innerText = `${t('match_lbl').toUpperCase()} ${m}`; wrapper.appendChild(matchTitle);
-
-            let table = document.createElement('table'); table.className = 'log-table'; let thead = document.createElement('thead'); let htr = document.createElement('tr'); htr.innerHTML = `<th>${t('round')}</th>`;
+        if(targetData.length === 0) { wrapper.innerHTML = `<div style="color:white; font-size:32px; text-align:center; padding:60px; font-weight:bold;">${t('empty_log')}</div>`; return; }  for (let m = 1; m <= currentMatch; m++) { let matchRounds = targetData.filter(rd => rd.matchNum === m); if (matchRounds.length === 0 && m !== currentMatch) continue; let isCurrentMatch = (m === currentMatch); let matchTitle = document.createElement('div'); matchTitle.style.color = '#f1c40f'; matchTitle.style.fontSize = '35px'; matchTitle.style.fontWeight = 'bold'; matchTitle.style.textAlign = 'center'; matchTitle.style.margin = '20px 0 10px 0'; matchTitle.style.textShadow = '2px 2px 0px #000'; matchTitle.innerText = `${t('match_lbl').toUpperCase()} ${m}`; wrapper.appendChild(matchTitle);  let table = document.createElement('table'); table.className = 'log-table'; let thead = document.createElement('thead'); let htr = document.createElement('tr'); htr.innerHTML = `<th>${t('round')}</th>`;
             let numCols = isCurrentMatch ? activePlayerCount : (matchRounds.length > 0 ? matchRounds[0].players.length : activePlayerCount);
             
             for(let p = 0; p < numCols; p++) { let pName = customPlayerNames[p] || `P${p+1}`; if (!isCurrentMatch && matchRounds.length > 0 && matchRounds[0].players[p]) { pName = matchRounds[0].players[p].playerName; } htr.innerHTML += `<th>${pName}</th>`; }
-            if (isCurrentMatch) { htr.innerHTML += `<th class="${logEditable ? '' : 'col-hide'}"><div style="display:flex; justify-content:center; gap:10px;"><div class="ur-btn ${logScreenHistoryIndex>0 ? '' : 'disabled'}" style="transform:scale(0.8);" onclick="logUndo()">&#8634;</div><div class="ur-btn ${logScreenHistoryIndex<logScreenHistory.length-1 ? '' : 'disabled'}" style="transform:scale(0.8);" onclick="logRedo()">&#8635;</div></div></th>`; }
+            if (isCurrentMatch) { htr.innerHTML += `<th class="\${logEditable ? '' : 'col-hide'}"><div style="display:flex; justify-content:center; gap:10px;"><div class="ur-btn \${logScreenHistoryIndex>0 ? '' : 'disabled'}" style="transform:scale(0.8);" onclick="logUndo()">&#8634;</div><div class="ur-btn \${logScreenHistoryIndex<logScreenHistory.length-1 ? '' : 'disabled'}" style="transform:scale(0.8);" onclick="logRedo()">&#8635;</div></div></th>`; }
             thead.appendChild(htr); table.appendChild(thead);
             
             let tbody = document.createElement('tbody');
-            if (matchRounds.length === 0) { let emptyColspan = 1 + numCols + (isCurrentMatch ? 1 : 0); tbody.innerHTML = `<tr><td colspan="${emptyColspan}" style="padding:25px; color:#95a5a6; font-style:italic;">-</td></tr>`; } 
+            if (matchRounds.length === 0) { let emptyColspan = 1 + numCols + (isCurrentMatch ? 1 : 0); tbody.innerHTML = `<tr><td colspan="\${emptyColspan}" style="padding:25px; color:#95a5a6; font-style:italic;">-</td></tr>`; } 
             else {
                 matchRounds.forEach((rd) => {
-                    let rIdx = targetData.findIndex(x => x === rd); let tr = document.createElement('tr'); tr.innerHTML = `<td style="color:#f1c40f;font-weight:bold">${t('round')} ${rd.roundNum}</td>`;
+                    let rIdx = targetData.findIndex(x => x === rd); let tr = document.createElement('tr'); tr.innerHTML = `<td style="color:#f1c40f;font-weight:bold">${t('round')}${rd.roundNum}</td>`;
                     for(let pIdx=0; pIdx < numCols; pIdx++) {
                         let pd = rd.players[pIdx];
                         if(pd) {
                             let td = document.createElement('td'); if(logEditable && isCurrentMatch) td.className = 'editable-cell';
-                            let badgeHTML = pd.hasBadge ? `<img src="${BASE_URL}badge.png" style="height:40px; cursor:${(logEditable && isCurrentMatch)?'pointer':'default'};" onclick="event.stopPropagation(); if(${isCurrentMatch}) toggleLogBadge(${rIdx}, ${pIdx})">` : `<div style="width:40px; height:40px; cursor:${(logEditable && isCurrentMatch)?'pointer':'default'};" onclick="event.stopPropagation(); if(${isCurrentMatch}) toggleLogBadge(${rIdx}, ${pIdx})"></div>`;
+                            let badgeHTML = pd.hasBadge ? `<img src="\${BASE_URL}badge.png" style="height:40px; cursor:${(logEditable && isCurrentMatch)?'pointer':'default'};" onclick="event.stopPropagation(); if(${isCurrentMatch}) toggleLogBadge(${rIdx},${pIdx})">` : `<div style="width:40px; height:40px; cursor:${(logEditable && isCurrentMatch)?'pointer':'default'};" onclick="event.stopPropagation(); if(${isCurrentMatch}) toggleLogBadge(${rIdx},${pIdx})"></div>`;
                             td.innerHTML = `<div style="display:flex;align-items:center;justify-content:center;gap:10px;">${badgeHTML} <span>${pd.score}</span></div>`; if(logEditable && isCurrentMatch) td.onclick = () => openKeypad('score', rIdx, pIdx); tr.appendChild(td);
                         } else { tr.innerHTML += `<td>-</td>`; }
                     }
