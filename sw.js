@@ -1,5 +1,5 @@
 const CACHE_NAME = 'joker-app-assets-v7';
-const SHELL_CACHE = 'joker-app-shell-v2';
+const SHELL_CACHE = 'joker-app-shell-v3';
 const TEMP_CACHE = 'joker-temp';
 const BASE_URL = 'https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/';
 
