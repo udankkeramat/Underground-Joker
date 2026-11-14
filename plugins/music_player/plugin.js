@@ -12,8 +12,6 @@
             this.ctx = ctx;
             this.AudioSys = ctx.AudioSys;
             this.appEl = ctx.getAppElement();
-            this.menuLayer = ctx.getMenuLayer();
-            this.gameLayer = ctx.getPluginLayer();
 
             this.songs = [];
             this.currentIndex = -1;
@@ -21,48 +19,58 @@
             this.isOpen = false;
             this.isPlaylistOpen = false;
             this.isAnimating = false;
-            this.activeAnchor = 'game';
 
             this.audio = new Audio();
             this.audio.preload = 'auto';
 
-            this.customPos = null;
-            this.isDragging = false;
-            this.dragStartClient = { x: 0, y: 0 };
-            this.dragStartPos = { right: 100, bottom: 128 };
+            // Posisi floating button (koordinat x/left dan y/top di dalam #app 2392x1080)
+            this.btnPos = { left: 46, top: 758 };
+            this.hasUserDraggedBtn = false;
+            this.isDraggingBtn = false;
+            this.btnHasMoved = false;
+            this.btnDragStartClient = { x: 0, y: 0 };
+            this.btnDragStartPos = { left: 46, top: 758 };
+
+            // Drag panel music player (saat >= 5 player di Main Screen)
+            this.customPanelPos = null;
+            this.isDraggingPanel = false;
+            this.panelDragStartClient = { x: 0, y: 0 };
+            this.panelDragStartPos = { right: 100, bottom: 128 };
 
             this.injectStyles();
             this.buildDOM();
             this.bindAudioEvents();
-            this.bindDragEvents();
+            this.bindFloatButtonEvents();
+            this.bindPanelDragEvents();
             this.loadSongsList();
 
-            const showGameButton = () => {
-                this.gameBtn.classList.remove('mp-btn-hide');
-                this.gameBtn.classList.add('mp-btn-show');
-            };
-
-            const hideGameButton = () => {
-                this.gameBtn.classList.remove('mp-btn-show');
-                this.gameBtn.classList.add('mp-btn-hide');
+            const handleMainMenuEnter = () => {
                 if (this.isOpen) {
                     this.forceClosePanelOnly();
                 }
+                this.resetButtonToDefault();
+                this.showFloatButton();
             };
 
-            const hideMenuPanel = () => {
+            const handleMainScreenEnter = () => {
                 if (this.isOpen) {
-                    this.forceClosePanelOnly();
+                    this.hideFloatButton();
+                    this.applyLayoutByPlayerCount();
+                } else {
+                    this.showFloatButton();
                 }
             };
 
-            if (ctx.getAppState && ctx.getAppState() === 'game') {
-                setTimeout(showGameButton, 50);
+            const currentState = ctx.getAppState ? ctx.getAppState() : 'splash';
+            if (currentState === 'menu') {
+                handleMainMenuEnter();
+            } else if (currentState === 'game') {
+                this.resetButtonToDefault();
+                handleMainScreenEnter();
             }
 
-            ctx.on('onMainMenuLeave', hideMenuPanel);
-            ctx.on('onMainScreenEnter', showGameButton);
-            ctx.on('onMainScreenLeave', hideGameButton);
+            ctx.on('onMainMenuEnter', handleMainMenuEnter);
+            ctx.on('onMainScreenEnter', handleMainScreenEnter);
 
             ctx.on('onPlayersRender', () => {
                 if (this.isOpen && this.ctx.getAppState() === 'game') {
@@ -74,51 +82,35 @@
         injectStyles() {
             const style = document.createElement('style');
             style.textContent = `
-                /* a. Button Music Player di Main Menu Screen (pojok kanan atas, dimensi asli) */
-                #btn-mp3-menu {
+                /* Floating Button Music Player (Minimize State) */
+                #btn-mp3-float {
                     position: absolute;
-                    top: 33px;
-                    right: 46px;
+                    left: 46px;
+                    top: 758px;
                     width: auto;
                     height: auto;
                     max-width: none;
                     max-height: none;
-                    display: block;
-                    z-index: 25;
-                    cursor: pointer;
-                    transition: transform 0.1s ease;
-                }
-                #btn-mp3-menu:active {
-                    transform: scale(0.9);
-                }
-
-                /* b. Button Music Player di Main Screen (pojok kiri bawah, dimensi asli) */
-                #btn-mp3-game {
-                    position: absolute;
-                    left: 40px;
-                    bottom: 40px;
-                    width: auto;
-                    height: auto;
-                    max-width: none;
-                    max-height: none;
-                    display: block;
-                    z-index: 105;
-                    cursor: pointer;
-                    transition: transform 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.8s ease;
-                }
-                #btn-mp3-game.mp-btn-hide {
-                    transform: translateY(250px);
+                    display: none;
                     opacity: 0;
-                    pointer-events: none;
+                    z-index: 350;
+                    cursor: grab;
+                    touch-action: none;
+                    user-select: none;
+                    -webkit-user-drag: none;
+                    filter: drop-shadow(0 6px 14px rgba(0, 0, 0, 0.65));
+                    transition: opacity 0.25s ease, transform 0.15s ease;
                 }
-                #btn-mp3-game.mp-btn-show {
-                    transform: translateY(0);
+                #btn-mp3-float.mp-float-visible {
                     opacity: 1;
-                    pointer-events: auto;
                 }
-                #btn-mp3-game:active {
-                    transform: scale(0.9) !important;
-                    transition: transform 0.1s !important;
+                #btn-mp3-float.mp-float-dragging {
+                    cursor: grabbing;
+                    transform: scale(1.06);
+                    transition: none;
+                }
+                #btn-mp3-float:active:not(.mp-float-dragging) {
+                    transform: scale(0.92);
                 }
 
                 /* Root Wrapper Music Player + Playlist */
@@ -126,7 +118,7 @@
                     position: absolute;
                     right: 100px;
                     bottom: 128px;
-                    z-index: 350;
+                    z-index: 360;
                     display: none;
                     opacity: 0;
                     pointer-events: none;
@@ -213,20 +205,33 @@
                     transform: scale(0.85);
                 }
 
-                /* Kontainer Playlist */
+                /* Kontainer Playlist - GPU Composited Slide & Fade (Bebas Glitch) */
                 #music-playlist-container {
                     position: absolute;
                     right: 50%;
                     top: 50%;
-                    transform: translateY(-50%);
                     z-index: 1;
-                    clip-path: inset(0 0 0 100%);
-                    transition: clip-path 0.42s cubic-bezier(0.25, 0.8, 0.25, 1);
+                    transform-origin: right center;
+                    transform: translate3d(90px, -50%, 0) scaleX(0.86);
+                    opacity: 0;
+                    visibility: hidden;
                     pointer-events: none;
+                    backface-visibility: hidden;
+                    will-change: transform, opacity;
+                    transition:
+                        transform 0.36s cubic-bezier(0.22, 1, 0.36, 1),
+                        opacity 0.26s ease,
+                        visibility 0s linear 0.36s;
                 }
                 #music-playlist-container.playlist-open {
-                    clip-path: inset(0 0 0 0%);
+                    transform: translate3d(0px, -50%, 0) scaleX(1);
+                    opacity: 1;
+                    visibility: visible;
                     pointer-events: auto;
+                    transition:
+                        transform 0.38s cubic-bezier(0.22, 1, 0.36, 1),
+                        opacity 0.28s ease,
+                        visibility 0s linear 0s;
                 }
 
                 #mp-playlist-bg {
@@ -245,7 +250,7 @@
                     width: 1372px;
                     height: 460px;
                     border-radius: 25px;
-                    background: rgba(0, 0, 0, 0.75);
+                    background: rgba(0, 0, 0, 0.78);
                     border: 2px solid rgba(255, 255, 255, 0.18);
                     z-index: 2;
                     overflow: hidden;
@@ -332,38 +337,20 @@
         },
 
         buildDOM() {
-            // a. Button di Main Menu Screen (pojok kanan atas, ukuran dimensi asli)
-            const menuBtn = document.createElement('img');
-            menuBtn.id = 'btn-mp3-menu';
-            menuBtn.src = IMG_BASE + 'button_music_player.png';
-            menuBtn.alt = 'Music Player';
-            menuBtn.onclick = () => {
-                this.AudioSys.playSFX('button.mp3');
-                if (this.isOpen) {
-                    this.closeMusicPlayer();
-                } else {
-                    this.openMusicPlayer('menu');
+            // Single Floating Button di level #app
+            const floatBtn = document.createElement('img');
+            floatBtn.id = 'btn-mp3-float';
+            floatBtn.src = IMG_BASE + 'button_music_player.png';
+            floatBtn.alt = 'Music Player';
+            floatBtn.draggable = false;
+            floatBtn.ondragstart = (e) => e.preventDefault();
+            floatBtn.onload = () => {
+                if (!this.hasUserDraggedBtn) {
+                    this.resetButtonToDefault();
                 }
             };
-            this.menuLayer.appendChild(menuBtn);
-            this.menuBtn = menuBtn;
-
-            // b. Button di Main Screen (pojok kiri bawah, ukuran dimensi asli)
-            const gameBtn = document.createElement('img');
-            gameBtn.id = 'btn-mp3-game';
-            gameBtn.className = 'mp-btn-hide';
-            gameBtn.src = IMG_BASE + 'button_music_player.png';
-            gameBtn.alt = 'Music Player';
-            gameBtn.onclick = () => {
-                this.AudioSys.playSFX('button.mp3');
-                if (this.isOpen) {
-                    this.closeMusicPlayer();
-                } else {
-                    this.openMusicPlayer('game');
-                }
-            };
-            this.gameLayer.appendChild(gameBtn);
-            this.gameBtn = gameBtn;
+            this.appEl.appendChild(floatBtn);
+            this.floatBtn = floatBtn;
 
             // Panel Music Player + Playlist
             const root = document.createElement('div');
@@ -432,6 +419,105 @@
                 this.AudioSys.playSFX('button.mp3');
                 this.songScroll.scrollBy({ top: 180, behavior: 'smooth' });
             };
+        },
+
+        // Posisi default: tepat di atas button tutorial di Main Menu (jarak tepi bawah ke tepi atas tutorial = 46px, tepi kiri sejajar = 46px)
+        resetButtonToDefault() {
+            const tutorialLeft = 46;
+            const tutorialBottomFromAppBottom = 96;
+            const tutorialHeight = 90;
+            const tutorialTop = 1080 - tutorialBottomFromAppBottom - tutorialHeight; // 894px
+
+            const btnHeight = this.floatBtn.naturalHeight || this.floatBtn.offsetHeight || 90;
+            const defaultLeft = tutorialLeft;
+            const defaultTop = Math.max(0, tutorialTop - 46 - btnHeight);
+
+            this.hasUserDraggedBtn = false;
+            this.btnPos = { left: defaultLeft, top: defaultTop };
+            this.floatBtn.style.left = defaultLeft + 'px';
+            this.floatBtn.style.top = defaultTop + 'px';
+        },
+
+        showFloatButton() {
+            if (!this.floatBtn) return;
+            this.floatBtn.style.left = this.btnPos.left + 'px';
+            this.floatBtn.style.top = this.btnPos.top + 'px';
+            this.floatBtn.style.display = 'block';
+            void this.floatBtn.offsetWidth;
+            this.floatBtn.classList.add('mp-float-visible');
+        },
+
+        hideFloatButton() {
+            if (!this.floatBtn) return;
+            this.floatBtn.classList.remove('mp-float-visible');
+            this.floatBtn.style.display = 'none';
+        },
+
+        bindFloatButtonEvents() {
+            this.floatBtn.addEventListener('pointerdown', (e) => {
+                if (this.isOpen || this.isAnimating) return;
+                e.stopPropagation();
+                this.isDraggingBtn = true;
+                this.btnHasMoved = false;
+                this.btnDragStartClient = { x: e.clientX, y: e.clientY };
+                this.btnDragStartPos = { left: this.btnPos.left, top: this.btnPos.top };
+                this.floatBtn.setPointerCapture(e.pointerId);
+            });
+
+            this.floatBtn.addEventListener('pointermove', (e) => {
+                if (!this.isDraggingBtn) return;
+                const rawDx = e.clientX - this.btnDragStartClient.x;
+                const rawDy = e.clientY - this.btnDragStartClient.y;
+
+                if (!this.btnHasMoved && Math.hypot(rawDx, rawDy) > 8) {
+                    this.btnHasMoved = true;
+                    this.hasUserDraggedBtn = true;
+                    this.floatBtn.classList.add('mp-float-dragging');
+                }
+
+                if (!this.btnHasMoved) return;
+
+                const { isPortrait, scale } = this.ctx.getAppTransformState();
+                let appDx, appDy;
+                if (isPortrait) {
+                    appDx = rawDy / scale;
+                    appDy = -rawDx / scale;
+                } else {
+                    appDx = rawDx / scale;
+                    appDy = rawDy / scale;
+                }
+
+                const bw = this.floatBtn.offsetWidth || this.floatBtn.naturalWidth || 90;
+                const bh = this.floatBtn.offsetHeight || this.floatBtn.naturalHeight || 90;
+
+                const newLeft = Math.max(0, Math.min(2392 - bw, this.btnDragStartPos.left + appDx));
+                const newTop = Math.max(0, Math.min(1080 - bh, this.btnDragStartPos.top + appDy));
+
+                this.btnPos = { left: newLeft, top: newTop };
+                this.floatBtn.style.left = newLeft + 'px';
+                this.floatBtn.style.top = newTop + 'px';
+            });
+
+            const finishPointer = (e) => {
+                if (!this.isDraggingBtn) return;
+                const wasTap = !this.btnHasMoved;
+                this.isDraggingBtn = false;
+                this.btnHasMoved = false;
+                this.floatBtn.classList.remove('mp-float-dragging');
+                try {
+                    if (e && e.pointerId !== undefined) {
+                        this.floatBtn.releasePointerCapture(e.pointerId);
+                    }
+                } catch (err) {}
+
+                if (wasTap && !this.isOpen && !this.isAnimating) {
+                    this.AudioSys.playSFX('button.mp3');
+                    this.openMusicPlayer();
+                }
+            };
+
+            this.floatBtn.addEventListener('pointerup', finishPointer);
+            this.floatBtn.addEventListener('pointercancel', finishPointer);
         },
 
         setupPixelHitbox(imgEl, onClickAction) {
@@ -654,12 +740,13 @@
             this.isPlaylistOpen = !this.isPlaylistOpen;
             if (this.isPlaylistOpen) {
                 this.playlistCont.classList.add('playlist-open');
-                setTimeout(() => this.updateScrollIndicators(), 60);
+                requestAnimationFrame(() => this.updateScrollIndicators());
             } else {
                 this.playlistCont.classList.remove('playlist-open');
             }
         },
 
+        // Menghitung selisih titik tengah kontainer Music Player ke titik tengah posisi terakhir Floating Button
         getZoomOriginOffset() {
             const mpWidth = this.toolsBg.naturalWidth || 550;
             const mpHeight = this.toolsBg.naturalHeight || 500;
@@ -669,18 +756,10 @@
             const playerCenterX = 2392 - currentRight - (mpWidth / 2);
             const playerCenterY = 1080 - currentBottom - (mpHeight / 2);
 
-            let btnCenterX, btnCenterY;
-            if (this.activeAnchor === 'menu') {
-                const bw = this.menuBtn.naturalWidth || 90;
-                const bh = this.menuBtn.naturalHeight || 90;
-                btnCenterX = 2392 - 46 - (bw / 2);
-                btnCenterY = 33 + (bh / 2);
-            } else {
-                const bw = this.gameBtn.naturalWidth || 90;
-                const bh = this.gameBtn.naturalHeight || 90;
-                btnCenterX = 40 + (bw / 2);
-                btnCenterY = 1080 - 40 - (bh / 2);
-            }
+            const bw = this.floatBtn.offsetWidth || this.floatBtn.naturalWidth || 90;
+            const bh = this.floatBtn.offsetHeight || this.floatBtn.naturalHeight || 90;
+            const btnCenterX = this.btnPos.left + (bw / 2);
+            const btnCenterY = this.btnPos.top + (bh / 2);
 
             return {
                 dx: btnCenterX - playerCenterX,
@@ -688,29 +767,32 @@
             };
         },
 
-        openMusicPlayer(anchor = 'game') {
+        openMusicPlayer() {
             if (this.isOpen || this.isAnimating) return;
-            this.activeAnchor = anchor;
             this.isOpen = true;
             this.isAnimating = true;
             this.isPlaylistOpen = false;
             this.playlistCont.classList.remove('playlist-open');
 
-            if (anchor === 'menu') {
+            const appState = this.ctx.getAppState ? this.ctx.getAppState() : 'menu';
+            if (appState === 'menu') {
                 this.root.style.right = '100px';
                 this.root.style.bottom = '260px';
                 this.playerCont.style.cursor = 'default';
             } else {
                 const count = this.ctx.getActivePlayerCount();
-                if (count <= 4 || !this.customPos) {
+                if (count <= 4 || !this.customPanelPos) {
                     this.root.style.right = '100px';
                     this.root.style.bottom = '128px';
                 } else {
-                    this.root.style.right = this.customPos.right + 'px';
-                    this.root.style.bottom = this.customPos.bottom + 'px';
+                    this.root.style.right = this.customPanelPos.right + 'px';
+                    this.root.style.bottom = this.customPanelPos.bottom + 'px';
                 }
                 this.applyLayoutByPlayerCount();
             }
+
+            // Sembunyikan floating button saat kontainer music player muncul
+            this.hideFloatButton();
 
             this.root.style.display = 'block';
 
@@ -737,7 +819,8 @@
             this.root.classList.remove('mp-visible');
 
             const performZoomOutToBtn = () => {
-                if (this.activeAnchor === 'game') {
+                const appState = this.ctx.getAppState ? this.ctx.getAppState() : 'menu';
+                if (appState === 'game') {
                     const playersCont = this.ctx.getPlayersContainer();
                     if (playersCont) {
                         playersCont.style.transform = '';
@@ -753,13 +836,19 @@
                     this.root.style.display = 'none';
                     this.isOpen = false;
                     this.isAnimating = false;
+
+                    // Munculkan kembali floating button di posisi terakhir penempatannya
+                    const stateNow = this.ctx.getAppState ? this.ctx.getAppState() : 'menu';
+                    if (stateNow === 'menu' || stateNow === 'game') {
+                        this.showFloatButton();
+                    }
                 }, 410);
             };
 
             if (this.isPlaylistOpen) {
                 this.isPlaylistOpen = false;
                 this.playlistCont.classList.remove('playlist-open');
-                setTimeout(performZoomOutToBtn, 430);
+                setTimeout(performZoomOutToBtn, 370);
             } else {
                 performZoomOutToBtn();
             }
@@ -799,15 +888,15 @@
             }
         },
 
-        bindDragEvents() {
+        bindPanelDragEvents() {
             this.playerCont.addEventListener('pointerdown', (e) => {
-                if (!this.isOpen || this.activeAnchor !== 'game' || this.ctx.getActivePlayerCount() < 5) return;
+                if (!this.isOpen || this.ctx.getAppState() !== 'game' || this.ctx.getActivePlayerCount() < 5) return;
                 if (e.target.id === 'mp-btn-close') return;
 
-                this.isDragging = true;
+                this.isDraggingPanel = true;
                 this.playerCont.style.cursor = 'grabbing';
-                this.dragStartClient = { x: e.clientX, y: e.clientY };
-                this.dragStartPos = {
+                this.panelDragStartClient = { x: e.clientX, y: e.clientY };
+                this.panelDragStartPos = {
                     right: parseFloat(this.root.style.right || 100),
                     bottom: parseFloat(this.root.style.bottom || 128)
                 };
@@ -815,10 +904,10 @@
             });
 
             this.playerCont.addEventListener('pointermove', (e) => {
-                if (!this.isDragging) return;
+                if (!this.isDraggingPanel) return;
                 const { isPortrait, scale } = this.ctx.getAppTransformState();
-                const rawDx = e.clientX - this.dragStartClient.x;
-                const rawDy = e.clientY - this.dragStartClient.y;
+                const rawDx = e.clientX - this.panelDragStartClient.x;
+                const rawDy = e.clientY - this.panelDragStartClient.y;
 
                 let appDx, appDy;
                 if (isPortrait) {
@@ -832,27 +921,27 @@
                 const mpWidth = this.toolsBg.naturalWidth || 560;
                 const mpHeight = this.toolsBg.naturalHeight || 500;
 
-                let newRight = this.dragStartPos.right - appDx;
-                let newBottom = this.dragStartPos.bottom - appDy;
+                let newRight = this.panelDragStartPos.right - appDx;
+                let newBottom = this.panelDragStartPos.bottom - appDy;
 
                 newRight = Math.max(0, Math.min(2392 - mpWidth, newRight));
                 newBottom = Math.max(50, Math.min(1080 - mpHeight, newBottom));
 
                 this.root.style.right = newRight + 'px';
                 this.root.style.bottom = newBottom + 'px';
-                this.customPos = { right: newRight, bottom: newBottom };
+                this.customPanelPos = { right: newRight, bottom: newBottom };
             });
 
-            const endDrag = () => {
-                if (!this.isDragging) return;
-                this.isDragging = false;
-                if (this.activeAnchor === 'game' && this.ctx.getActivePlayerCount() >= 5) {
+            const endPanelDrag = () => {
+                if (!this.isDraggingPanel) return;
+                this.isDraggingPanel = false;
+                if (this.ctx.getAppState() === 'game' && this.ctx.getActivePlayerCount() >= 5) {
                     this.playerCont.style.cursor = 'grab';
                 }
             };
 
-            this.playerCont.addEventListener('pointerup', endDrag);
-            this.playerCont.addEventListener('pointercancel', endDrag);
+            this.playerCont.addEventListener('pointerup', endPanelDrag);
+            this.playerCont.addEventListener('pointercancel', endPanelDrag);
         }
     });
 })();
