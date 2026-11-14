@@ -1,12 +1,18 @@
 const CACHE_NAME = 'joker-app-assets-v7';
-const SHELL_CACHE = 'joker-app-shell-v1';
+const SHELL_CACHE = 'joker-app-shell-v2';
 const TEMP_CACHE = 'joker-temp';
 const BASE_URL = 'https://raw.githubusercontent.com/udankkeramat/Underground-Joker/main/';
 
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(SHELL_CACHE)
-            .then((cache) => cache.addAll(['./', 'index.html', 'manifest.json']).catch(() => {}))
+            .then((cache) => cache.addAll([
+                './',
+                'index.html',
+                'manifest.json',
+                'plugins/plugins.json',
+                'plugins/music_player/plugin.js'
+            ]).catch(() => {}))
             .then(() => self.skipWaiting())
     );
 });
