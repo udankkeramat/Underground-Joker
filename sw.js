@@ -6,13 +6,7 @@ const BASE_URL = 'https://raw.githubusercontent.com/udankkeramat/Underground-Jok
 self.addEventListener('install', (event) => {
     event.waitUntil(
         caches.open(SHELL_CACHE)
-            .then((cache) => cache.addAll([
-                './',
-                'index.html',
-                'manifest.json',
-                'plugins/plugins.json',
-                'plugins/music_player/plugin.js'
-            ]).catch(() => {}))
+            .then((cache) => cache.addAll(['./', 'index.html', 'manifest.json']).catch(() => {}))
             .then(() => self.skipWaiting())
     );
 });
@@ -52,6 +46,15 @@ self.addEventListener('fetch', (event) => {
                     const cached = await caches.match(event.request, { ignoreSearch: true });
                     return cached || caches.match('index.html') || new Response('', { status: 503, statusText: 'Offline' });
                 })
+        );
+        return;
+    }
+
+    // Lewati cache saat Update / Update Plugins / query nocache
+    const bypassCache = event.request.cache === 'no-store' || url.searchParams.has('t') || url.searchParams.has('nocache');
+    if (bypassCache) {
+        event.respondWith(
+            fetch(event.request).catch(() => caches.match(event.request, { ignoreSearch: true }))
         );
         return;
     }
